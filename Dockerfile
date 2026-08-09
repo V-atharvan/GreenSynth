@@ -9,11 +9,24 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # ── Install Python dependencies ────────────────────────────
-COPY backend/pyproject.toml ./backend/
-COPY backend/app ./backend/app
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir \
+    fastapi \
+    "uvicorn[standard]" \
+    python-multipart \
+    "sqlalchemy[asyncio]" \
+    pydantic \
+    pydantic-settings \
+    numpy \
+    pandas \
+    scipy \
+    scikit-learn \
+    matplotlib \
+    reportlab \
+    httpx
 
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -e "./backend"
+# ── Copy application code ──────────────────────────────────
+COPY backend/app ./backend/app
 
 # ── Environment variables ──────────────────────────────────
 ENV PYTHONPATH=/app/backend

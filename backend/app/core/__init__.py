@@ -1,0 +1,1 @@
+"""GreenSynth Analytics — Core package."""

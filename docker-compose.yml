@@ -1,0 +1,85 @@
+version: "3.9"
+
+# ============================================================
+# GreenSynth Analytics — Docker Compose (Development)
+#
+# Services:
+#   db       → PostgreSQL 16           → port 5432
+#   backend  → FastAPI (uvicorn)       → port 8000
+#   frontend → Vite dev server         → port 5173
+#
+# Usage:
+#   docker compose up --build          # Start all services
+#   docker compose up -d               # Start in background
+#   docker compose logs -f backend     # Tail backend logs
+#   docker compose exec backend alembic upgrade head
+# ============================================================
+
+services:
+
+  # ── PostgreSQL 16 ─────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: greensynth_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-greensynth}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_DB: ${POSTGRES_DB:-greensynth_db}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-greensynth} -d ${POSTGRES_DB:-greensynth_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── FastAPI Backend ────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: greensynth_backend
+    restart: unless-stopped
+    command: >
+      sh -c "alembic upgrade head &&
+             uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+    volumes:
+      - ./backend:/app
+      - ./data:/data
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-greensynth}:${POSTGRES_PASSWORD:-changeme}@db:5432/${POSTGRES_DB:-greensynth_db}
+      DATABASE_URL_SYNC: postgresql+psycopg2://${POSTGRES_USER:-greensynth}:${POSTGRES_PASSWORD:-changeme}@db:5432/${POSTGRES_DB:-greensynth_db}
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production}
+      DEBUG: ${DEBUG:-true}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
+      STORAGE_PATH: /data
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # ── React + Vite Frontend ──────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: greensynth_frontend
+    restart: unless-stopped
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_BASE_URL: http://localhost:8000
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
+    name: greensynth_pgdata

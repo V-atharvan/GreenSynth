@@ -1,0 +1,69 @@
+# ============================================================
+# GreenSynth Analytics — .gitignore
+# ============================================================
+
+# ── Environment & Secrets ──────────────────────────────────
+.env
+.env.local
+.env.*.local
+*.secret
+
+# ── Python ────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+.venv/
+venv/
+env/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+htmlcov/
+.coverage
+coverage.xml
+*.log
+
+# ── Node / Frontend ───────────────────────────────────────
+node_modules/
+frontend/dist/
+frontend/build/
+frontend/.vite/
+*.tsbuildinfo
+
+# ── Docker ────────────────────────────────────────────────
+docker/secrets/
+
+# ── IDE ───────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ── Data (raw lab data is gitignored; keep directory markers)
+data/raw/*
+data/processed/*
+data/exports/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!data/exports/.gitkeep
+
+# ── Database ──────────────────────────────────────────────
+*.db
+*.sqlite
+*.sqlite3
+
+# ── ML models ─────────────────────────────────────────────
+*.pkl
+*.joblib
+*.h5
+
+# ── Alembic (keep versions tracked) ──────────────────────
+# alembic/versions/ is intentionally tracked

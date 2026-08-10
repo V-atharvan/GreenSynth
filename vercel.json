@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://greensynth.onrender.com/api/:path*"
+    },
+    {
+      "source": "/health",
+      "destination": "https://greensynth.onrender.com/health"
+    }
+  ]
+}

@@ -9,7 +9,7 @@
       "destination": "https://greensynth.onrender.com/health"
     },
     {
-      "source": "/:path*",
+      "source": "/((?!api|health).*)",
       "destination": "/index.html"
     }
   ]

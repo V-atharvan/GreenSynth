@@ -1,6 +1,4 @@
-import axios from 'axios';
-
-const API_BASE_URL = 'http://127.0.0.1:8000/api/v1';
+import { apiClient } from '@/services/api';
 
 export interface Objective {
   id: string;
@@ -166,58 +164,59 @@ export interface DOEAnalysisResponse {
 
 export const doeService = {
   listObjectives: async (projectId: string): Promise<Objective[]> => {
-    const res = await axios.get(`${API_BASE_URL}/objectives`, { params: { project_id: projectId } });
+    const res = await apiClient.get('/objectives', { params: { project_id: projectId } });
     return res.data;
   },
 
   previewWorkload: async (payload: DOECreateInput): Promise<DOEWorkloadPreview> => {
-    const res = await axios.post(`${API_BASE_URL}/doe/preview`, payload);
+    const res = await apiClient.post('/doe/preview', payload);
     return res.data;
   },
 
   createDOEAndGenerate: async (payload: DOECreateInput): Promise<{ doe: DOEResponse; quality_report: DOEQualityReport }> => {
-    const res = await axios.post(`${API_BASE_URL}/doe`, payload);
+    const res = await apiClient.post('/doe', payload);
     return res.data;
   },
 
   listProjectDOEs: async (projectId: string): Promise<DOEResponse[]> => {
-    const res = await axios.get(`${API_BASE_URL}/doe`, { params: { project_id: projectId } });
+    const res = await apiClient.get('/doe', { params: { project_id: projectId } });
     return res.data;
   },
 
   getDOE: async (id: string): Promise<DOEResponse> => {
-    const res = await axios.get(`${API_BASE_URL}/doe/${id}`);
+    const res = await apiClient.get(`/doe/${id}`);
     return res.data;
   },
 
   listProposedExperiments: async (doeId: string): Promise<ProposedExperiment[]> => {
-    const res = await axios.get(`${API_BASE_URL}/doe/${doeId}/proposed-experiments`);
+    const res = await apiClient.get(`/doe/${doeId}/proposed-experiments`);
     return res.data;
   },
 
   approveDOEStudy: async (id: string): Promise<DOEResponse> => {
-    const res = await axios.post(`${API_BASE_URL}/doe/${id}/approve`);
+    const res = await apiClient.post(`/doe/${id}/approve`);
     return res.data;
   },
 
   regenerateDOEVersion: async (id: string, payload: DOECreateInput): Promise<{ doe: DOEResponse; quality_report: DOEQualityReport }> => {
-    const res = await axios.post(`${API_BASE_URL}/doe/${id}/regenerate`, payload);
+    const res = await apiClient.post(`/doe/${id}/regenerate`, payload);
     return res.data;
   },
 
   convertRunToPlannedExperiment: async (proposedId: string): Promise<any> => {
-    const res = await axios.post(`${API_BASE_URL}/doe/proposed-experiments/${proposedId}/convert`);
+    const res = await apiClient.post(`/doe/proposed-experiments/${proposedId}/convert`);
     return res.data;
   },
 
   analyzeDOE: async (doeId: string, responseProperty: string = 'Electrical Conductivity'): Promise<DOEAnalysisResponse> => {
-    const res = await axios.get(`${API_BASE_URL}/doe/${doeId}/analysis`, {
+    const res = await apiClient.get(`/doe/${doeId}/analysis`, {
       params: { response_property: responseProperty },
     });
     return res.data;
   },
 
   exportDOECSVUrl: (doeId: string): string => {
-    return `${API_BASE_URL}/doe/${doeId}/export`;
+    const baseUrl = apiClient.defaults.baseURL || '/api/v1';
+    return `${baseUrl}/doe/${doeId}/export`;
   },
 };

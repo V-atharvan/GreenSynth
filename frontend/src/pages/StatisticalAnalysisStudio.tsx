@@ -8,7 +8,9 @@ import {
   ModelDiagnosticsResponse,
   ReadinessGatesResponse,
   RegressionResponse,
+  evidenceService,
 } from '../services/evidenceService';
+import { apiClient } from '../services/api';
 import {
   BarChart2,
   TrendingUp,
@@ -202,7 +204,7 @@ export const StatisticalAnalysisStudio: React.FC = () => {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const res = await axios.get('http://127.0.0.1:8000/api/v1/projects');
+        const res = await apiClient.get('/projects');
         setProjects(res.data);
         if (res.data.length > 0) setSelectedProjectId(res.data[0].id);
       } catch (err) {
@@ -543,7 +545,7 @@ export const StatisticalAnalysisStudio: React.FC = () => {
                     Score: {ev.evidence_score} / 100
                   </span>
                   <a
-                    href={`http://127.0.0.1:8000/api/v1/evidence/${ev.id}/report`}
+                    href={evidenceService.exportEvidenceReportUrl(ev.id)}
                     target="_blank"
                     rel="noreferrer"
                     className="gs-btn gs-btn-outline gs-btn-sm"

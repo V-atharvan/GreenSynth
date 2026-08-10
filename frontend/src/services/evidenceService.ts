@@ -1,6 +1,4 @@
-import axios from 'axios';
-
-const API_BASE_URL = 'http://127.0.0.1:8000/api/v1';
+import { apiClient } from '@/services/api';
 
 export interface DatasetVersionResponse {
   id: string;
@@ -145,71 +143,72 @@ export interface EvidenceResponse {
 
 export const evidenceService = {
   createDatasetVersion: async (datasetId: string, versionLabel: string = 'v1.0'): Promise<DatasetVersionResponse> => {
-    const res = await axios.post(`${API_BASE_URL}/statistics/datasets`, null, {
+    const res = await apiClient.post('/statistics/datasets', null, {
       params: { dataset_id: datasetId, version_label: versionLabel },
     });
     return res.data;
   },
 
   getDatasetVersion: async (versionId: string): Promise<DatasetVersionResponse> => {
-    const res = await axios.get(`${API_BASE_URL}/statistics/datasets/${versionId}`);
+    const res = await apiClient.get(`/statistics/datasets/${versionId}`);
     return res.data;
   },
 
   calculateDescriptive: async (variableName: string, values: number[], unit?: string): Promise<DescriptiveStatsItem> => {
-    const res = await axios.post(`${API_BASE_URL}/statistics/descriptive`, values, {
+    const res = await apiClient.post('/statistics/descriptive', values, {
       params: { variable_name: variableName, unit },
     });
     return res.data;
   },
 
   computeCorrelationMatrix: async (variables: string[], dataRows: Record<string, number | null>[], method: string = 'PEARSON'): Promise<CorrelationMatrixResponse> => {
-    const res = await axios.post(`${API_BASE_URL}/statistics/correlation`, dataRows, {
+    const res = await apiClient.post('/statistics/correlation', dataRows, {
       params: { variables, method },
     });
     return res.data;
   },
 
   computeRegression: async (payload: RegressionRequest, dataRows: Record<string, number | null>[]): Promise<RegressionResponse> => {
-    const res = await axios.post(`${API_BASE_URL}/statistics/regression`, dataRows, {
+    const res = await apiClient.post('/statistics/regression', dataRows, {
       params: payload,
     });
     return res.data;
   },
 
   computeDiagnostics: async (residuals: number[], fittedValues: number[]): Promise<ModelDiagnosticsResponse> => {
-    const res = await axios.post(`${API_BASE_URL}/statistics/diagnostics`, { residuals, fittedValues });
+    const res = await apiClient.post('/statistics/diagnostics', { residuals, fittedValues });
     return res.data;
   },
 
   runQualityCheck: async (sampleRecords: Record<string, number | null>[], variables: string[]): Promise<DataQualityReportResponse> => {
-    const res = await axios.post(`${API_BASE_URL}/statistics/quality-check`, { sample_records: sampleRecords, variables });
+    const res = await apiClient.post('/statistics/quality-check', { sample_records: sampleRecords, variables });
     return res.data;
   },
 
   evaluateReadinessGates: async (versionId: string, sampleSize: number = 10): Promise<ReadinessGatesResponse> => {
-    const res = await axios.get(`${API_BASE_URL}/statistics/readiness-gates/${versionId}`, {
+    const res = await apiClient.get(`/statistics/readiness-gates/${versionId}`, {
       params: { sample_size: sampleSize },
     });
     return res.data;
   },
 
   createEvidenceRecord: async (payload: EvidenceCreateInput): Promise<EvidenceResponse> => {
-    const res = await axios.post(`${API_BASE_URL}/evidence`, payload);
+    const res = await apiClient.post('/evidence', payload);
     return res.data;
   },
 
   listEvidenceRecords: async (datasetVersionId?: string): Promise<EvidenceResponse[]> => {
-    const res = await axios.get(`${API_BASE_URL}/evidence`, { params: { dataset_version_id: datasetVersionId } });
+    const res = await apiClient.get('/evidence', { params: { dataset_version_id: datasetVersionId } });
     return res.data;
   },
 
   approveEvidenceRecord: async (evidenceId: string): Promise<EvidenceResponse> => {
-    const res = await axios.post(`${API_BASE_URL}/evidence/${evidenceId}/approve`);
+    const res = await apiClient.post(`/evidence/${evidenceId}/approve`);
     return res.data;
   },
 
   exportEvidenceReportUrl: (evidenceId: string): string => {
-    return `${API_BASE_URL}/evidence/${evidenceId}/report`;
+    const baseUrl = apiClient.defaults.baseURL || '/api/v1';
+    return `${baseUrl}/evidence/${evidenceId}/report`;
   },
 };

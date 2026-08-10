@@ -3,7 +3,7 @@ import { DOEResponse, ProposedExperiment, doeService } from '../services/doeServ
 import { DOEDesignMatrixView } from '../components/doe/DOEDesignMatrixView';
 import { DOEAnalysisView } from '../components/doe/DOEAnalysisView';
 import { DOEWizardModal } from '../components/doe/DOEWizardModal';
-import axios from 'axios';
+import { apiClient } from '../services/api';
 
 export const DOEDashboard: React.FC = () => {
   const [projects, setProjects] = useState<any[]>([]);
@@ -19,7 +19,7 @@ export const DOEDashboard: React.FC = () => {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const res = await axios.get('http://127.0.0.1:8000/api/v1/projects');
+        const res = await apiClient.get('/projects');
         setProjects(res.data);
         if (res.data.length > 0) setSelectedProjectId(res.data[0].id);
       } catch (err) { console.error('Failed to fetch projects:', err); }

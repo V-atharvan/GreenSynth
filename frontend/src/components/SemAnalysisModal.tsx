@@ -10,6 +10,7 @@
  */
 
 import React, { useEffect, useState } from 'react'
+import { apiClient } from '@/services/api'
 import type {
   Characterization,
   RawFile,
@@ -138,7 +139,8 @@ export function SemAnalysisModal({ characterization, file, onClose }: SemAnalysi
     }
   }
 
-  const imageUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/files/${file.id}/download`
+  const baseUrl = apiClient.defaults.baseURL || '/api/v1'
+  const imageUrl = `${baseUrl}/files/${file.id}/download`
 
   return (
     <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="sem-modal-title">

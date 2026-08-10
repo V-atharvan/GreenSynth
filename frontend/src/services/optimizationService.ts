@@ -1,6 +1,4 @@
-import axios from 'axios'
-
-const API_BASE = 'http://127.0.0.1:8000/api/v1/optimization'
+import { apiClient } from '@/services/api'
 
 export interface OptimizationObjective {
   id?: string
@@ -105,62 +103,62 @@ export interface OptimizationReport {
 
 export const optimizationService = {
   createObjective: async (payload: OptimizationObjective): Promise<OptimizationObjective> => {
-    const res = await axios.post(`${API_BASE}/objectives`, payload)
+    const res = await apiClient.post('/optimization/objectives', payload)
     return res.data
   },
 
   listObjectives: async (projectId?: string): Promise<OptimizationObjective[]> => {
-    const res = await axios.get(`${API_BASE}/objectives`, { params: { project_id: projectId } })
+    const res = await apiClient.get('/optimization/objectives', { params: { project_id: projectId } })
     return res.data
   },
 
   createConstraint: async (payload: OptimizationConstraint): Promise<OptimizationConstraint> => {
-    const res = await axios.post(`${API_BASE}/constraints`, payload)
+    const res = await apiClient.post('/optimization/constraints', payload)
     return res.data
   },
 
   listConstraints: async (projectId?: string): Promise<OptimizationConstraint[]> => {
-    const res = await axios.get(`${API_BASE}/constraints`, { params: { project_id: projectId } })
+    const res = await apiClient.get('/optimization/constraints', { params: { project_id: projectId } })
     return res.data
   },
 
   validateSearchSpace: async (projectId: string): Promise<any> => {
-    const res = await axios.post(`${API_BASE}/search-space/validate`, { project_id: projectId })
+    const res = await apiClient.post('/optimization/search-space/validate', { project_id: projectId })
     return res.data
   },
 
   createRun: async (payload: OptimizationRunCreatePayload): Promise<OptimizationRun> => {
-    const res = await axios.post(`${API_BASE}/runs`, payload)
+    const res = await apiClient.post('/optimization/runs', payload)
     return res.data
   },
 
   listRuns: async (projectId?: string): Promise<OptimizationRun[]> => {
-    const res = await axios.get(`${API_BASE}/runs`, { params: { project_id: projectId } })
+    const res = await apiClient.get('/optimization/runs', { params: { project_id: projectId } })
     return res.data
   },
 
   getRun: async (runId: string): Promise<OptimizationRun> => {
-    const res = await axios.get(`${API_BASE}/runs/${runId}`)
+    const res = await apiClient.get(`/optimization/runs/${runId}`)
     return res.data
   },
 
   selectCandidate: async (candidateId: string, reason?: string): Promise<OptimizationCandidate> => {
-    const res = await axios.post(`${API_BASE}/candidates/${candidateId}/select`, { decision: 'SELECTED', reason })
+    const res = await apiClient.post(`/optimization/candidates/${candidateId}/select`, { decision: 'SELECTED', reason })
     return res.data
   },
 
   rejectCandidate: async (candidateId: string, reason?: string): Promise<OptimizationCandidate> => {
-    const res = await axios.post(`${API_BASE}/candidates/${candidateId}/reject`, { decision: 'REJECTED', reason })
+    const res = await apiClient.post(`/optimization/candidates/${candidateId}/reject`, { decision: 'REJECTED', reason })
     return res.data
   },
 
   createProposedExperiment: async (candidateId: string): Promise<any> => {
-    const res = await axios.post(`${API_BASE}/candidates/${candidateId}/create-experiment`)
+    const res = await apiClient.post(`/optimization/candidates/${candidateId}/create-experiment`)
     return res.data
   },
 
   getReport: async (runId: string): Promise<OptimizationReport> => {
-    const res = await axios.get(`${API_BASE}/runs/${runId}/report`)
+    const res = await apiClient.get(`/optimization/runs/${runId}/report`)
     return res.data
   },
 }

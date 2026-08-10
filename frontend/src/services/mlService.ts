@@ -240,6 +240,7 @@ export const mlService = {
   },
 
   getModelReportUrl: (modelId: string): string => {
-    return `http://127.0.0.1:8000/api/v1/ml/reports/${modelId}`
+    const baseUrl = apiClient.defaults.baseURL || '/api/v1'
+    return `${baseUrl}/ml/reports/${modelId}`
   },
 }

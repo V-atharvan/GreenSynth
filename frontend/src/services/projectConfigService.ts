@@ -1,6 +1,4 @@
-import axios from 'axios'
-
-const API_BASE = 'http://127.0.0.1:8000/api/v1'
+import { apiClient } from '@/services/api'
 
 export interface ProjectMatrixRow {
   project_code: string
@@ -56,12 +54,12 @@ export interface CatalogItem {
 
 export const projectConfigService = {
   getMatrix: async (): Promise<ProjectMatrixRow[]> => {
-    const res = await axios.get(`${API_BASE}/projects/matrix`)
+    const res = await apiClient.get('/projects/matrix')
     return res.data
   },
 
   getConfiguration: async (projectId: string): Promise<ProjectConfiguration> => {
-    const res = await axios.get(`${API_BASE}/projects/${projectId}/configuration`)
+    const res = await apiClient.get(`/projects/${projectId}/configuration`)
     return res.data
   },
 
@@ -71,7 +69,7 @@ export const projectConfigService = {
     sourceProperty: string,
     targetProperty: string
   ): Promise<PropertyComparabilityResult> => {
-    const res = await axios.post(`${API_BASE}/projects/compare`, {
+    const res = await apiClient.post('/projects/compare', {
       source_project_code: sourceProjectCode,
       target_project_code: targetProjectCode,
       source_property: sourceProperty,
@@ -81,27 +79,27 @@ export const projectConfigService = {
   },
 
   getMaterialsCatalog: async (): Promise<CatalogItem[]> => {
-    const res = await axios.get(`${API_BASE}/catalogs/materials`)
+    const res = await apiClient.get('/catalogs/materials')
     return res.data
   },
 
   getSolventsCatalog: async (): Promise<CatalogItem[]> => {
-    const res = await axios.get(`${API_BASE}/catalogs/solvents`)
+    const res = await apiClient.get('/catalogs/solvents')
     return res.data
   },
 
   getExtractsCatalog: async (): Promise<CatalogItem[]> => {
-    const res = await axios.get(`${API_BASE}/catalogs/extracts`)
+    const res = await apiClient.get('/catalogs/extracts')
     return res.data
   },
 
   getBiomassCatalog: async (): Promise<CatalogItem[]> => {
-    const res = await axios.get(`${API_BASE}/catalogs/biomass`)
+    const res = await apiClient.get('/catalogs/biomass')
     return res.data
   },
 
   getSynthesisMethodsCatalog: async (): Promise<CatalogItem[]> => {
-    const res = await axios.get(`${API_BASE}/catalogs/synthesis-methods`)
+    const res = await apiClient.get('/catalogs/synthesis-methods')
     return res.data
   },
 }

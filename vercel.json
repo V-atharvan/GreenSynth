@@ -7,6 +7,10 @@
     {
       "source": "/health",
       "destination": "https://greensynth.onrender.com/health"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }

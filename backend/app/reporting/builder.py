@@ -142,7 +142,7 @@ class ExperimentReportDataBuilder:
 
                 for rf in c.raw_files:
                     # Query analysis run & calculated properties
-                    ar_stmt = select(AnalysisRun).where(AnalysisRun.raw_file_id == rf.id)
+                    ar_stmt = select(AnalysisRun).where(AnalysisRun.input_file_id == rf.id)
                     ar_res = await db.execute(ar_stmt)
                     ar = ar_res.scalar_one_or_none()
 
@@ -164,8 +164,8 @@ class ExperimentReportDataBuilder:
                         if technique == "XRD" and not xrd_section.available:
                             xrd_section.available = True
                             xrd_section.raw_filename = rf.original_filename
-                            xrd_section.analysis_version = ar.algorithm_version or "v1.0"
-                            xrd_section.processing_parameters = ar.parameters_json or {}
+                            xrd_section.analysis_version = getattr(ar, "software_version", None) or "v1.0"
+                            xrd_section.processing_parameters = getattr(ar, "parameters", None) or {}
 
                             # Fetch peaks
                             peak_stmt = select(XRDPeak).where(XRDPeak.analysis_run_id == ar.id)
@@ -173,13 +173,13 @@ class ExperimentReportDataBuilder:
                             peaks = peak_res.scalars().all()
                             xrd_section.peaks = [
                                 {
-                                    "peak_number": p.peak_number,
-                                    "two_theta": p.two_theta,
+                                    "peak_number": idx + 1,
+                                    "two_theta": getattr(p, "peak_position", 0.0),
                                     "intensity": p.intensity,
-                                    "fwhm": p.fwhm,
-                                    "crystallite_size_nm": p.crystallite_size_nm,
+                                    "fwhm": getattr(p, "fwhm", None),
+                                    "crystallite_size_nm": None,
                                 }
-                                for p in peaks
+                                for idx, p in enumerate(peaks)
                             ]
 
                             # Extract crystallite size
@@ -190,7 +190,10 @@ class ExperimentReportDataBuilder:
                         elif technique == "UV_VIS" and not uvvis_section.available:
                             uvvis_section.available = True
                             uvvis_section.raw_filename = rf.original_filename
-                            uvvis_section.analysis_version = ar.algorithm_version or "v1.0"
+                            uvvis_section.analysis_version = getattr(ar, "software_version", None) or "v1.0"
+                            for p in calc_props:
+                                if "band_gap" in p["property_name"].lower():
+                                    uvvis_section.optical_band_gap_ev = float(p["value"])
                             for p in calc_props:
                                 if "band_gap" in p["property_name"].lower():
                                     uvvis_section.optical_band_gap_ev = float(p["value"])
@@ -225,9 +228,9 @@ class ExperimentReportDataBuilder:
                             raw_file_id=str(rf.id),
                             sha256_checksum=rf.checksum,
                             analysis_run_id=str(ar.id) if ar else None,
-                            analysis_method=ar.algorithm_name if ar else None,
+                            analysis_method=getattr(ar, "analysis_type", None) if ar else None,
                             software_version="1.0.0-research",
-                            processing_parameters=ar.parameters_json if ar else {},
+                            processing_parameters=getattr(ar, "parameters", {}) if ar else {},
                             calculated_properties=calc_props,
                         )
                     )
@@ -244,9 +247,9 @@ class ExperimentReportDataBuilder:
         stat_section = StatisticalReportSectionSchema()
         if stat_obj:
             stat_section.available = True
-            stat_section.analysis_type = stat_obj.analysis_type
-            stat_section.sample_size_n = stat_obj.sample_size
-            stat_section.metrics = stat_obj.results_json or {}
+            stat_section.analysis_type = getattr(stat_obj, "analysis_type", "STATISTICAL")
+            stat_section.sample_size_n = getattr(stat_obj, "sample_size", 0)
+            stat_section.metrics = getattr(stat_obj, "results_json", {}) or {}
 
         # 6. Fetch ML Prediction
         from app.models.ml import MLDataset

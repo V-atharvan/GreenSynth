@@ -854,17 +854,52 @@
   border-bottom: none;
 }
 
-/* ── Two-column layout ────────────────────────────────────── */
+/* ── Two-column layout & Responsive Media Queries ────────────── */
 .gs-two-col {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
 }
 
+@media (max-width: 1024px) {
+  .gs-page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
 @media (max-width: 768px) {
   .gs-two-col { grid-template-columns: 1fr; }
   .gs-metrics-row { grid-template-columns: 1fr 1fr; }
   .gs-action-grid { grid-template-columns: 1fr; }
+  .gs-form-row { grid-template-columns: 1fr; }
+  .gs-param-grid { grid-template-columns: 1fr 1fr; }
+  .gs-panel-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 640px) {
+  .gs-page-subtitle {
+    margin-left: 0;
+    margin-top: 4px;
+  }
+  .gs-metrics-row {
+    grid-template-columns: 1fr;
+  }
+  .gs-btn {
+    min-height: 44px;
+    padding: 10px 16px;
+  }
+  .gs-select, .gs-input {
+    min-height: 44px;
+  }
+  .gs-candidate-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
 /* ── Divider ──────────────────────────────────────────────── */
@@ -886,6 +921,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
+  white-space: normal;
 }
 
 .gs-badge.blue   { background: #dbeafe; color: #1e40af; }

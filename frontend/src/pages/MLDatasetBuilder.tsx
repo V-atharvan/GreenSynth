@@ -90,226 +90,249 @@ export default function MLDatasetBuilder() {
   }
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
-      <div className="flex items-center gap-4">
-        <button
-          onClick={() => navigate('/ml')}
-          className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
+    <div className="gs-page">
+      {/* Header */}
+      <div className="gs-page-header">
         <div>
-          <h1 className="text-2xl font-bold text-slate-100 flex items-center gap-2">
-            <Database className="w-6 h-6 text-teal-400" />
-            Dataset Builder Wizard
-          </h1>
-          <p className="text-slate-400 text-sm">
+          <div className="gs-page-title">
+            <button
+              onClick={() => navigate('/ml')}
+              className="btn btn-secondary btn-icon"
+              style={{ marginRight: 8 }}
+              title="Back to Machine Learning Studio"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+
+            <div className="gs-page-title-icon teal">
+              <Database className="w-5 h-5" />
+            </div>
+            <span>Dataset Builder Wizard</span>
+          </div>
+          <div className="gs-page-subtitle">
             Formulate an immutable ML dataset from completed experimental observations.
-          </p>
+          </div>
         </div>
       </div>
 
       {error && (
-        <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-xl text-sm flex items-center gap-2">
+        <div className="alert alert-error">
           <AlertCircle className="w-5 h-5 shrink-0" />
-          {error}
+          <span>{error}</span>
         </div>
       )}
 
-      {/* Dataset Form */}
-      <form onSubmit={handleBuildDataset} className="bg-slate-900 border border-slate-800 rounded-xl p-6 space-y-6">
-        <h2 className="text-lg font-semibold text-slate-100 border-b border-slate-800 pb-3">
-          1. Target & Project Configuration
-        </h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Target Project</label>
-            <select
-              value={selectedProject}
-              onChange={(e) => setSelectedProject(e.target.value)}
-              className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2"
-            >
-              {projects.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.project_code} — {p.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Dataset Name</label>
-            <input
-              type="text"
-              value={datasetName}
-              onChange={(e) => setDatasetName(e.target.value)}
-              required
-              className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Target Property</label>
-            <input
-              type="text"
-              value={targetProperty}
-              onChange={(e) => setTargetProperty(e.target.value)}
-              required
-              placeholder="e.g. Electrical Conductivity"
-              className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Target Unit</label>
-            <input
-              type="text"
-              value={targetUnit}
-              onChange={(e) => setTargetUnit(e.target.value)}
-              required
-              placeholder="e.g. S/cm"
-              className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2"
-            />
-          </div>
+      {/* Dataset Form Card */}
+      <form onSubmit={handleBuildDataset} className="card">
+        <div className="card-header">
+          <h2>1. Target & Project Configuration</h2>
         </div>
 
-        <h2 className="text-lg font-semibold text-slate-100 border-b border-slate-800 pb-3 pt-2">
-          2. Input Feature Definitions
-        </h2>
-
-        <div className="space-y-3">
-          {features.map((feat, idx) => (
-            <div key={idx} className="flex items-center gap-3 bg-slate-800/40 p-3 rounded-lg border border-slate-700/50">
-              <input
-                type="text"
-                value={feat.feature_name}
-                onChange={(e) => handleFeatureChange(idx, 'feature_name', e.target.value)}
-                placeholder="Feature Name"
-                className="flex-1 bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5"
-              />
-              <input
-                type="text"
-                value={feat.source_parameter}
-                onChange={(e) => handleFeatureChange(idx, 'source_parameter', e.target.value)}
-                placeholder="Source Parameter Code"
-                className="flex-1 bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5"
-              />
-              <input
-                type="text"
-                value={feat.unit}
-                onChange={(e) => handleFeatureChange(idx, 'unit', e.target.value)}
-                placeholder="Unit"
-                className="w-24 bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5"
-              />
-              {features.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() => handleRemoveFeature(idx)}
-                  className="text-red-400 hover:text-red-300 p-1.5"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              )}
+        <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <div className="form-grid">
+            <div className="form-group">
+              <label className="form-label required">Target Project</label>
+              <select
+                value={selectedProject}
+                onChange={(e) => setSelectedProject(e.target.value)}
+                className="form-control"
+              >
+                {projects.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.project_code} — {p.name}
+                  </option>
+                ))}
+              </select>
             </div>
-          ))}
 
-          <button
-            type="button"
-            onClick={handleAddFeature}
-            className="flex items-center gap-1.5 text-xs font-semibold text-teal-400 hover:text-teal-300 py-1"
-          >
-            <Plus className="w-4 h-4" /> Add Input Feature
-          </button>
-        </div>
+            <div className="form-group">
+              <label className="form-label required">Dataset Name</label>
+              <input
+                type="text"
+                value={datasetName}
+                onChange={(e) => setDatasetName(e.target.value)}
+                required
+                className="form-control"
+              />
+            </div>
 
-        <div className="pt-4 flex justify-end">
-          <button
-            type="submit"
-            disabled={building}
-            className="px-6 py-2.5 bg-teal-400 text-slate-900 font-semibold rounded-lg hover:bg-teal-300 transition-colors disabled:opacity-50"
-          >
-            {building ? 'Assembling Dataset...' : 'Build & Validate Dataset'}
-          </button>
+            <div className="form-group">
+              <label className="form-label required">Target Property</label>
+              <input
+                type="text"
+                value={targetProperty}
+                onChange={(e) => setTargetProperty(e.target.value)}
+                required
+                placeholder="e.g. Electrical Conductivity"
+                className="form-control"
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label required">Target Unit</label>
+              <input
+                type="text"
+                value={targetUnit}
+                onChange={(e) => setTargetUnit(e.target.value)}
+                required
+                placeholder="e.g. S/cm"
+                className="form-control"
+              />
+            </div>
+          </div>
+
+          <h2 style={{ fontSize: '1rem', fontWeight: 600, borderTop: '1px solid var(--color-border-light)', paddingTop: 16 }}>
+            2. Input Feature Definitions
+          </h2>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {features.map((feat, idx) => (
+              <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'var(--color-bg)', padding: '12px 16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border-light)' }}>
+                <div style={{ flex: 1 }}>
+                  <label className="form-label" style={{ fontSize: '0.75rem', marginBottom: 2 }}>Feature Name</label>
+                  <input
+                    type="text"
+                    value={feat.feature_name}
+                    onChange={(e) => handleFeatureChange(idx, 'feature_name', e.target.value)}
+                    placeholder="Feature Name"
+                    className="form-control"
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label className="form-label" style={{ fontSize: '0.75rem', marginBottom: 2 }}>Source Parameter Code</label>
+                  <input
+                    type="text"
+                    value={feat.source_parameter}
+                    onChange={(e) => handleFeatureChange(idx, 'source_parameter', e.target.value)}
+                    placeholder="Source Parameter Code"
+                    className="form-control"
+                  />
+                </div>
+                <div style={{ width: 120 }}>
+                  <label className="form-label" style={{ fontSize: '0.75rem', marginBottom: 2 }}>Unit</label>
+                  <input
+                    type="text"
+                    value={feat.unit}
+                    onChange={(e) => handleFeatureChange(idx, 'unit', e.target.value)}
+                    placeholder="Unit"
+                    className="form-control"
+                  />
+                </div>
+                {features.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveFeature(idx)}
+                    className="btn btn-danger btn-sm"
+                    style={{ marginTop: 18 }}
+                    title="Remove feature"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            ))}
+
+            <div>
+              <button
+                type="button"
+                onClick={handleAddFeature}
+                className="btn btn-secondary btn-sm"
+              >
+                <Plus className="w-4 h-4" /> Add Input Feature
+              </button>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--color-border-light)', paddingTop: 16 }}>
+            <button
+              type="submit"
+              disabled={building}
+              className="btn btn-primary"
+            >
+              {building ? 'Assembling Dataset...' : 'Build & Validate Dataset'}
+            </button>
+          </div>
         </div>
       </form>
 
       {/* Dataset Preview */}
       {createdDataset && (
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 space-y-6">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+        <div className="card">
+          <div className="card-header">
             <div>
-              <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
-                <CheckCircle2 className="w-6 h-6 text-emerald-400" />
+              <h2 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <CheckCircle2 className="w-5 h-5 text-emerald-600" />
                 Dataset Created: {createdDataset.name} (v{createdDataset.version})
               </h2>
-              <p className="text-sm text-slate-400 mt-1">
-                Target: <span className="text-teal-400 font-medium">{createdDataset.target_property}</span> ({createdDataset.target_unit})
+              <p className="text-muted" style={{ fontSize: '0.8125rem', marginTop: 2 }}>
+                Target Property: <strong>{createdDataset.target_property}</strong> ({createdDataset.target_unit})
               </p>
             </div>
             <button
               onClick={() => navigate('/ml/training')}
-              className="px-4 py-2 bg-indigo-500 hover:bg-indigo-400 text-white font-semibold text-sm rounded-lg transition-colors"
+              className="btn btn-primary btn-sm"
             >
               Proceed to Model Training →
             </button>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
-            <div className="bg-slate-800/40 p-4 rounded-lg border border-slate-700/50">
-              <p className="text-xs font-semibold text-slate-400 uppercase">Eligible Records</p>
-              <p className="text-2xl font-bold text-emerald-400 mt-1">{createdDataset.eligible_count}</p>
+          <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            <div className="gs-metrics-row">
+              <div className="gs-metric-card emerald">
+                <span className="gs-metric-label">Eligible Records</span>
+                <span className="gs-metric-value">{createdDataset.eligible_count}</span>
+              </div>
+              <div className="gs-metric-card amber">
+                <span className="gs-metric-label">Excluded Records</span>
+                <span className="gs-metric-value">{createdDataset.excluded_count}</span>
+              </div>
+              <div className="gs-metric-card teal">
+                <span className="gs-metric-label">Dataset Status</span>
+                <span className="gs-metric-value" style={{ fontSize: '1.25rem' }}>{createdDataset.status}</span>
+              </div>
             </div>
-            <div className="bg-slate-800/40 p-4 rounded-lg border border-slate-700/50">
-              <p className="text-xs font-semibold text-slate-400 uppercase">Excluded Records</p>
-              <p className="text-2xl font-bold text-amber-400 mt-1">{createdDataset.excluded_count}</p>
-            </div>
-            <div className="bg-slate-800/40 p-4 rounded-lg border border-slate-700/50">
-              <p className="text-xs font-semibold text-slate-400 uppercase">Dataset Status</p>
-              <p className="text-2xl font-bold text-teal-400 mt-1">{createdDataset.status}</p>
-            </div>
-          </div>
 
-          {/* Record Preview Table */}
-          <div>
-            <h3 className="text-md font-semibold text-slate-200 mb-3">Record Preview & Eligibility</h3>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-slate-300">
-                <thead className="bg-slate-800 text-slate-400 uppercase">
-                  <tr>
-                    <th className="px-3 py-2">Experiment ID</th>
-                    <th className="px-3 py-2">Sample ID</th>
-                    {features.map((f) => (
-                      <th key={f.feature_name} className="px-3 py-2">{f.feature_name}</th>
-                    ))}
-                    <th className="px-3 py-2">Target ({createdDataset.target_unit})</th>
-                    <th className="px-3 py-2">Status</th>
-                    <th className="px-3 py-2">Exclusion Reason</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800">
-                  {datasetRecords.map((r) => (
-                    <tr key={r.id} className={r.is_eligible ? 'hover:bg-slate-800/30' : 'bg-red-500/5 hover:bg-red-500/10'}>
-                      <td className="px-3 py-2 font-mono">{r.experiment_id.substring(0, 8)}...</td>
-                      <td className="px-3 py-2 font-mono">{r.sample_id.substring(0, 8)}...</td>
+            {/* Record Preview Table */}
+            <div>
+              <h3 style={{ fontSize: '0.9375rem', fontWeight: 600, marginBottom: 12 }}>Record Preview & Eligibility</h3>
+              <div className="table-container">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Experiment ID</th>
+                      <th>Sample ID</th>
                       {features.map((f) => (
-                        <td key={f.feature_name} className="px-3 py-2">
-                          {r.feature_values[f.feature_name] ?? 'N/A'}
-                        </td>
+                        <th key={f.feature_name}>{f.feature_name}</th>
                       ))}
-                      <td className="px-3 py-2 font-semibold text-teal-400">{r.target_value ?? 'N/A'}</td>
-                      <td className="px-3 py-2">
-                        {r.is_eligible ? (
-                          <span className="text-emerald-400 font-semibold">Eligible</span>
-                        ) : (
-                          <span className="text-red-400 font-semibold">Excluded</span>
-                        )}
-                      </td>
-                      <td className="px-3 py-2 text-slate-400">{r.exclusion_reason ?? '—'}</td>
+                      <th>Target ({createdDataset.target_unit})</th>
+                      <th>Status</th>
+                      <th>Exclusion Reason</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {datasetRecords.map((r) => (
+                      <tr key={r.id} style={{ background: r.is_eligible ? undefined : 'var(--color-danger-bg)' }}>
+                        <td className="text-mono">{r.experiment_id.substring(0, 8)}...</td>
+                        <td className="text-mono">{r.sample_id.substring(0, 8)}...</td>
+                        {features.map((f) => (
+                          <td key={f.feature_name}>
+                            {r.feature_values[f.feature_name] ?? 'N/A'}
+                          </td>
+                        ))}
+                        <td style={{ fontWeight: 600, color: 'var(--color-primary)' }}>{r.target_value ?? 'N/A'}</td>
+                        <td>
+                          {r.is_eligible ? (
+                            <span className="badge badge-active">Eligible</span>
+                          ) : (
+                            <span className="badge badge-failed">Excluded</span>
+                          )}
+                        </td>
+                        <td className="text-muted">{r.exclusion_reason ?? '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>

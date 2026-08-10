@@ -10,7 +10,6 @@ import {
   AlertTriangle,
   ArrowRight,
   ShieldCheck,
-  Building2,
   FileCheck,
 } from 'lucide-react'
 import { mlService, MLPrediction } from '@/services/mlService'
@@ -102,55 +101,63 @@ export default function ExperimentalValidation() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="gs-page">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-slate-100 flex items-center gap-2">
-          <FlaskConical className="w-7 h-7 text-teal-400" />
-          Prospective Experimental Validation
-        </h1>
-        <p className="text-slate-400 text-sm mt-1">
-          Bridge Model Predictions with Physical Laboratory Characterization Results (Level 3 Validation).
-        </p>
+      <div className="gs-page-header">
+        <div>
+          <div className="gs-page-title">
+            <div className="gs-page-title-icon emerald">
+              <FlaskConical className="w-5 h-5" />
+            </div>
+            <span>Prospective Experimental Validation</span>
+          </div>
+          <div className="gs-page-subtitle">
+            Bridge Model Predictions with Physical Laboratory Characterization Results (Level 3 Validation).
+          </div>
+        </div>
       </div>
 
       {error && (
-        <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-xl text-sm flex items-center gap-2">
+        <div className="alert alert-error">
           <AlertTriangle className="w-5 h-5 shrink-0" />
-          {error}
+          <span>{error}</span>
         </div>
       )}
 
       {/* Progress Steps */}
-      <div className="flex items-center justify-between bg-slate-900 border border-slate-800 rounded-xl p-4 text-xs font-semibold text-slate-400">
-        <div className={`flex items-center gap-2 ${step >= 1 ? 'text-teal-400' : ''}`}>
-          <span className="w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center border border-slate-700">1</span>
-          Select & Review Prediction
-        </div>
-        <ArrowRight className="w-4 h-4 text-slate-600" />
-        <div className={`flex items-center gap-2 ${step >= 2 ? 'text-teal-400' : ''}`}>
-          <span className="w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center border border-slate-700">2</span>
-          Link Lab Experiment
-        </div>
-        <ArrowRight className="w-4 h-4 text-slate-600" />
-        <div className={`flex items-center gap-2 ${step >= 3 ? 'text-teal-400' : ''}`}>
-          <span className="w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center border border-slate-700">3</span>
-          Validation Result
+      <div className="card" style={{ padding: '16px 24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', fontSize: '0.8125rem', fontWeight: 600 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: step >= 1 ? 'var(--color-primary)' : 'var(--color-text-secondary)' }}>
+            <span style={{ width: 24, height: 24, borderRadius: '50%', background: step >= 1 ? 'var(--color-primary)' : 'var(--color-border)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem' }}>1</span>
+            Select & Review Prediction
+          </div>
+          <ArrowRight className="w-4 h-4 text-muted" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: step >= 2 ? 'var(--color-primary)' : 'var(--color-text-secondary)' }}>
+            <span style={{ width: 24, height: 24, borderRadius: '50%', background: step >= 2 ? 'var(--color-primary)' : 'var(--color-border)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem' }}>2</span>
+            Link Lab Experiment
+          </div>
+          <ArrowRight className="w-4 h-4 text-muted" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: step >= 3 ? 'var(--color-primary)' : 'var(--color-text-secondary)' }}>
+            <span style={{ width: 24, height: 24, borderRadius: '50%', background: step >= 3 ? 'var(--color-primary)' : 'var(--color-border)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem' }}>3</span>
+            Validation Result
+          </div>
         </div>
       </div>
 
       {/* STEP 1: Select & Approve Prediction */}
       {step === 1 && (
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 space-y-6">
-          <h2 className="text-lg font-semibold text-slate-100">Step 1: Select Model Prediction</h2>
+        <div className="card">
+          <div className="card-header">
+            <h2>Step 1: Select Model Prediction</h2>
+          </div>
 
-          <div className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">Select Prediction Record</label>
+          <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            <div className="form-group">
+              <label className="form-label required">Select Prediction Record</label>
               <select
                 value={selectedPredId}
                 onChange={(e) => setSelectedPredId(e.target.value)}
-                className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg p-3"
+                className="form-control"
               >
                 {predictions.map((p) => (
                   <option key={p.id} value={p.id}>
@@ -161,194 +168,211 @@ export default function ExperimentalValidation() {
             </div>
 
             {selectedPred && (
-              <div className="bg-slate-800/60 border border-slate-700/60 rounded-xl p-5 space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-slate-400 uppercase">Target Property</span>
-                  <span className="text-sm font-bold text-slate-100">{selectedPred.predicted_property}</span>
+              <div style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border-light)', borderRadius: 'var(--radius-lg)', padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span className="detail-label">Target Property</span>
+                  <span style={{ fontWeight: 700, fontSize: '0.9375rem' }}>{selectedPred.predicted_property}</span>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-xs">
-                  <div>
-                    <span className="text-slate-400 block">Predicted Value</span>
-                    <span className="text-lg font-bold text-teal-400">{selectedPred.predicted_value} {selectedPred.unit}</span>
+                <div className="detail-grid">
+                  <div className="detail-item">
+                    <span className="detail-label">Predicted Value</span>
+                    <span className="detail-value" style={{ fontWeight: 700, color: 'var(--color-primary)', fontSize: '1.25rem' }}>
+                      {selectedPred.predicted_value} {selectedPred.unit}
+                    </span>
                   </div>
-                  <div>
-                    <span className="text-slate-400 block">95% Uncertainty Bounds</span>
-                    <span className="text-sm font-semibold text-indigo-400">
+                  <div className="detail-item">
+                    <span className="detail-label">95% Uncertainty Bounds</span>
+                    <span className="detail-value code">
                       {selectedPred.uncertainty_lower !== undefined ? `[${selectedPred.uncertainty_lower}, ${selectedPred.uncertainty_upper}]` : 'N/A'}
                     </span>
                   </div>
-                  <div>
-                    <span className="text-slate-400 block">Applicability Domain</span>
-                    <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  <div className="detail-item">
+                    <span className="detail-label">Applicability Domain</span>
+                    <span className="badge badge-active" style={{ alignSelf: 'flex-start' }}>
                       {selectedPred.applicability_status}
                     </span>
                   </div>
                 </div>
 
                 <div>
-                  <span className="text-xs font-semibold text-slate-400 uppercase block mb-2">Input Synthesis Parameters</span>
-                  <div className="grid grid-cols-2 gap-2 text-xs font-mono text-slate-300">
+                  <span className="detail-label" style={{ marginBottom: 8, display: 'block' }}>Input Synthesis Parameters</span>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 8 }}>
                     {Object.entries(selectedPred.input_parameters).map(([k, v]) => (
-                      <div key={k} className="bg-slate-900/60 px-3 py-2 rounded-lg border border-slate-800">
-                        {k}: <span className="text-teal-400 font-bold">{v}</span>
+                      <div key={k} style={{ background: 'white', padding: '8px 12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', fontSize: '0.8125rem' }}>
+                        <span className="text-muted">{k}: </span>
+                        <strong style={{ color: 'var(--color-primary)' }}>{v}</strong>
                       </div>
                     ))}
                   </div>
                 </div>
               </div>
             )}
-          </div>
 
-          <button
-            onClick={handleApproveProspective}
-            disabled={loading || !selectedPred}
-            className="w-full py-3 bg-emerald-500 text-slate-950 font-bold rounded-lg hover:bg-emerald-400 transition-colors disabled:opacity-50"
-          >
-            {loading ? 'Approving...' : 'Approve Prediction for Physical Lab Synthesis'}
-          </button>
+            <div style={{ borderTop: '1px solid var(--color-border-light)', paddingTop: 16 }}>
+              <button
+                onClick={handleApproveProspective}
+                disabled={loading || !selectedPred}
+                className="btn btn-primary w-full"
+                style={{ justifyContent: 'center', padding: '12px' }}
+              >
+                {loading ? 'Approving...' : 'Approve Prediction for Physical Lab Synthesis'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
       {/* STEP 2: Link Physical Characterization */}
       {step === 2 && prospectiveExp && (
-        <form onSubmit={handleLinkResult} className="bg-slate-900 border border-slate-800 rounded-xl p-6 space-y-6">
-          <h2 className="text-lg font-semibold text-slate-100">Step 2: Link Laboratory Experiment & Characterization</h2>
-
-          <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-4 rounded-xl text-xs flex items-center gap-2">
-            <CheckCircle className="w-4 h-4 shrink-0" />
-            Prospective Experiment Approved (ID: {prospectiveExp.id.slice(0, 8)}...). Proceed to enter lab execution details.
+        <form onSubmit={handleLinkResult} className="card">
+          <div className="card-header">
+            <h2>Step 2: Link Laboratory Experiment & Characterization</h2>
           </div>
 
-          <div className="space-y-4 text-xs">
-            <div>
-              <label className="block font-semibold text-slate-400 uppercase mb-1">Laboratory Experiment UUID</label>
-              <input
-                type="text"
-                required
-                placeholder="e.g. 84c2e37a-e483-4fc8-b9dd-147e91c01738"
-                value={labExpId}
-                onChange={(e) => setLabExpId(e.target.value)}
-                className="w-full bg-slate-800 border border-slate-700 text-slate-100 rounded-lg p-3 font-mono"
-              />
+          <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            <div className="alert alert-success">
+              <CheckCircle className="w-5 h-5 shrink-0" />
+              <span>Prospective Experiment Approved (ID: {prospectiveExp.id.slice(0, 8)}...). Enter laboratory execution details.</span>
             </div>
 
-            <div>
-              <label className="block font-semibold text-slate-400 uppercase mb-1">Characterized Sample UUID</label>
-              <input
-                type="text"
-                required
-                placeholder="e.g. c0ca9240-2e5d-4733-9ce6-0b9062f90687"
-                value={sampleId}
-                onChange={(e) => setSampleId(e.target.value)}
-                className="w-full bg-slate-800 border border-slate-700 text-slate-100 rounded-lg p-3 font-mono"
-              />
+            <div className="form-grid">
+              <div className="form-group">
+                <label className="form-label required">Laboratory Experiment UUID</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. 84c2e37a-e483-4fc8-b9dd-147e91c01738"
+                  value={labExpId}
+                  onChange={(e) => setLabExpId(e.target.value)}
+                  className="form-control text-mono"
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label required">Characterized Sample UUID</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. c0ca9240-2e5d-4733-9ce6-0b9062f90687"
+                  value={sampleId}
+                  onChange={(e) => setSampleId(e.target.value)}
+                  className="form-control text-mono"
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Validation Criterion (Optional)</label>
+                <select
+                  value={selectedCritId}
+                  onChange={(e) => setSelectedCritId(e.target.value)}
+                  className="form-control"
+                >
+                  <option value="">No criterion (Calculate raw errors only)</option>
+                  {criteria.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.property_name}: {c.metric} {c.comparison_operator} {c.threshold} {c.unit}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Measurement Uncertainty (Optional)</label>
+                <input
+                  type="number"
+                  step="0.001"
+                  placeholder="0.05"
+                  value={measUncertainty}
+                  onChange={(e) => setMeasUncertainty(e.target.value)}
+                  className="form-control text-mono"
+                />
+              </div>
             </div>
 
-            <div>
-              <label className="block font-semibold text-slate-400 uppercase mb-1">Validation Criterion (Optional)</label>
-              <select
-                value={selectedCritId}
-                onChange={(e) => setSelectedCritId(e.target.value)}
-                className="w-full bg-slate-800 border border-slate-700 text-slate-200 rounded-lg p-3"
+            <div style={{ borderTop: '1px solid var(--color-border-light)', paddingTop: 16 }}>
+              <button
+                type="submit"
+                disabled={loading || !labExpId || !sampleId}
+                className="btn btn-primary w-full"
+                style={{ justifyContent: 'center', padding: '12px' }}
               >
-                <option value="">No criterion (Calculate raw errors only)</option>
-                {criteria.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.property_name}: {c.metric} {c.comparison_operator} {c.threshold} {c.unit}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block font-semibold text-slate-400 uppercase mb-1">Measurement Uncertainty (Optional)</label>
-              <input
-                type="number"
-                step="0.001"
-                placeholder="0.05"
-                value={measUncertainty}
-                onChange={(e) => setMeasUncertainty(e.target.value)}
-                className="w-full bg-slate-800 border border-slate-700 text-slate-100 rounded-lg p-3 font-mono"
-              />
+                {loading ? 'Evaluating...' : 'Evaluate Physical Validation Result'}
+              </button>
             </div>
           </div>
-
-          <button
-            type="submit"
-            disabled={loading || !labExpId || !sampleId}
-            className="w-full py-3 bg-indigo-500 text-white font-bold rounded-lg hover:bg-indigo-400 transition-colors disabled:opacity-50"
-          >
-            {loading ? 'Evaluating...' : 'Evaluate Physical Validation Result'}
-          </button>
         </form>
       )}
 
       {/* STEP 3: Validation Result Summary */}
       {step === 3 && valResult && (
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 space-y-6">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-            <h2 className="text-lg font-semibold text-slate-100 flex items-center gap-2">
-              <FileCheck className="w-5 h-5 text-emerald-400" />
+        <div className="card">
+          <div className="card-header">
+            <h2 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <FileCheck className="w-5 h-5 text-emerald-600" />
               Experimental Validation Evaluation
             </h2>
-            <span className="px-3 py-1 text-xs font-bold rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+            <span className="badge badge-planned">
               {valResult.validation_type} VALIDATION
             </span>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
-            <div className="bg-slate-800/60 p-4 rounded-xl">
-              <span className="text-slate-400 block">Predicted Value</span>
-              <span className="text-xl font-bold text-teal-400">{valResult.predicted_value} {valResult.unit}</span>
+          <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            <div className="gs-metrics-row">
+              <div className="gs-metric-card teal">
+                <span className="gs-metric-label">Predicted Value</span>
+                <span className="gs-metric-value" style={{ fontSize: '1.5rem' }}>{valResult.predicted_value} {valResult.unit}</span>
+              </div>
+
+              <div className="gs-metric-card emerald">
+                <span className="gs-metric-label">Actual Lab Result</span>
+                <span className="gs-metric-value" style={{ fontSize: '1.5rem' }}>{valResult.actual_value} {valResult.unit}</span>
+              </div>
+
+              <div className="gs-metric-card blue">
+                <span className="gs-metric-label">Absolute Error</span>
+                <span className="gs-metric-value" style={{ fontSize: '1.5rem' }}>{valResult.absolute_error}</span>
+              </div>
+
+              <div className="gs-metric-card amber">
+                <span className="gs-metric-label">Criterion Evaluation</span>
+                <span className="gs-metric-value" style={{ fontSize: '1rem', marginTop: 4 }}>
+                  {valResult.criterion_result === 'SATISFIED' ? 'Satisfied' : 'Not Satisfied'}
+                </span>
+              </div>
             </div>
 
-            <div className="bg-slate-800/60 p-4 rounded-xl">
-              <span className="text-slate-400 block">Actual Lab Result</span>
-              <span className="text-xl font-bold text-emerald-400">{valResult.actual_value} {valResult.unit}</span>
-            </div>
+            {valResult.is_within_prediction_interval !== undefined && (
+              <div className="alert alert-info">
+                <strong>Prediction Interval Assessment: </strong>
+                <span>
+                  {valResult.is_within_prediction_interval
+                    ? 'Actual lab result falls within the estimated prediction interval bounds.'
+                    : 'Actual lab result falls outside the estimated prediction interval bounds.'}
+                </span>
+              </div>
+            )}
 
-            <div className="bg-slate-800/60 p-4 rounded-xl">
-              <span className="text-slate-400 block">Absolute Error</span>
-              <span className="text-xl font-bold text-slate-200">{valResult.absolute_error}</span>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+              <Link
+                to="/validation"
+                className="btn btn-secondary"
+                style={{ flex: 1, justifyContent: 'center' }}
+              >
+                Return to Validation Dashboard
+              </Link>
+              <button
+                onClick={() => {
+                  setStep(1)
+                  setProspectiveExp(null)
+                  setValResult(null)
+                }}
+                className="btn btn-primary"
+                style={{ flex: 1, justifyContent: 'center' }}
+              >
+                Validate Another Prediction
+              </button>
             </div>
-
-            <div className="bg-slate-800/60 p-4 rounded-xl">
-              <span className="text-slate-400 block">Criterion Evaluation</span>
-              <span className={`text-sm font-bold mt-1 block ${
-                valResult.criterion_result === 'SATISFIED' ? 'text-emerald-400' : 'text-amber-400'
-              }`}>
-                {valResult.criterion_result === 'SATISFIED' ? 'Criterion satisfied' : 'Criterion not satisfied'}
-              </span>
-            </div>
-          </div>
-
-          {valResult.is_within_prediction_interval !== undefined && (
-            <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-700 text-xs text-slate-300">
-              <span className="font-bold text-slate-100">Prediction Interval Assessment: </span>
-              {valResult.is_within_prediction_interval
-                ? 'Actual lab result falls within the estimated prediction interval bounds.'
-                : 'Actual lab result falls outside the estimated prediction interval bounds.'}
-            </div>
-          )}
-
-          <div className="flex gap-4">
-            <Link
-              to="/validation"
-              className="flex-1 py-3 bg-slate-800 text-slate-200 text-center font-semibold rounded-lg hover:bg-slate-700 transition-colors"
-            >
-              Return to Validation Dashboard
-            </Link>
-            <button
-              onClick={() => {
-                setStep(1)
-                setProspectiveExp(null)
-                setValResult(null)
-              }}
-              className="flex-1 py-3 bg-emerald-500 text-slate-950 font-bold rounded-lg hover:bg-emerald-400 transition-colors"
-            >
-              Validate Another Prediction
-            </button>
           </div>
         </div>
       )}

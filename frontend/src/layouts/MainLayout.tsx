@@ -2,11 +2,11 @@
  * GreenSynth Analytics — Main Layout
  *
  * Responsive layout supporting Desktop (fixed sidebar), Tablet (collapsible),
- * and Mobile (top header + slide-out navigation drawer with overlay).
+ * and Mobile (top header + slide-out hamburger drawer + 5-item bottom bar + Research Sheet).
  */
 
 import React, { useState, useEffect } from 'react'
-import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard,
   FolderKanban,
@@ -25,6 +25,9 @@ import {
   Menu,
   X,
   Dna,
+  MoreHorizontal,
+  Home,
+  Grid,
 } from 'lucide-react'
 import './MainLayout.css'
 
@@ -56,26 +59,85 @@ const FUTURE_ITEMS = [
   { label: 'ML & Predict',   icon: Cpu, phase: 'Phase 14–16' },
 ]
 
+// Research menu groups for the 5th mobile bottom bar item
+const RESEARCH_GROUPS = [
+  {
+    title: 'Analysis',
+    items: [
+      { to: '/comparison', label: 'Sample Comparison', icon: BarChart3 },
+      { to: '/statistics', label: 'Statistical Evidence', icon: BarChart2 },
+    ]
+  },
+  {
+    title: 'Machine Learning',
+    items: [
+      { to: '/ml', label: 'Machine Learning', icon: Cpu },
+      { to: '/ml/predict', label: 'ML & Predict', icon: Cpu },
+      { to: '/validation', label: 'Validation & Drift', icon: ShieldCheck },
+    ]
+  },
+  {
+    title: 'Experimental Design',
+    items: [
+      { to: '/doe', label: 'Design of Experiments', icon: Ruler },
+      { to: '/optimization', label: 'Experimental Optimization', icon: Ruler },
+      { to: '/recommendations', label: 'Recommendation Studio', icon: Lightbulb },
+    ]
+  },
+  {
+    title: 'Research Management',
+    items: [
+      { to: '/closed-loop', label: 'Research Loop', icon: RotateCw },
+    ]
+  }
+]
+
 export default function MainLayout() {
   const location = useLocation()
+  const navigate = useNavigate()
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false)
+  const [researchSheetOpen, setResearchSheetOpen] = useState(false)
 
-  // Close mobile drawer on route change
+  // Close mobile drawer and research sheet on route change
   useEffect(() => {
     setMobileDrawerOpen(false)
+    setResearchSheetOpen(false)
   }, [location.pathname])
 
-  // ESC key handler to close mobile drawer
+  // ESC key handler to close drawers
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && mobileDrawerOpen) {
-        setMobileDrawerOpen(false)
+      if (e.key === 'Escape') {
+        if (mobileDrawerOpen) setMobileDrawerOpen(false)
+        if (researchSheetOpen) setResearchSheetOpen(false)
       }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [mobileDrawerOpen])
+  }, [mobileDrawerOpen, researchSheetOpen])
+
+  // Helper to determine if a bottom bar item is active
+  const isPathActive = (type: 'home' | 'projects' | 'experiments' | 'samples' | 'research') => {
+    const path = location.pathname
+    if (type === 'home') return path === '/'
+    if (type === 'projects') return path.startsWith('/projects')
+    if (type === 'experiments') return path.startsWith('/experiments')
+    if (type === 'samples') return path.startsWith('/samples')
+    if (type === 'research') {
+      return (
+        path.startsWith('/comparison') ||
+        path.startsWith('/ml') ||
+        path.startsWith('/validation') ||
+        path.startsWith('/recommendations') ||
+        path.startsWith('/closed-loop') ||
+        path.startsWith('/doe') ||
+        path.startsWith('/statistics') ||
+        path.startsWith('/optimization')
+      )
+    }
+    return false
+  }
 
   return (
     <div className={`layout ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
@@ -85,7 +147,10 @@ export default function MainLayout() {
         <div className="mobile-header-left">
           <button
             className="mobile-hamburger-btn"
-            onClick={() => setMobileDrawerOpen(!mobileDrawerOpen)}
+            onClick={() => {
+              setMobileDrawerOpen(!mobileDrawerOpen)
+              setResearchSheetOpen(false)
+            }}
             aria-label={mobileDrawerOpen ? 'Close Navigation Menu' : 'Open Navigation Menu'}
             aria-expanded={mobileDrawerOpen}
           >
@@ -104,11 +169,14 @@ export default function MainLayout() {
         </div>
       </header>
 
-      {/* ── Backdrop Overlay for Mobile Drawer ─────────────────────── */}
-      {mobileDrawerOpen && (
+      {/* ── Backdrop Overlay for Mobile Drawer & Research Sheet ────── */}
+      {(mobileDrawerOpen || researchSheetOpen) && (
         <div
           className="mobile-drawer-backdrop"
-          onClick={() => setMobileDrawerOpen(false)}
+          onClick={() => {
+            setMobileDrawerOpen(false)
+            setResearchSheetOpen(false)
+          }}
           aria-hidden="true"
         />
       )}
@@ -208,6 +276,53 @@ export default function MainLayout() {
         )}
       </aside>
 
+      {/* ── Research Navigation Bottom Sheet (Mobile) ───────────────── */}
+      <div
+        className={`mobile-research-sheet ${researchSheetOpen ? 'open' : ''}`}
+        role="dialog"
+        aria-label="Research Navigation Menu"
+      >
+        <div className="research-sheet-header">
+          <div className="research-sheet-title">
+            <Grid className="w-5 h-5 text-emerald-600" />
+            <span>Research Modules</span>
+          </div>
+          <button
+            className="research-sheet-close"
+            onClick={() => setResearchSheetOpen(false)}
+            aria-label="Close research menu"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <div className="research-sheet-body">
+          {RESEARCH_GROUPS.map((group) => (
+            <div key={group.title} className="research-group">
+              <div className="research-group-title">{group.title}</div>
+              <div className="research-group-items">
+                {group.items.map((item) => {
+                  const IconComp = item.icon
+                  const active = location.pathname === item.to
+                  return (
+                    <button
+                      key={item.to}
+                      className={`research-item-btn ${active ? 'active' : ''}`}
+                      onClick={() => {
+                        navigate(item.to)
+                        setResearchSheetOpen(false)
+                      }}
+                    >
+                      <IconComp className="w-4 h-4 text-emerald-600" />
+                      <span>{item.label}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* ── Main Wrapper (Desktop Topbar + Scrollable Content) ───────── */}
       <div className="main-wrapper">
         {/* Desktop Topbar */}
@@ -227,6 +342,60 @@ export default function MainLayout() {
           <Outlet />
         </main>
       </div>
+
+      {/* ── Fixed Mobile Bottom Navigation Bar (Screens <= 767px) ──────── */}
+      <nav className="mobile-bottom-nav" aria-label="Mobile Bottom Navigation">
+        <NavLink
+          to="/"
+          end
+          className={`bottom-nav-item ${isPathActive('home') ? 'active' : ''}`}
+          aria-label="Home"
+        >
+          <Home className="bottom-nav-icon" />
+          <span className="bottom-nav-label">Home</span>
+        </NavLink>
+
+        <NavLink
+          to="/projects"
+          className={`bottom-nav-item ${isPathActive('projects') ? 'active' : ''}`}
+          aria-label="Projects"
+        >
+          <FolderKanban className="bottom-nav-icon" />
+          <span className="bottom-nav-label">Projects</span>
+        </NavLink>
+
+        <NavLink
+          to="/experiments"
+          className={`bottom-nav-item ${isPathActive('experiments') ? 'active' : ''}`}
+          aria-label="Experiments"
+        >
+          <FlaskConical className="bottom-nav-icon" />
+          <span className="bottom-nav-label">Experiments</span>
+        </NavLink>
+
+        <NavLink
+          to="/samples"
+          className={`bottom-nav-item ${isPathActive('samples') ? 'active' : ''}`}
+          aria-label="Samples"
+        >
+          <TestTube2 className="bottom-nav-icon" />
+          <span className="bottom-nav-label">Samples</span>
+        </NavLink>
+
+        <button
+          type="button"
+          className={`bottom-nav-item ${isPathActive('research') || researchSheetOpen ? 'active' : ''}`}
+          onClick={() => {
+            setResearchSheetOpen(!researchSheetOpen)
+            setMobileDrawerOpen(false)
+          }}
+          aria-label="Research Modules Menu"
+          aria-expanded={researchSheetOpen}
+        >
+          <Grid className="bottom-nav-icon" />
+          <span className="bottom-nav-label">Research</span>
+        </button>
+      </nav>
     </div>
   )
 }

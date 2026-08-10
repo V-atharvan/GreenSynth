@@ -75,7 +75,7 @@
   font-weight: 500;
 }
 
-/* ── Backdrop for Mobile Drawer ───────────────────────────── */
+/* ── Backdrop for Mobile Drawer & Research Sheet ──────────── */
 .mobile-drawer-backdrop {
   display: none;
 }
@@ -324,6 +324,16 @@
   width: 100%;
 }
 
+/* ── Fixed Mobile Bottom Navigation Bar (Hidden on Desktop) ── */
+.mobile-bottom-nav {
+  display: none;
+}
+
+/* ── Mobile Research Sheet Drawer (Hidden on Desktop) ─────── */
+.mobile-research-sheet {
+  display: none;
+}
+
 /* ============================================================
    RESPONSIVE BREAKPOINTS (Mobile & Tablet Transformation)
    ============================================================ */
@@ -383,12 +393,178 @@
   }
 }
 
-@media (max-width: 640px) {
+/* ── Mobile Viewport (<= 767px): 5-Item Bottom Navigation ─── */
+@media (max-width: 767px) {
   .main-content {
-    padding: var(--space-3);
+    padding-bottom: 84px; /* Ensure main content never hides behind bottom navigation */
+  }
+
+  /* Fixed 5-Item Bottom Navigation Bar */
+  .mobile-bottom-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 62px;
+    background: var(--sidebar-bg);
+    border-top: 1px solid var(--sidebar-border);
+    z-index: 910;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.15);
+    padding: 0 4px;
+  }
+
+  .bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    flex: 1;
+    height: 100%;
+    color: var(--sidebar-text);
+    text-decoration: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 0;
+    transition: color var(--transition);
+  }
+
+  .bottom-nav-icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+
+  .bottom-nav-label {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .bottom-nav-item.active {
+    color: #3b9ede; /* GreenSynth accent blue highlight */
+  }
+
+  .bottom-nav-item.active .bottom-nav-icon {
+    transform: scale(1.1);
+  }
+
+  /* Research Bottom Sheet Drawer */
+  .mobile-research-sheet {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    bottom: 62px;
+    left: 0;
+    right: 0;
+    max-height: 75vh;
+    background: white;
+    border-top-left-radius: var(--radius-xl);
+    border-top-right-radius: var(--radius-xl);
+    z-index: 940;
+    box-shadow: var(--shadow-lg);
+    transform: translateY(120%);
+    transition: transform var(--transition-slow);
+    overflow: hidden;
+  }
+
+  .mobile-research-sheet.open {
+    transform: translateY(0);
+  }
+
+  .research-sheet-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-4) var(--space-5);
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-bg);
+  }
+
+  .research-sheet-title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-weight: 700;
+    font-size: 0.9375rem;
+    color: var(--color-text);
+  }
+
+  .research-sheet-close {
+    background: none;
+    border: none;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    padding: var(--space-1);
+  }
+
+  .research-sheet-body {
+    padding: var(--space-4) var(--space-5);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .research-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .research-group-title {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text-secondary);
+  }
+
+  .research-group-items {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-2);
+  }
+
+  .research-item-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-3);
+    background: var(--color-bg);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-md);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--color-text);
+    text-align: left;
+    cursor: pointer;
+    transition: all var(--transition);
+  }
+
+  .research-item-btn:hover,
+  .research-item-btn.active {
+    background: var(--color-accent-light);
+    border-color: var(--color-accent);
+    color: var(--color-primary);
+  }
+}
+
+@media (max-width: 380px) {
+  .bottom-nav-label {
+    font-size: 0.625rem; /* Compact label on very narrow phones */
+  }
+
+  .research-group-items {
+    grid-template-columns: 1fr; /* Single column on tiny screens */
   }
 
   .mobile-mode-text {
-    display: none; /* Keep mode badge compact on small phones */
+    display: none;
   }
 }

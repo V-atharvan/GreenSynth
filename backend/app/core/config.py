@@ -60,7 +60,7 @@ class Settings(BaseSettings):
 
     # ── CORS ──────────────────────────────────────────────
     cors_origins: str = Field(
-        default="http://localhost:5173,http://localhost:3000",
+        default="*,http://localhost:5173,http://localhost:3000,https://green-synth.vercel.app",
         description="Comma-separated list of allowed CORS origins",
     )
 

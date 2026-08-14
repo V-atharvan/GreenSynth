@@ -57,26 +57,33 @@ class MLDatasetService:
             s_res = await self.db.execute(select(Sample).where(Sample.experiment_id == exp.id))
             samples = s_res.scalars().all()
 
-            # Query recorded parameters for this experiment
+            # Query recorded parameters for this experiment (mapping both code and display name)
             p_res = await self.db.execute(
-                select(ExperimentParameter, ParameterDefinition.parameter_code)
+                select(
+                    ExperimentParameter,
+                    ParameterDefinition.parameter_code,
+                    ParameterDefinition.parameter_name,
+                )
                 .join(ParameterDefinition, ExperimentParameter.parameter_definition_id == ParameterDefinition.id)
                 .where(ExperimentParameter.experiment_id == exp.id)
             )
             param_rows = p_res.all()
-            params_map: dict[str, float] = {}
+            params_map: dict[str, Any] = {}
             param_units_map: dict[str, str] = {}
-            for ep, pcode in param_rows:
+            for ep, pcode, pname in param_rows:
                 num_val = ep.value_numeric
                 if num_val is None and ep.value:
                     try:
                         num_val = float(ep.value)
                     except ValueError:
-                        num_val = None
-                if num_val is not None:
-                    params_map[pcode] = num_val
+                        num_val = ep.value
+                val_to_store = num_val if num_val is not None else ep.value
+                if val_to_store is not None:
+                    params_map[pcode] = val_to_store
+                    params_map[pname] = val_to_store
                     if ep.unit:
                         param_units_map[pcode] = ep.unit
+                        param_units_map[pname] = ep.unit
 
             for smp in samples:
                 # Query calculated properties for sample
@@ -122,6 +129,7 @@ class MLDatasetService:
             quality_indicators.warnings.extend(leakage_res.leakage_warnings)
 
         # 5. Persist MLDataset ORM
+        is_ready = quality_indicators.is_valid_for_training and build_result.eligible_count > 0
         dataset = MLDataset(
             project_id=payload.project_id,
             name=payload.name,
@@ -132,7 +140,7 @@ class MLDatasetService:
             target_unit=payload.target_unit,
             features=feature_specs_dicts,
             filters=payload.filters,
-            status="READY" if quality_indicators.is_valid_for_training else "DRAFT",
+            status="READY" if is_ready else "DRAFT",
             eligible_count=build_result.eligible_count,
             excluded_count=build_result.excluded_count,
             exclusion_summary=build_result.exclusion_summary,

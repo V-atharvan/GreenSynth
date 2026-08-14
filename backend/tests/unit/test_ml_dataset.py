@@ -76,6 +76,96 @@ def test_dataset_validator():
     assert indicators.target_std > 0.0
 
 
+def test_dataset_builder_alias_resolution():
+    """Verify parameter code aliases and target property aliases resolve correctly."""
+    feature_specs = [
+        {"feature_name": "precursor_concentration", "source_parameter": "precursor_concentration", "unit": "mol/L"},
+        {"feature_name": "precursor_volume", "source_parameter": "precursor_solution_volume", "unit": "mL"},
+        {"feature_name": "extract_concentration", "source_parameter": "mulberry_extract_concentration", "unit": "g/L"},
+        {"feature_name": "extract_volume", "source_parameter": "mulberry_extract_volume", "unit": "mL"},
+        {"feature_name": "solvent_volume", "source_parameter": "solvent_volume", "unit": "mL"},
+        {"feature_name": "substrate_temperature", "source_parameter": "substrate_temperature", "unit": "°C"},
+        {"feature_name": "spray_rate", "source_parameter": "spray_rate", "unit": "mL/min"},
+    ]
+    builder = DatasetBuilder(
+        target_property="Electrical Conductivity",
+        target_unit="S/cm",
+        feature_specs=feature_specs,
+    )
+
+    candidates = [
+        {
+            "experiment_id": "EXP-P7-TEST-001",
+            "sample_id": "SAMP-P7-TEST-001-A",
+            "experiment_status": "COMPLETED",
+            "parameters": {
+                "copper_precursor": "Copper acetate monohydrate",
+                "precursor_concentration": 0.1,
+                "precursor_volume": 100.0,
+                "extract_concentration": 10.0,
+                "extract_volume": 20.0,
+                "solvent_volume": 80.0,
+                "substrate_temperature_c": 350.0,  # Alias for substrate_temperature
+                "spray_rate_ml_min": 5.0,  # Alias for spray_rate
+            },
+            "properties": {
+                "Electrical Conductivity": 5.0,
+                "Electrical Resistance": 2000.0,
+                "Electrical Resistivity": 0.2,
+            },
+        }
+    ]
+
+    result = builder.build_records(candidates, dataset_name="CuO Test Dataset")
+    assert result.eligible_count == 1
+    assert result.excluded_count == 0
+
+    record = result.records[0]
+    assert record.is_eligible is True
+    assert record.target_value == 5.0
+    assert record.feature_values["substrate_temperature"] == 350.0
+    assert record.feature_values["spray_rate"] == 5.0
+    assert record.feature_values["precursor_concentration"] == 0.1
+    assert record.feature_values["precursor_volume"] == 100.0
+    assert record.feature_values["extract_concentration"] == 10.0
+    assert record.feature_values["extract_volume"] == 20.0
+    assert record.feature_values["solvent_volume"] == 80.0
+
+
+def test_dataset_builder_feature_values_populated_on_exclusion():
+    """Verify feature values are preserved and populated in record item even when excluded."""
+    feature_specs = [
+        {"feature_name": "temp", "source_parameter": "substrate_temperature_c", "unit": "°C"},
+        {"feature_name": "rate", "source_parameter": "spray_rate_ml_min", "unit": "mL/min"},
+    ]
+    builder = DatasetBuilder(
+        target_property="Electrical Conductivity",
+        target_unit="S/cm",
+        feature_specs=feature_specs,
+    )
+
+    candidates = [
+        {
+            "experiment_id": "EXP-PLANNED-1",
+            "sample_id": "SAMP-1",
+            "experiment_status": "PLANNED",
+            "parameters": {"substrate_temperature_c": 350.0, "spray_rate_ml_min": 5.0},
+            "properties": {"Electrical Conductivity": 5.0},
+        }
+    ]
+
+    result = builder.build_records(candidates)
+    assert result.eligible_count == 0
+    assert result.excluded_count == 1
+
+    rec = result.records[0]
+    assert rec.is_eligible is False
+    assert "Incomplete experiment" in (rec.exclusion_reason or "")
+    # Crucial check: feature_values must NOT be empty!
+    assert rec.feature_values["temp"] == 350.0
+    assert rec.feature_values["rate"] == 5.0
+
+
 def test_leakage_detector():
     detector = LeakageDetector()
 

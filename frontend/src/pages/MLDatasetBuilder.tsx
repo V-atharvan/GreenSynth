@@ -20,6 +20,11 @@ export default function MLDatasetBuilder() {
   const [targetType, setTargetType] = useState<string>('CALCULATED')
 
   const [features, setFeatures] = useState<MLDatasetFeatureSpec[]>([
+    { feature_name: 'precursor_concentration', source_parameter: 'precursor_concentration', unit: 'mol/L', data_type: 'NUMBER' },
+    { feature_name: 'precursor_volume', source_parameter: 'precursor_volume', unit: 'mL', data_type: 'NUMBER' },
+    { feature_name: 'extract_concentration', source_parameter: 'extract_concentration', unit: 'g/L', data_type: 'NUMBER' },
+    { feature_name: 'extract_volume', source_parameter: 'extract_volume', unit: 'mL', data_type: 'NUMBER' },
+    { feature_name: 'solvent_volume', source_parameter: 'solvent_volume', unit: 'mL', data_type: 'NUMBER' },
     { feature_name: 'substrate_temperature', source_parameter: 'substrate_temperature', unit: '°C', data_type: 'NUMBER' },
     { feature_name: 'spray_rate', source_parameter: 'spray_rate', unit: 'mL/min', data_type: 'NUMBER' },
   ])
@@ -271,12 +276,37 @@ export default function MLDatasetBuilder() {
             <button
               onClick={() => navigate('/ml/training')}
               className="btn btn-primary btn-sm"
+              disabled={createdDataset.eligible_count === 0}
             >
               Proceed to Model Training →
             </button>
           </div>
 
           <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            {createdDataset.eligible_count === 0 && (
+              <div className="alert alert-error" style={{ margin: 0 }}>
+                <AlertCircle className="w-5 h-5 shrink-0" />
+                <span>
+                  <strong>At least 1 eligible record is required to proceed to model training.</strong> Please complete experiments, record synthesis parameters, and perform characterization analysis.
+                </span>
+              </div>
+            )}
+
+            {createdDataset.eligible_count > 0 && createdDataset.eligible_count < 5 && (
+              <div
+                style={{
+                  background: '#fffbebfb',
+                  borderLeft: '4px solid #f59e0b',
+                  padding: '12px 16px',
+                  borderRadius: 4,
+                  fontSize: '0.875rem',
+                  color: '#92400e',
+                }}
+              >
+                <strong>⚠️ Scientific Warning:</strong> Dataset contains {createdDataset.eligible_count} eligible observation(s). Dataset creation is valid, but model training recommends at least 5 observations for stable cross-validation.
+              </div>
+            )}
+
             <div className="gs-metrics-row">
               <div className="gs-metric-card emerald">
                 <span className="gs-metric-label">Eligible Records</span>

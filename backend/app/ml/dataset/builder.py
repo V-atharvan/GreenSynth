@@ -136,7 +136,8 @@ class DatasetBuilder:
 
             # Rule 2: Target Property Presence & Validity
             if target_float is None:
-                reason = f"Missing target property: {self.target_property}"
+                smp_identifier = item.get("sample_code") or smp_id
+                reason = f"Target property {self.target_property} ({self.target_unit}) not found for sample {smp_identifier}"
                 category = "MISSING_TARGET"
                 exclusion_summary[category] = exclusion_summary.get(category, 0) + 1
                 records.append(

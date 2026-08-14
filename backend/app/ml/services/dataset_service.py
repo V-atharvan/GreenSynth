@@ -99,10 +99,21 @@ class MLDatasetService:
                     props_map[cp.property_name] = cp.value
                     prop_units_map[cp.property_name] = cp.unit
                     analysis_run_id = str(cp.analysis_run_id)
+                    logger.info(
+                        "ML Dataset Data Flow — Found CalculatedProperty: exp_id=%s, sample_id=%s (%s), run_id=%s, property_name='%s', value=%s, unit='%s'",
+                        exp.id,
+                        smp.id,
+                        smp.sample_code,
+                        cp.analysis_run_id,
+                        cp.property_name,
+                        cp.value,
+                        cp.unit,
+                    )
 
                 candidate_items.append({
                     "experiment_id": str(exp.id),
                     "sample_id": str(smp.id),
+                    "sample_code": smp.sample_code,
                     "experiment_status": exp.status,
                     "parameters": params_map,
                     "properties": props_map,

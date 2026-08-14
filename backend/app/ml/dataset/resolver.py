@@ -63,15 +63,37 @@ PARAMETER_ALIASES: dict[str, list[str]] = {
 # Canonical target property alias groups: canonical_property -> (list of aliases, default_unit)
 TARGET_PROPERTY_ALIASES: dict[str, tuple[list[str], str]] = {
     "Electrical Conductivity": (
-        ["Electrical Conductivity", "electrical_conductivity", "conductivity", "Conductivity", "sigma"],
+        [
+            "Electrical Conductivity",
+            "electrical_conductivity",
+            "conductivity",
+            "Conductivity",
+            "electricalConductivity",
+            "sigma",
+            "conductivity_s_cm",
+        ],
         "S/cm",
     ),
     "Electrical Resistivity": (
-        ["Electrical Resistivity", "electrical_resistivity", "resistivity", "Resistivity", "rho"],
+        [
+            "Electrical Resistivity",
+            "electrical_resistivity",
+            "resistivity",
+            "Resistivity",
+            "rho",
+            "resistivity_ohm_cm",
+        ],
         "Ohm·cm",
     ),
     "Electrical Resistance": (
-        ["Electrical Resistance", "electrical_resistance", "resistance", "Resistance", "R"],
+        [
+            "Electrical Resistance",
+            "electrical_resistance",
+            "resistance",
+            "Resistance",
+            "R",
+            "resistance_ohms",
+        ],
         "Ohm",
     ),
     "Optical Band Gap": (
@@ -86,6 +108,15 @@ TARGET_PROPERTY_ALIASES: dict[str, tuple[list[str], str]] = {
         ["Particle Size", "particle_size", "grain_size"],
         "nm",
     ),
+}
+
+# Unit Aliases for compatibility matching
+UNIT_ALIASES: dict[str, list[str]] = {
+    "S/cm": ["s/cm", "siemens/cm", "siemens_per_cm", "s·cm⁻¹", "siemens per cm"],
+    "Ohm": ["ohm", "ohms", "Ω"],
+    "Ohm·cm": ["ohm·cm", "ohm*cm", "Ω·cm", "ohm_cm", "ohm cm"],
+    "eV": ["ev", "electronvolt", "electron-volts"],
+    "nm": ["nm", "nanometer", "nanometers"],
 }
 
 
@@ -118,7 +149,6 @@ class ParameterResolver:
     ) -> ResolvedParameter:
         """
         Resolves a requested feature specification against candidate parameters map.
-
         params_map can contain stored parameter_code or parameter_name keys.
         """
         fname = feature_spec.get("feature_name", "")
@@ -176,7 +206,22 @@ class TargetPropertyResolver:
     """Resolves target property queries against calculated properties map."""
 
     @staticmethod
+    def is_unit_compatible(unit_a: str, unit_b: str) -> bool:
+        if not unit_a or not unit_b:
+            return True
+        norm_a = unit_a.lower().strip()
+        norm_b = unit_b.lower().strip()
+        if norm_a == norm_b:
+            return True
+        for canonical_unit, aliases in UNIT_ALIASES.items():
+            all_group = [canonical_unit.lower()] + [a.lower() for a in aliases]
+            if norm_a in all_group and norm_b in all_group:
+                return True
+        return False
+
+    @classmethod
     def resolve_target(
+        cls,
         props_map: dict[str, float],
         prop_units_map: dict[str, str],
         requested_target: str,
@@ -184,52 +229,78 @@ class TargetPropertyResolver:
     ) -> ResolvedTarget:
         """
         Resolves target property value and unit from sample calculated properties map.
+        Guarantees strict separation between Resistance, Resistivity, and Conductivity.
         """
-        # 1. Direct match
-        if requested_target in props_map and props_map[requested_target] is not None:
-            unit = prop_units_map.get(requested_target, requested_unit)
-            return ResolvedTarget(
-                requested_property=requested_target,
-                resolved_property=requested_target,
-                value=props_map[requested_target],
-                unit=unit,
-                is_found=True,
-            )
+        logger.debug(
+            "Target Property Resolver: resolving req_target='%s', req_unit='%s' against props_map=%s",
+            requested_target,
+            requested_unit,
+            props_map,
+        )
 
-        # 2. Case-insensitive / Alias matching
-        norm_props = {str(k).lower().strip(): (k, v) for k, v in props_map.items()}
         req_norm = str(requested_target).lower().strip()
 
-        if req_norm in norm_props:
-            orig_key, val = norm_props[req_norm]
-            unit = prop_units_map.get(orig_key, requested_unit)
-            return ResolvedTarget(
-                requested_property=requested_target,
-                resolved_property=orig_key,
-                value=val,
-                unit=unit,
-                is_found=True,
-            )
+        # Identify target category for strict discrimination
+        target_canonical: str | None = None
+        for canonical, (aliases, _) in TARGET_PROPERTY_ALIASES.items():
+            if req_norm == canonical.lower() or any(req_norm == a.lower() for a in aliases):
+                target_canonical = canonical
+                break
 
-        # Check target property aliases
-        for canonical, (aliases, default_unit) in TARGET_PROPERTY_ALIASES.items():
-            canonical_match = (
-                req_norm == canonical.lower()
-                or any(req_norm == a.lower() for a in aliases)
-            )
-            if canonical_match:
-                for alias in [canonical] + aliases:
-                    alias_norm = alias.lower().strip()
-                    if alias_norm in norm_props:
-                        orig_key, val = norm_props[alias_norm]
+        # 1. Direct match
+        if requested_target in props_map and props_map[requested_target] is not None:
+            val = props_map[requested_target]
+            unit = prop_units_map.get(requested_target, requested_unit)
+            if cls.is_unit_compatible(unit, requested_unit):
+                logger.info(
+                    "Target Property Resolver: EXACT MATCH req='%s' -> found='%s', val=%s %s",
+                    requested_target,
+                    requested_target,
+                    val,
+                    unit,
+                )
+                return ResolvedTarget(
+                    requested_property=requested_target,
+                    resolved_property=requested_target,
+                    value=val,
+                    unit=unit,
+                    is_found=True,
+                )
+
+        # 2. Alias matching within canonical group
+        if target_canonical:
+            aliases, default_unit = TARGET_PROPERTY_ALIASES[target_canonical]
+            norm_props = {str(k).lower().strip(): (k, v) for k, v in props_map.items()}
+
+            for alias in [target_canonical] + aliases:
+                alias_norm = alias.lower().strip()
+                if alias_norm in norm_props:
+                    orig_key, val = norm_props[alias_norm]
+                    if val is not None:
                         unit = prop_units_map.get(orig_key, requested_unit or default_unit)
-                        return ResolvedTarget(
-                            requested_property=requested_target,
-                            resolved_property=orig_key,
-                            value=val,
-                            unit=unit,
-                            is_found=True,
-                        )
+                        if cls.is_unit_compatible(unit, requested_unit):
+                            logger.info(
+                                "Target Property Resolver: ALIAS MATCH req='%s' (group '%s') -> found='%s', val=%s %s",
+                                requested_target,
+                                target_canonical,
+                                orig_key,
+                                val,
+                                unit,
+                            )
+                            return ResolvedTarget(
+                                requested_property=requested_target,
+                                resolved_property=orig_key,
+                                value=val,
+                                unit=unit,
+                                is_found=True,
+                            )
+
+        logger.info(
+            "Target Property Resolver: NOT FOUND req_target='%s', req_unit='%s' in props=%s",
+            requested_target,
+            requested_unit,
+            list(props_map.keys()),
+        )
 
         return ResolvedTarget(
             requested_property=requested_target,

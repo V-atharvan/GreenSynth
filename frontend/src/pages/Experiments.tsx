@@ -82,6 +82,15 @@ export default function Experiments() {
       ])
       setExperiments(exps)
       setProjects(projs)
+
+      if (projs.length > 0) {
+        if (projectFilter && !projs.some((p) => p.id === projectFilter)) {
+          setProjectFilter('')
+        }
+        if (!form.project_id || !projs.some((p) => p.id === form.project_id)) {
+          setForm((prev) => ({ ...prev, project_id: projs[0].id }))
+        }
+      }
     } catch (e: unknown) {
       setError((e as ApiError)?.message ?? 'Failed to load experiments.')
     } finally {
@@ -90,6 +99,15 @@ export default function Experiments() {
   }
 
   useEffect(() => { fetchData() }, [projectFilter, statusFilter])
+
+  const handleOpenCreate = () => {
+    setFormError(null)
+    const validProjId = projects.some((p) => p.id === projectFilter)
+      ? projectFilter
+      : projects[0]?.id ?? ''
+    setForm({ ...EMPTY_FORM, project_id: validProjId })
+    setShowCreate(true)
+  }
 
   // When project_id changes in creation form, fetch parameter definitions
   useEffect(() => {
@@ -209,7 +227,7 @@ export default function Experiments() {
         title="Experiments"
         subtitle={`${experiments.length} experiment${experiments.length !== 1 ? 's' : ''}`}
         actions={
-          <button className="btn btn-primary" onClick={() => setShowCreate(true)}>
+          <button className="btn btn-primary" onClick={handleOpenCreate}>
             + New Experiment
           </button>
         }
@@ -264,7 +282,7 @@ export default function Experiments() {
             title={search || statusFilter || projectFilter ? 'No matching experiments' : 'No experiments yet'}
             description="Create a new experiment to record a laboratory synthesis run."
             action={
-              <button className="btn btn-primary" onClick={() => setShowCreate(true)}>
+              <button className="btn btn-primary" onClick={handleOpenCreate}>
                 Create Experiment
               </button>
             }

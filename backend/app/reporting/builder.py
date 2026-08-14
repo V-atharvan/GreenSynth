@@ -89,8 +89,9 @@ class ExperimentReportDataBuilder:
             })
 
         # Fallback to parameters_json if experiment_parameters table empty
-        if not synthesis_params and exp.parameters_json:
-            for k, v in exp.parameters_json.items():
+        params_json = getattr(exp, "parameters_json", None)
+        if not synthesis_params and params_json:
+            for k, v in params_json.items():
                 synthesis_params.append({
                     "parameter_code": k,
                     "parameter_name": k.replace("_", " ").title(),

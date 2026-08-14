@@ -15,12 +15,25 @@ logger = logging.getLogger(__name__)
 
 # Canonical parameter alias groups: canonical_code -> list of matching aliases/codes/names
 PARAMETER_ALIASES: dict[str, list[str]] = {
+    "substrate_temperature_c": [
+        "substrate_temperature_c",
+        "substrate_temperature",
+        "substrate_temp",
+        "temp",
+        "Substrate Temperature",
+    ],
     "substrate_temperature": [
         "substrate_temperature",
         "substrate_temperature_c",
         "substrate_temp",
         "temp",
         "Substrate Temperature",
+    ],
+    "spray_rate_ml_min": [
+        "spray_rate_ml_min",
+        "spray_rate",
+        "spray_flow_rate",
+        "Spray Rate",
     ],
     "spray_rate": [
         "spray_rate",
@@ -33,30 +46,95 @@ PARAMETER_ALIASES: dict[str, list[str]] = {
         "copper_precursor_concentration",
         "Precursor Concentration",
     ],
+    "precursor_solution_volume": [
+        "precursor_solution_volume",
+        "precursor_volume",
+        "Precursor Solution Volume",
+    ],
     "precursor_volume": [
         "precursor_volume",
         "precursor_solution_volume",
         "Precursor Solution Volume",
+    ],
+    "mulberry_extract_concentration": [
+        "mulberry_extract_concentration",
+        "extract_concentration",
+        "Mulberry Extract Concentration",
     ],
     "extract_concentration": [
         "extract_concentration",
         "mulberry_extract_concentration",
         "Mulberry Extract Concentration",
     ],
+    "mulberry_extract_volume": [
+        "mulberry_extract_volume",
+        "extract_volume",
+        "Mulberry Extract Volume",
+    ],
     "extract_volume": [
         "extract_volume",
         "mulberry_extract_volume",
         "Mulberry Extract Volume",
     ],
+    "ethanol_volume": [
+        "ethanol_volume",
+        "solvent_volume",
+        "Ethanol Volume",
+        "Solvent Volume",
+    ],
     "solvent_volume": [
         "solvent_volume",
+        "ethanol_volume",
         "Solvent Volume",
+        "Ethanol Volume",
+    ],
+    "copper_precursor_salt": [
+        "copper_precursor_salt",
+        "copper_precursor",
+        "precursor_salt",
+        "Copper Precursor Salt",
     ],
     "copper_precursor": [
         "copper_precursor",
         "copper_precursor_salt",
         "precursor_salt",
         "Copper Precursor Salt",
+    ],
+    "substrate_type": [
+        "substrate_type",
+        "Substrate Type",
+        "substrate",
+    ],
+    "spray_duration_min": [
+        "spray_duration_min",
+        "spray_duration",
+        "Spray Duration",
+    ],
+    "nozzle_substrate_distance_cm": [
+        "nozzle_substrate_distance_cm",
+        "nozzle_distance",
+        "Nozzle-to-Substrate Distance",
+    ],
+    "carrier_gas_pressure_kpa": [
+        "carrier_gas_pressure_kpa",
+        "carrier_pressure",
+        "Carrier Gas Pressure",
+    ],
+    "spray_cycles": [
+        "spray_cycles",
+        "Number of Spray Cycles",
+        "cycles",
+    ],
+    "ambient_temperature_c": [
+        "ambient_temperature_c",
+        "ambient_temp",
+        "Ambient Temperature",
+    ],
+    "ambient_relative_humidity": [
+        "ambient_relative_humidity",
+        "ambient_humidity",
+        "humidity",
+        "Ambient Relative Humidity",
     ],
 }
 

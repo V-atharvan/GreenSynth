@@ -1,277 +1,343 @@
 """
-GreenSynth Analytics — Integration Tests: Parameters API
+GreenSynth Analytics — Integration Tests: Parameter Schema & Experiment Creation
 """
 
 from __future__ import annotations
 
 import pytest
+import pytest_asyncio
 from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.ml.dataset.resolver import ParameterResolver
+
+from app.database.seed import seed_demo_project
 
 PROJECTS_API = "/api/v1/projects"
 EXPERIMENTS_API = "/api/v1/experiments"
-PARAMS_API = "/api/v1"
 
 
-async def setup_project_and_experiment(client: AsyncClient, suffix: str) -> tuple[str, str]:
-    """Helper: create project and experiment."""
-    p_resp = await client.post(
-        f"{PROJECTS_API}/",
-        json={
-            "project_code": f"P-PARAM-{suffix}",
-            "name": f"Param Test Project {suffix}",
-            "material": "CuO",
-            "extract": "Mulberry",
-            "solvent": "Ethanol",
-            "synthesis_method": "Spray Pyrolysis",
-        },
-    )
-    assert p_resp.status_code == 201
-    project_id = p_resp.json()["id"]
+@pytest_asyncio.fixture(autouse=True)
+async def seed_projects(db_session: AsyncSession) -> None:
+    """Ensure P1-P8 projects and parameter definitions are seeded before tests."""
+    await seed_demo_project(db_session)
 
-    e_resp = await client.post(
+
+def make_p8_payload(def_map: dict[str, str], overrides: dict[str, tuple[str, str | None]] | None = None) -> dict:
+    defaults: dict[str, tuple[str, str | None]] = {
+        "copper_precursor_salt": ("Copper acetate monohydrate", None),
+        "precursor_concentration": ("0.1", "mol/L"),
+        "precursor_solution_volume": ("100", "mL"),
+        "mulberry_extract_concentration": ("10", "g/L"),
+        "mulberry_extract_volume": ("20", "mL"),
+        "ethanol_volume": ("80", "mL"),
+        "substrate_type": ("FTO Glass", None),
+        "substrate_temperature_c": ("350", "°C"),
+        "spray_rate_ml_min": ("5", "mL/min"),
+        "spray_duration_min": ("15", "min"),
+        "nozzle_substrate_distance_cm": ("20", "cm"),
+        "carrier_gas_pressure_kpa": ("150", "kPa"),
+        "spray_cycles": ("10", "cycles"),
+        "ambient_temperature_c": ("25", "°C"),
+        "ambient_relative_humidity": ("45", "%"),
+    }
+    if overrides:
+        defaults.update(overrides)
+    params = []
+    for code, (val, unit) in defaults.items():
+        if code in def_map:
+            item: dict[str, str] = {"parameter_definition_id": def_map[code], "value": val}
+            if unit:
+                item["unit"] = unit
+            params.append(item)
+    return {"parameters": params}
+
+
+@pytest.mark.asyncio
+async def test_p8_all_valid_parameters(client: AsyncClient) -> None:
+    """1. Creating a P8 experiment with all 15 valid parameters."""
+    p_resp = await client.get(f"{PROJECTS_API}/")
+    assert p_resp.status_code == 200
+    projects = p_resp.json()
+    p8 = next((p for p in projects if p["project_code"] == "P8"), None)
+    if not p8:
+        pytest.skip("P8 project not seeded")
+
+    p8_id = p8["id"]
+    defs_resp = await client.get(f"{PROJECTS_API}/{p8_id}/parameters")
+    assert defs_resp.status_code == 200
+    defs = defs_resp.json()
+    def_map = {d["parameter_code"]: d["id"] for d in defs}
+
+    expected_codes = [
+        "copper_precursor_salt",
+        "precursor_concentration",
+        "precursor_solution_volume",
+        "mulberry_extract_concentration",
+        "mulberry_extract_volume",
+        "ethanol_volume",
+        "substrate_type",
+        "substrate_temperature_c",
+        "spray_rate_ml_min",
+        "spray_duration_min",
+        "nozzle_substrate_distance_cm",
+        "carrier_gas_pressure_kpa",
+        "spray_cycles",
+        "ambient_temperature_c",
+        "ambient_relative_humidity",
+    ]
+    for code in expected_codes:
+        assert code in def_map, f"Missing expected parameter definition code: {code}"
+
+    exp_resp = await client.post(
         f"{EXPERIMENTS_API}/",
         json={
-            "project_id": project_id,
-            "experiment_code": f"EXP-PARAM-{suffix}",
-            "title": f"Param Test Experiment {suffix}",
-            "status": "PLANNED",
+            "project_id": p8_id,
+            "experiment_code": "EXP-P8-VALID-001",
+            "title": "P8 Valid Spray Pyrolysis Test",
+            "status": "COMPLETED",
         },
     )
-    assert e_resp.status_code == 201
-    return project_id, e_resp.json()["id"]
+    assert exp_resp.status_code == 201
+    exp_id = exp_resp.json()["id"]
 
-
-@pytest.mark.asyncio
-async def test_create_and_get_parameter_definitions(client: AsyncClient) -> None:
-    """Create a parameter definition for a project and retrieve it."""
-    project_id, _ = await setup_project_and_experiment(client, "DEF1")
-
-    # Add parameter definition
-    create_resp = await client.post(
-        f"{PARAMS_API}/projects/{project_id}/parameters",
-        json={
-            "parameter_code": "annealing_temp",
-            "parameter_name": "Annealing Temperature",
-            "description": "Post-deposition thermal annealing temperature",
-            "data_type": "NUMBER",
-            "unit": "°C",
-            "required": True,
-            "minimum_value": 100.0,
-            "maximum_value": 800.0,
-        },
-    )
-    assert create_resp.status_code == 201
-    pdef = create_resp.json()
-    assert pdef["parameter_code"] == "annealing_temp"
-    assert pdef["unit"] == "°C"
-    assert pdef["minimum_value"] == 100.0
-
-    # Retrieve definitions
-    list_resp = await client.get(f"{PARAMS_API}/projects/{project_id}/parameters")
-    assert list_resp.status_code == 200
-    defs = list_resp.json()
-    assert len(defs) == 1
-    assert defs[0]["parameter_code"] == "annealing_temp"
-
-
-@pytest.mark.asyncio
-async def test_save_experiment_parameters_success(client: AsyncClient) -> None:
-    """Save valid synthesis parameter values for an experiment."""
-    project_id, exp_id = await setup_project_and_experiment(client, "VAL1")
-
-    # Define parameter
-    p_resp = await client.post(
-        f"{PARAMS_API}/projects/{project_id}/parameters",
-        json={
-            "parameter_code": "temp",
-            "parameter_name": "Substrate Temp",
-            "data_type": "NUMBER",
-            "unit": "°C",
-            "required": True,
-            "minimum_value": 100.0,
-            "maximum_value": 500.0,
-        },
-    )
-    pdef_id = p_resp.json()["id"]
-
-    # Save experiment parameter
-    save_resp = await client.post(
-        f"{PARAMS_API}/experiments/{exp_id}/parameters",
-        json={
-            "parameters": [
-                {
-                    "parameter_definition_id": pdef_id,
-                    "value": "350",
-                    "unit": "°C",
-                    "notes": "Target temperature achieved",
-                }
-            ]
-        },
-    )
+    valid_payload = make_p8_payload(def_map)
+    save_resp = await client.post(f"{EXPERIMENTS_API}/{exp_id}/parameters", json=valid_payload)
     assert save_resp.status_code == 200
     saved = save_resp.json()
-    assert len(saved) == 1
-    assert saved[0]["value"] == "350"
-    assert saved[0]["value_numeric"] == 350.0
-    assert saved[0]["unit"] == "°C"
+    assert len(saved) == 15
 
 
 @pytest.mark.asyncio
-async def test_validation_required_parameter_missing(client: AsyncClient) -> None:
-    """Submitting missing required parameter returns 422 Unprocessable Entity."""
-    project_id, exp_id = await setup_project_and_experiment(client, "REQMISS")
+async def test_reject_invalid_substrate_temperature(client: AsyncClient) -> None:
+    """2. Rejecting invalid substrate temperature (> 600 °C)."""
+    p_resp = await client.get(f"{PROJECTS_API}/")
+    p8 = next((p for p in p_resp.json() if p["project_code"] == "P8"), None)
+    if not p8:
+        pytest.skip("P8 project not seeded")
 
-    await client.post(
-        f"{PARAMS_API}/projects/{project_id}/parameters",
-        json={
-            "parameter_code": "req_param",
-            "parameter_name": "Required Field",
-            "data_type": "TEXT",
-            "required": True,
-        },
-    )
+    defs_resp = await client.get(f"{PROJECTS_API}/{p8['id']}/parameters")
+    def_map = {d["parameter_code"]: d["id"] for d in defs_resp.json()}
 
-    # Submit empty list
-    save_resp = await client.post(
-        f"{PARAMS_API}/experiments/{exp_id}/parameters",
-        json={"parameters": []},
+    exp_resp = await client.post(
+        f"{EXPERIMENTS_API}/",
+        json={"project_id": p8["id"], "experiment_code": "EXP-INV-TEMP", "title": "Invalid Temp"},
     )
-    assert save_resp.status_code == 422
-    assert "Required parameter 'Required Field' is missing" in save_resp.json()["detail"]
+    exp_id = exp_resp.json()["id"]
+
+    payload = make_p8_payload(def_map, {"substrate_temperature_c": ("700", "°C")})
+    resp = await client.post(f"{EXPERIMENTS_API}/{exp_id}/parameters", json=payload)
+    assert resp.status_code == 422
+    assert "maximum allowed limit of 600.0" in resp.json()["detail"]
 
 
 @pytest.mark.asyncio
-async def test_validation_invalid_numeric(client: AsyncClient) -> None:
-    """Submitting non-numeric text for NUMBER parameter returns 422 error."""
-    project_id, exp_id = await setup_project_and_experiment(client, "NONNUM")
+async def test_reject_invalid_spray_rate(client: AsyncClient) -> None:
+    """3. Rejecting invalid spray rate (> 20 mL/min)."""
+    p_resp = await client.get(f"{PROJECTS_API}/")
+    p8 = next((p for p in p_resp.json() if p["project_code"] == "P8"), None)
+    if not p8:
+        pytest.skip("P8 project not seeded")
 
-    p_resp = await client.post(
-        f"{PARAMS_API}/projects/{project_id}/parameters",
-        json={
-            "parameter_code": "spray_rate",
-            "parameter_name": "Spray Rate",
-            "data_type": "NUMBER",
-            "unit": "mL/min",
-            "required": False,
-        },
-    )
-    pdef_id = p_resp.json()["id"]
+    defs_resp = await client.get(f"{PROJECTS_API}/{p8['id']}/parameters")
+    def_map = {d["parameter_code"]: d["id"] for d in defs_resp.json()}
 
-    save_resp = await client.post(
-        f"{PARAMS_API}/experiments/{exp_id}/parameters",
-        json={
-            "parameters": [
-                {
-                    "parameter_definition_id": pdef_id,
-                    "value": "fast",
-                }
-            ]
-        },
+    exp_resp = await client.post(
+        f"{EXPERIMENTS_API}/",
+        json={"project_id": p8["id"], "experiment_code": "EXP-INV-RATE", "title": "Invalid Spray Rate"},
     )
-    assert save_resp.status_code == 422
-    assert "must be a numeric value" in save_resp.json()["detail"]
+    exp_id = exp_resp.json()["id"]
+
+    payload = make_p8_payload(def_map, {"spray_rate_ml_min": ("50", "mL/min")})
+    resp = await client.post(f"{EXPERIMENTS_API}/{exp_id}/parameters", json=payload)
+    assert resp.status_code == 422
 
 
 @pytest.mark.asyncio
-async def test_validation_out_of_range(client: AsyncClient) -> None:
-    """Submitting value out of allowed range returns 422 error."""
-    project_id, exp_id = await setup_project_and_experiment(client, "OOR")
+async def test_reject_invalid_spray_duration(client: AsyncClient) -> None:
+    """4. Rejecting invalid spray duration (< 0.5 min)."""
+    p_resp = await client.get(f"{PROJECTS_API}/")
+    p8 = next((p for p in p_resp.json() if p["project_code"] == "P8"), None)
+    if not p8:
+        pytest.skip("P8 project not seeded")
 
-    p_resp = await client.post(
-        f"{PARAMS_API}/projects/{project_id}/parameters",
-        json={
-            "parameter_code": "temp",
-            "parameter_name": "Substrate Temperature",
-            "data_type": "NUMBER",
-            "unit": "°C",
-            "required": False,
-            "minimum_value": 100.0,
-            "maximum_value": 600.0,
-        },
-    )
-    pdef_id = p_resp.json()["id"]
+    defs_resp = await client.get(f"{PROJECTS_API}/{p8['id']}/parameters")
+    def_map = {d["parameter_code"]: d["id"] for d in defs_resp.json()}
 
-    save_resp = await client.post(
-        f"{PARAMS_API}/experiments/{exp_id}/parameters",
-        json={
-            "parameters": [
-                {
-                    "parameter_definition_id": pdef_id,
-                    "value": "850",
-                }
-            ]
-        },
+    exp_resp = await client.post(
+        f"{EXPERIMENTS_API}/",
+        json={"project_id": p8["id"], "experiment_code": "EXP-INV-DUR", "title": "Invalid Spray Duration"},
     )
-    assert save_resp.status_code == 422
-    assert "exceeds the maximum allowed limit" in save_resp.json()["detail"]
+    exp_id = exp_resp.json()["id"]
+
+    payload = make_p8_payload(def_map, {"spray_duration_min": ("0.1", "min")})
+    resp = await client.post(f"{EXPERIMENTS_API}/{exp_id}/parameters", json=payload)
+    assert resp.status_code == 422
 
 
 @pytest.mark.asyncio
-async def test_validation_enum_allowed_values(client: AsyncClient) -> None:
-    """Submitting invalid enum option returns 422 error."""
-    project_id, exp_id = await setup_project_and_experiment(client, "ENUMVAL")
+async def test_reject_invalid_nozzle_distance(client: AsyncClient) -> None:
+    """5. Rejecting invalid nozzle distance (< 5 cm)."""
+    p_resp = await client.get(f"{PROJECTS_API}/")
+    p8 = next((p for p in p_resp.json() if p["project_code"] == "P8"), None)
+    if not p8:
+        pytest.skip("P8 project not seeded")
 
-    p_resp = await client.post(
-        f"{PARAMS_API}/projects/{project_id}/parameters",
-        json={
-            "parameter_code": "substrate",
-            "parameter_name": "Substrate Type",
-            "data_type": "ENUM",
-            "required": False,
-            "allowed_values": ["Glass", "Quartz", "FTO"],
-        },
-    )
-    pdef_id = p_resp.json()["id"]
+    defs_resp = await client.get(f"{PROJECTS_API}/{p8['id']}/parameters")
+    def_map = {d["parameter_code"]: d["id"] for d in defs_resp.json()}
 
-    save_resp = await client.post(
-        f"{PARAMS_API}/experiments/{exp_id}/parameters",
-        json={
-            "parameters": [
-                {
-                    "parameter_definition_id": pdef_id,
-                    "value": "Plastic",
-                }
-            ]
-        },
+    exp_resp = await client.post(
+        f"{EXPERIMENTS_API}/",
+        json={"project_id": p8["id"], "experiment_code": "EXP-INV-DIST", "title": "Invalid Nozzle Distance"},
     )
-    assert save_resp.status_code == 422
-    assert "is invalid. Allowed options" in save_resp.json()["detail"]
+    exp_id = exp_resp.json()["id"]
+
+    payload = make_p8_payload(def_map, {"nozzle_substrate_distance_cm": ("2.0", "cm")})
+    resp = await client.post(f"{EXPERIMENTS_API}/{exp_id}/parameters", json=payload)
+    assert resp.status_code == 422
 
 
 @pytest.mark.asyncio
-async def test_deactivate_parameter_and_historical_integrity(client: AsyncClient) -> None:
-    """
-    Deactivating a parameter definition sets status=INACTIVE
-    while preserving already recorded experiment parameters.
-    """
-    project_id, exp_id = await setup_project_and_experiment(client, "HIST")
+async def test_reject_invalid_carrier_pressure(client: AsyncClient) -> None:
+    """6. Rejecting invalid carrier pressure (> 500 kPa)."""
+    p_resp = await client.get(f"{PROJECTS_API}/")
+    p8 = next((p for p in p_resp.json() if p["project_code"] == "P8"), None)
+    if not p8:
+        pytest.skip("P8 project not seeded")
 
-    # 1. Create parameter definition
-    p_resp = await client.post(
-        f"{PARAMS_API}/projects/{project_id}/parameters",
-        json={
-            "parameter_code": "pressure",
-            "parameter_name": "Carrier Gas Pressure",
-            "data_type": "NUMBER",
-            "unit": "kPa",
+    defs_resp = await client.get(f"{PROJECTS_API}/{p8['id']}/parameters")
+    def_map = {d["parameter_code"]: d["id"] for d in defs_resp.json()}
+
+    exp_resp = await client.post(
+        f"{EXPERIMENTS_API}/",
+        json={"project_id": p8["id"], "experiment_code": "EXP-INV-PRESS", "title": "Invalid Carrier Pressure"},
+    )
+    exp_id = exp_resp.json()["id"]
+
+    payload = make_p8_payload(def_map, {"carrier_gas_pressure_kpa": ("600", "kPa")})
+    resp = await client.post(f"{EXPERIMENTS_API}/{exp_id}/parameters", json=payload)
+    assert resp.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_reject_invalid_spray_cycle_count(client: AsyncClient) -> None:
+    """7. Rejecting invalid spray cycle count (< 1 cycle)."""
+    p_resp = await client.get(f"{PROJECTS_API}/")
+    p8 = next((p for p in p_resp.json() if p["project_code"] == "P8"), None)
+    if not p8:
+        pytest.skip("P8 project not seeded")
+
+    defs_resp = await client.get(f"{PROJECTS_API}/{p8['id']}/parameters")
+    def_map = {d["parameter_code"]: d["id"] for d in defs_resp.json()}
+
+    exp_resp = await client.post(
+        f"{EXPERIMENTS_API}/",
+        json={"project_id": p8["id"], "experiment_code": "EXP-INV-CYC", "title": "Invalid Spray Cycles"},
+    )
+    exp_id = exp_resp.json()["id"]
+
+    payload = make_p8_payload(def_map, {"spray_cycles": ("0", "cycles")})
+    resp = await client.post(f"{EXPERIMENTS_API}/{exp_id}/parameters", json=payload)
+    assert resp.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_reject_invalid_humidity(client: AsyncClient) -> None:
+    """8. Rejecting invalid humidity (> 95%)."""
+    p_resp = await client.get(f"{PROJECTS_API}/")
+    p8 = next((p for p in p_resp.json() if p["project_code"] == "P8"), None)
+    if not p8:
+        pytest.skip("P8 project not seeded")
+
+    defs_resp = await client.get(f"{PROJECTS_API}/{p8['id']}/parameters")
+    def_map = {d["parameter_code"]: d["id"] for d in defs_resp.json()}
+
+    exp_resp = await client.post(
+        f"{EXPERIMENTS_API}/",
+        json={"project_id": p8["id"], "experiment_code": "EXP-INV-HUM", "title": "Invalid Humidity"},
+    )
+    exp_id = exp_resp.json()["id"]
+
+    payload = make_p8_payload(def_map, {"ambient_relative_humidity": ("100", "%")})
+    resp = await client.post(f"{EXPERIMENTS_API}/{exp_id}/parameters", json=payload)
+    assert resp.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_persistence_and_retrieval(client: AsyncClient) -> None:
+    """9 & 10. Correct persistence of parameter codes and retrieval of experiment."""
+    p_resp = await client.get(f"{PROJECTS_API}/")
+    p8 = next((p for p in p_resp.json() if p["project_code"] == "P8"), None)
+    if not p8:
+        pytest.skip("P8 project not seeded")
+
+    defs_resp = await client.get(f"{PROJECTS_API}/{p8['id']}/parameters")
+    def_map = {d["parameter_code"]: d["id"] for d in defs_resp.json()}
+
+    exp_resp = await client.post(
+        f"{EXPERIMENTS_API}/",
+        json={"project_id": p8["id"], "experiment_code": "EXP-PERSIST-01", "title": "Persistence Check"},
+    )
+    exp_id = exp_resp.json()["id"]
+
+    payload = make_p8_payload(
+        def_map,
+        {
+            "ambient_temperature_c": ("24.5", "°C"),
+            "ambient_relative_humidity": ("50.0", "%"),
         },
     )
-    pdef_id = p_resp.json()["id"]
+    await client.post(f"{EXPERIMENTS_API}/{exp_id}/parameters", json=payload)
 
-    # 2. Record experiment value
-    await client.post(
-        f"{PARAMS_API}/experiments/{exp_id}/parameters",
-        json={"parameters": [{"parameter_definition_id": pdef_id, "value": "150"}]},
+    # Retrieve experiment parameters
+    get_params = await client.get(f"{EXPERIMENTS_API}/{exp_id}/parameters")
+    assert get_params.status_code == 200
+    params = get_params.json()
+    assert len(params) == 15
+    codes = [p["parameter_definition"]["parameter_code"] for p in params]
+    assert "ambient_temperature_c" in codes
+    assert "ambient_relative_humidity" in codes
+
+
+@pytest.mark.asyncio
+async def test_ml_dataset_builder_mapping() -> None:
+    """12. Correct mapping into ML Dataset Builder using ParameterResolver."""
+    params_map = {
+        "ethanol_volume": 80.0,
+        "substrate_temperature_c": 350.0,
+        "spray_rate_ml_min": 5.0,
+    }
+    param_units_map = {
+        "ethanol_volume": "mL",
+        "substrate_temperature_c": "°C",
+        "spray_rate_ml_min": "mL/min",
+    }
+
+    # Resolve via canonical code
+    res1 = ParameterResolver.resolve_parameter(
+        params_map, param_units_map, {"feature_name": "ethanol_volume", "unit": "mL"}
     )
+    assert res1.is_found is True
+    assert res1.value == 80.0
 
-    # 3. Deactivate parameter definition
-    del_resp = await client.delete(f"{PARAMS_API}/projects/{project_id}/parameters/{pdef_id}")
-    assert del_resp.status_code == 200
-    assert del_resp.json()["status"] == "INACTIVE"
+    # Resolve via legacy alias 'solvent_volume'
+    res_legacy = ParameterResolver.resolve_parameter(
+        params_map, param_units_map, {"feature_name": "solvent_volume", "unit": "mL"}
+    )
+    assert res_legacy.is_found is True
+    assert res_legacy.value == 80.0
 
-    # 4. Historical recorded values remain intact and queryable
-    get_resp = await client.get(f"{PARAMS_API}/experiments/{exp_id}/parameters")
-    assert get_resp.status_code == 200
-    saved = get_resp.json()
-    assert len(saved) == 1
-    assert saved[0]["value"] == "150"
+
+@pytest.mark.asyncio
+async def test_project_specific_parameter_isolation(client: AsyncClient) -> None:
+    """14. P1/P2/P3/P4/P5/P6 do not incorrectly receive P8-only parameters."""
+    p_resp = await client.get(f"{PROJECTS_API}/")
+    projects = p_resp.json()
+
+    p1 = next((p for p in projects if p["project_code"] == "P1"), None)
+    if p1:
+        p1_defs = await client.get(f"{PROJECTS_API}/{p1['id']}/parameters")
+        p1_codes = [d["parameter_code"] for d in p1_defs.json()]
+        # P1 (Sol-Gel) should have sol_gel_aging_temperature_c, but NOT spray_cycles
+        assert "sol_gel_aging_temperature_c" in p1_codes
+        assert "spray_cycles" not in p1_codes

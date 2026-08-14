@@ -110,9 +110,14 @@ class ExperimentService:
         try:
             await project_service.get_by_id(data.project_id)
         except ProjectNotFoundError:
-            raise ProjectNotFoundError(
-                f"Cannot create experiment: project {data.project_id} not found."
-            )
+            # Fallback check if project_id was passed as project_code (e.g., 'P7')
+            proj_by_code = await project_service.get_by_code(data.project_id)
+            if proj_by_code is not None:
+                data.project_id = str(proj_by_code.id)
+            else:
+                raise ProjectNotFoundError(
+                    f"Cannot create experiment: project {data.project_id} not found."
+                )
 
         # Check code uniqueness
         existing = await self.get_by_code(data.experiment_code)

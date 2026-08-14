@@ -245,7 +245,7 @@ async def create_optimization_run(
         {
             "id": str(e.id),
             "experiment_code": e.experiment_code,
-            "parameter_values": e.parameters_json or {},
+            "parameter_values": getattr(e, "parameters_json", None) or {},
         }
         for e in exp_res.scalars().all()
     ]
@@ -480,9 +480,8 @@ async def create_proposed_experiment_from_candidate(
         project_id=opt_run.project_id,
         experiment_code=exp_code,
         title=f"Proposed Experiment from Optimization Candidate Rank #{cand.rank}",
-        objective=f"Physical laboratory validation of candidate conditions (Candidate Rank #{cand.rank})",
-        parameters_json=cand.parameter_values,
         status=ExperimentStatus.PLANNED,
+        notes=f"Physical laboratory validation of candidate conditions (Candidate Rank #{cand.rank})",
     )
     db.add(exp)
     await db.flush()

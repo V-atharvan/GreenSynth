@@ -1,5 +1,11 @@
+/**
+ * GreenSynth Analytics — DOE Factor Effects & Response Surface View Component
+ * Theme-aligned light-mode UI/UX for statistical main effects and response surface fit metrics.
+ */
+
 import React, { useEffect, useState } from 'react';
 import { DOEAnalysisResponse, DOEResponse, doeService } from '../../services/doeService';
+import { BarChart3, Info, AlertTriangle, Layers } from 'lucide-react';
 
 interface DOEAnalysisViewProps {
   doe: DOEResponse;
@@ -31,18 +37,55 @@ export const DOEAnalysisView: React.FC<DOEAnalysisViewProps> = ({ doe }) => {
   const mainEffectsKeys = analysis?.main_effects ? Object.keys(analysis.main_effects) : [];
 
   return (
-    <div className="space-y-6">
-      {/* Target Selector & Status */}
-      <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl flex justify-between items-center text-slate-100">
-        <div>
-          <h3 className="text-sm font-bold text-white uppercase tracking-wider">DOE Factor Effects & Response Surface Fit</h3>
-          <p className="text-xs text-slate-400 mt-0.5">Statistical estimation of main factor effects and interaction models</p>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      {/* Target Selector & Header Banner */}
+      <div
+        className="gs-panel"
+        style={{
+          padding: '18px 24px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: 16,
+          background: '#ffffff',
+          borderRadius: 'var(--radius-lg)',
+          border: '1px solid var(--color-border)',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div
+            style={{
+              width: 38,
+              height: 38,
+              borderRadius: 'var(--radius-md)',
+              background: 'var(--color-bg)',
+              color: 'var(--color-primary)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: '1px solid var(--color-border)',
+            }}
+          >
+            <BarChart3 className="w-5 h-5" />
+          </div>
+          <div>
+            <h3 style={{ fontSize: '1rem', fontWeight: 700, margin: 0, color: 'var(--color-text)' }}>
+              DOE Factor Main Effects &amp; Response Surface Fit
+            </h3>
+            <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', margin: '2px 0 0 0' }}>
+              Statistical estimation of main factor effects and response surface models for {doe.name}
+            </p>
+          </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <label className="text-xs text-slate-400 uppercase font-semibold">Response Property:</label>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <label className="form-label" style={{ fontSize: '0.8125rem', fontWeight: 600, margin: 0 }}>
+            Response Property:
+          </label>
           <select
-            className="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500 font-medium"
+            className="form-control"
+            style={{ width: 'auto', fontSize: '0.8125rem', fontWeight: 600, padding: '6px 12px' }}
             value={targetProperty}
             onChange={(e) => setTargetProperty(e.target.value)}
           >
@@ -54,111 +97,173 @@ export const DOEAnalysisView: React.FC<DOEAnalysisViewProps> = ({ doe }) => {
       </div>
 
       {error && (
-        <div className="p-3 bg-rose-950/80 border border-rose-800 text-rose-200 rounded-lg text-xs">
-          <strong>Error:</strong> {error}
+        <div
+          style={{
+            padding: '12px 16px',
+            background: '#fef2f2',
+            border: '1px solid #fecaca',
+            color: '#991b1b',
+            borderRadius: 'var(--radius-md)',
+            fontSize: '0.875rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+          }}
+        >
+          <AlertTriangle className="w-4 h-4" />
+          <span><strong>Error:</strong> {error}</span>
         </div>
       )}
 
       {loading && (
-        <div className="p-8 text-center text-slate-400 text-xs animate-pulse">
-          Computing Main Effects & Polynomial Response Surface Regression...
+        <div className="gs-panel" style={{ padding: '40px', textAlign: 'center', color: 'var(--color-text-secondary)', fontSize: '0.875rem' }}>
+          Computing main factor effects &amp; response surface regression model...
         </div>
       )}
 
       {analysis && !loading && (
-        <div className="space-y-6">
-          {/* Main Effects SVG Visualization */}
-          <div className="p-5 bg-slate-900 border border-slate-800 rounded-xl space-y-4 shadow-lg">
-            <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
-              <span>📈</span> Factor Main Effects Plot (E_A = Y_high - Y_low)
-            </h4>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {mainEffectsKeys.map((key) => {
-                const item = analysis.main_effects[key];
-                const effect = item.estimated_main_effect;
-                const isPos = effect >= 0;
-                return (
-                  <div key={key} className="p-4 bg-slate-950 border border-slate-800 rounded-xl space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs font-bold text-slate-200 capitalize">{key.replace('_', ' ')}</span>
-                      <span
-                        className={`text-xs font-extrabold font-mono px-2 py-0.5 rounded ${
-                          isPos
-                            ? 'bg-emerald-950 text-emerald-300 border border-emerald-800'
-                            : 'bg-rose-950 text-rose-300 border border-rose-800'
-                        }`}
-                      >
-                        {isPos ? `+${effect}` : effect}
-                      </span>
-                    </div>
-
-                    {/* SVG Effect Bar */}
-                    <div className="h-16 bg-slate-900 rounded-lg p-2 relative flex items-center justify-center border border-slate-800">
-                      <svg className="w-full h-full" viewBox="0 0 200 40">
-                        {/* Zero Line */}
-                        <line x1="100" y1="5" x2="100" y2="35" stroke="#475569" strokeDasharray="3 3" strokeWidth="1.5" />
-                        {/* Bar */}
-                        {isPos ? (
-                          <rect
-                            x="100"
-                            y="12"
-                            width={Math.min(Math.abs(effect) * 20, 85)}
-                            height="16"
-                            fill="#10b981"
-                            rx="3"
-                          />
-                        ) : (
-                          <rect
-                            x={100 - Math.min(Math.abs(effect) * 20, 85)}
-                            y="12"
-                            width={Math.min(Math.abs(effect) * 20, 85)}
-                            height="16"
-                            fill="#f43f5e"
-                            rx="3"
-                          />
-                        )}
-                      </svg>
-                    </div>
-
-                    <div className="text-[10px] text-slate-400 flex justify-between">
-                      <span>Observed count: {item.n_observations}</span>
-                      <span>Level Means: {Object.keys(item.level_means).length} levels</span>
-                    </div>
-                  </div>
-                );
-              })}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          {/* Main Effects Plot */}
+          <div
+            className="gs-panel"
+            style={{
+              padding: 24,
+              background: '#ffffff',
+              borderRadius: 'var(--radius-lg)',
+              border: '1px solid var(--color-border)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 16,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <h4 style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span>📈</span> Factor Main Effects Plot (E_A = Y_high - Y_low)
+              </h4>
+              <span className="badge badge-planned font-mono">
+                Sample Size N = {analysis.sample_count}
+              </span>
             </div>
+
+            {mainEffectsKeys.length > 0 ? (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
+                {mainEffectsKeys.map((key) => {
+                  const item = analysis.main_effects[key];
+                  const effect = item.estimated_main_effect;
+                  const isPos = effect >= 0;
+                  return (
+                    <div
+                      key={key}
+                      style={{
+                        background: 'var(--color-bg)',
+                        border: '1px solid var(--color-border)',
+                        borderRadius: 'var(--radius-md)',
+                        padding: 16,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 12,
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '0.875rem', fontWeight: 600, textTransform: 'capitalize', color: 'var(--color-text)' }}>
+                          {key.replace(/_/g, ' ')}
+                        </span>
+                        <span
+                          className={`badge ${isPos ? 'badge-completed' : 'badge-failed'}`}
+                          style={{ fontFamily: 'monospace', fontWeight: 700 }}
+                        >
+                          {isPos ? `+${effect}` : effect}
+                        </span>
+                      </div>
+
+                      {/* SVG Bar Representation */}
+                      <div
+                        style={{
+                          height: 44,
+                          background: '#ffffff',
+                          borderRadius: 'var(--radius-sm)',
+                          border: '1px solid var(--color-border-light)',
+                          padding: '4px 8px',
+                          position: 'relative',
+                          display: 'flex',
+                          alignItems: 'center',
+                        }}
+                      >
+                        <svg className="w-full h-full" viewBox="0 0 200 40">
+                          <line x1="100" y1="4" x2="100" y2="36" stroke="var(--color-border-dark)" strokeDasharray="3 3" strokeWidth="1.5" />
+                          {isPos ? (
+                            <rect
+                              x="100"
+                              y="12"
+                              width={Math.min(Math.abs(effect) * 20, 85)}
+                              height="16"
+                              fill="var(--color-success)"
+                              rx="3"
+                            />
+                          ) : (
+                            <rect
+                              x={100 - Math.min(Math.abs(effect) * 20, 85)}
+                              y="12"
+                              width={Math.min(Math.abs(effect) * 20, 85)}
+                              height="16"
+                              fill="var(--color-danger)"
+                              rx="3"
+                            />
+                          )}
+                        </svg>
+                      </div>
+
+                      <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', display: 'flex', justifyContent: 'space-between' }}>
+                        <span>Observations: {item.n_observations}</span>
+                        <span>Level Means: {Object.keys(item.level_means).length}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div style={{ padding: '24px', textAlign: 'center', color: 'var(--color-text-secondary)', background: 'var(--color-bg)', borderRadius: 'var(--radius-md)', fontSize: '0.875rem' }}>
+                <Info className="w-5 h-5 mx-auto mb-2 text-slate-400" />
+                No measured response data recorded yet for {targetProperty}. Complete proposed DOE experiments to calculate factor main effects.
+              </div>
+            )}
           </div>
 
           {/* Response Surface Fit Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl text-center">
-              <div className="text-xs text-slate-400 uppercase font-medium">Sample Size (n)</div>
-              <div className="text-xl font-extrabold text-white mt-1 font-mono">{analysis.sample_count}</div>
-            </div>
-            <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl text-center">
-              <div className="text-xs text-slate-400 uppercase font-medium">R² Fit Metric</div>
-              <div className="text-xl font-extrabold text-emerald-400 mt-1 font-mono">
-                {analysis.fit_metrics.r2 !== undefined && analysis.fit_metrics.r2 !== null
-                  ? analysis.fit_metrics.r2
-                  : 'N/A'}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16 }}>
+            <div style={{ background: '#ffffff', padding: 16, borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-border)', textAlign: 'center' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase', fontWeight: 600 }}>
+                Sample Size (n)
+              </div>
+              <div style={{ fontSize: '1.25rem', fontWeight: 800, marginTop: 4, fontFamily: 'monospace', color: 'var(--color-text)' }}>
+                {analysis.sample_count}
               </div>
             </div>
-            <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl text-center">
-              <div className="text-xs text-slate-400 uppercase font-medium">Adjusted R²</div>
-              <div className="text-xl font-extrabold text-indigo-400 mt-1 font-mono">
-                {analysis.fit_metrics.adjusted_r2 !== undefined && analysis.fit_metrics.adjusted_r2 !== null
-                  ? analysis.fit_metrics.adjusted_r2
-                  : 'N/A'}
+
+            <div style={{ background: '#ffffff', padding: 16, borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-border)', textAlign: 'center' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase', fontWeight: 600 }}>
+                R² Fit Metric
+              </div>
+              <div style={{ fontSize: '1.25rem', fontWeight: 800, marginTop: 4, fontFamily: 'monospace', color: 'var(--color-primary)' }}>
+                {analysis.fit_metrics.r2 !== undefined && analysis.fit_metrics.r2 !== null ? analysis.fit_metrics.r2 : 'N/A'}
               </div>
             </div>
-            <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl text-center">
-              <div className="text-xs text-slate-400 uppercase font-medium">RMSE Residual Error</div>
-              <div className="text-xl font-extrabold text-amber-400 mt-1 font-mono">
-                {analysis.fit_metrics.rmse !== undefined && analysis.fit_metrics.rmse !== null
-                  ? analysis.fit_metrics.rmse
-                  : 'N/A'}
+
+            <div style={{ background: '#ffffff', padding: 16, borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-border)', textAlign: 'center' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase', fontWeight: 600 }}>
+                Adjusted R²
+              </div>
+              <div style={{ fontSize: '1.25rem', fontWeight: 800, marginTop: 4, fontFamily: 'monospace', color: '#4f46e5' }}>
+                {analysis.fit_metrics.adjusted_r2 !== undefined && analysis.fit_metrics.adjusted_r2 !== null ? analysis.fit_metrics.adjusted_r2 : 'N/A'}
+              </div>
+            </div>
+
+            <div style={{ background: '#ffffff', padding: 16, borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-border)', textAlign: 'center' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase', fontWeight: 600 }}>
+                RMSE Residual Error
+              </div>
+              <div style={{ fontSize: '1.25rem', fontWeight: 800, marginTop: 4, fontFamily: 'monospace', color: '#d97706' }}>
+                {analysis.fit_metrics.rmse !== undefined && analysis.fit_metrics.rmse !== null ? analysis.fit_metrics.rmse : 'N/A'}
               </div>
             </div>
           </div>

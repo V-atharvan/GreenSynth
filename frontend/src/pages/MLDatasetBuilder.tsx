@@ -6,6 +6,7 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Database, Plus, Trash2, CheckCircle2, AlertCircle, ArrowLeft } from 'lucide-react'
 import { projectService } from '@/services/projectService'
+import { parameterService } from '@/services/parameterService'
 import type { ProjectSummary } from '@/types'
 import { mlService, MLDataset, MLDatasetFeatureSpec, MLDatasetRecord } from '@/services/mlService'
 
@@ -21,12 +22,18 @@ export default function MLDatasetBuilder() {
 
   const [features, setFeatures] = useState<MLDatasetFeatureSpec[]>([
     { feature_name: 'precursor_concentration', source_parameter: 'precursor_concentration', unit: 'mol/L', data_type: 'NUMBER' },
-    { feature_name: 'precursor_volume', source_parameter: 'precursor_volume', unit: 'mL', data_type: 'NUMBER' },
-    { feature_name: 'extract_concentration', source_parameter: 'extract_concentration', unit: 'g/L', data_type: 'NUMBER' },
-    { feature_name: 'extract_volume', source_parameter: 'extract_volume', unit: 'mL', data_type: 'NUMBER' },
-    { feature_name: 'solvent_volume', source_parameter: 'solvent_volume', unit: 'mL', data_type: 'NUMBER' },
-    { feature_name: 'substrate_temperature', source_parameter: 'substrate_temperature', unit: '°C', data_type: 'NUMBER' },
-    { feature_name: 'spray_rate', source_parameter: 'spray_rate', unit: 'mL/min', data_type: 'NUMBER' },
+    { feature_name: 'precursor_solution_volume', source_parameter: 'precursor_solution_volume', unit: 'mL', data_type: 'NUMBER' },
+    { feature_name: 'mulberry_extract_concentration', source_parameter: 'mulberry_extract_concentration', unit: 'g/L', data_type: 'NUMBER' },
+    { feature_name: 'mulberry_extract_volume', source_parameter: 'mulberry_extract_volume', unit: 'mL', data_type: 'NUMBER' },
+    { feature_name: 'ethanol_volume', source_parameter: 'ethanol_volume', unit: 'mL', data_type: 'NUMBER' },
+    { feature_name: 'substrate_temperature_c', source_parameter: 'substrate_temperature_c', unit: '°C', data_type: 'NUMBER' },
+    { feature_name: 'spray_rate_ml_min', source_parameter: 'spray_rate_ml_min', unit: 'mL/min', data_type: 'NUMBER' },
+    { feature_name: 'spray_duration_min', source_parameter: 'spray_duration_min', unit: 'min', data_type: 'NUMBER' },
+    { feature_name: 'nozzle_substrate_distance_cm', source_parameter: 'nozzle_substrate_distance_cm', unit: 'cm', data_type: 'NUMBER' },
+    { feature_name: 'carrier_gas_pressure_kpa', source_parameter: 'carrier_gas_pressure_kpa', unit: 'kPa', data_type: 'NUMBER' },
+    { feature_name: 'spray_cycles', source_parameter: 'spray_cycles', unit: 'cycles', data_type: 'NUMBER' },
+    { feature_name: 'ambient_temperature_c', source_parameter: 'ambient_temperature_c', unit: '°C', data_type: 'NUMBER' },
+    { feature_name: 'ambient_relative_humidity', source_parameter: 'ambient_relative_humidity', unit: '%', data_type: 'NUMBER' },
   ])
 
   const [building, setBuilding] = useState<boolean>(false)
@@ -48,6 +55,29 @@ export default function MLDatasetBuilder() {
     }
     loadProjects()
   }, [])
+
+  useEffect(() => {
+    if (!selectedProject) return
+    async function syncProjectFeatures() {
+      try {
+        const defs = await parameterService.getProjectParameters(selectedProject)
+        const numDefs = defs.filter((d) => d.data_type === 'NUMBER')
+        if (numDefs.length > 0) {
+          setFeatures(
+            numDefs.map((d) => ({
+              feature_name: d.parameter_code,
+              source_parameter: d.parameter_code,
+              unit: d.unit ?? '',
+              data_type: 'NUMBER',
+            }))
+          )
+        }
+      } catch (err) {
+        console.error('Failed to sync project parameter features:', err)
+      }
+    }
+    syncProjectFeatures()
+  }, [selectedProject])
 
   const handleAddFeature = () => {
     setFeatures([

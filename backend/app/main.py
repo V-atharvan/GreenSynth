@@ -42,11 +42,35 @@ async def lifespan(app: FastAPI):
     from app.database.session import async_engine, AsyncSessionLocal
     from app.database.seed import seed_demo_project
 
+    # Drop empty legacy 'does' & 'proposed_experiments' tables if missing columns so create_all builds clean schema
+    async with AsyncSessionLocal() as session:
+        try:
+            from sqlalchemy import text
+            res = await session.execute(text("PRAGMA table_info(does)"))
+            cols = {row[1] for row in res.fetchall()}
+            if cols and ("research_question" not in cols or "version" not in cols):
+                cnt_res = await session.execute(text("SELECT COUNT(*) FROM does"))
+                if cnt_res.scalar() == 0:
+                    await session.execute(text("DROP TABLE does"))
+                    await session.commit()
+                    logger.info("Dropped empty legacy 'does' table for clean schema creation.")
+
+            res_pe = await session.execute(text("PRAGMA table_info(proposed_experiments)"))
+            cols_pe = {row[1] for row in res_pe.fetchall()}
+            if cols_pe and "is_center_point" not in cols_pe:
+                cnt_pe = await session.execute(text("SELECT COUNT(*) FROM proposed_experiments"))
+                if cnt_pe.scalar() == 0:
+                    await session.execute(text("DROP TABLE proposed_experiments"))
+                    await session.commit()
+                    logger.info("Dropped empty legacy 'proposed_experiments' table for clean schema creation.")
+        except Exception as exc:
+            logger.warning("Schema check warning: %s", exc)
+
     # Ensure tables exist
     async with async_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
-    # Seed demo Project 7 configuration
+    # Seed demo project configurations
     async with AsyncSessionLocal() as session:
         try:
             await seed_demo_project(session)

@@ -67,10 +67,18 @@ class DOEExperimentLinker:
                 continue
             res_pd = await self.db.execute(
                 select(ParameterDefinition).where(
-                    ParameterDefinition.parameter_code == param_code
+                    ParameterDefinition.parameter_code == param_code,
+                    ParameterDefinition.project_id == project_id,
                 )
             )
-            pdef = res_pd.scalar_one_or_none()
+            pdef = res_pd.scalars().first()
+            if not pdef:
+                res_pd_fallback = await self.db.execute(
+                    select(ParameterDefinition).where(
+                        ParameterDefinition.parameter_code == param_code
+                    )
+                )
+                pdef = res_pd_fallback.scalars().first()
             if pdef:
                 ep = ExperimentParameter(
                     id=uuid.uuid4(),

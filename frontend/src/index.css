@@ -298,6 +298,20 @@ tbody tr:last-child td {
   background: var(--color-danger-bg);
 }
 
+.btn-danger-filled {
+  background: var(--color-danger);
+  color: #ffffff;
+  border-color: var(--color-danger);
+}
+.btn-danger-filled:hover:not(:disabled) {
+  background: #a93226;
+  border-color: #a93226;
+}
+.btn-danger-filled:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .btn-sm {
   padding: var(--space-1) var(--space-3);
   font-size: 0.8125rem;

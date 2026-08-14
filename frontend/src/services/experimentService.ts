@@ -36,6 +36,10 @@ export const experimentService = {
     return response.data
   },
 
+  async delete(id: string): Promise<void> {
+    await apiClient.delete(`/experiments/${id}`)
+  },
+
   async archive(id: string): Promise<void> {
     await apiClient.delete(`/experiments/${id}`)
   },

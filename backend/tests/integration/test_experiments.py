@@ -132,8 +132,8 @@ async def test_update_experiment_status(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
-async def test_delete_experiment_archives_it(client: AsyncClient) -> None:
-    """DELETE /experiments/{id} soft-deletes the experiment."""
+async def test_delete_experiment_permanently(client: AsyncClient) -> None:
+    """DELETE /experiments/{id} permanently deletes the experiment."""
     project_id = await create_test_project(client, "P-DELEXP-TEST")
     create_resp = await client.post(
         f"{EXPERIMENTS_API}/",
@@ -146,10 +146,15 @@ async def test_delete_experiment_archives_it(client: AsyncClient) -> None:
     )
     exp_id = create_resp.json()["id"]
 
+    # Delete experiment
     del_resp = await client.delete(f"{EXPERIMENTS_API}/{exp_id}")
     assert del_resp.status_code == 204
 
-    # Should not appear in default list
-    list_resp = await client.get(f"{EXPERIMENTS_API}/?project_id={project_id}")
+    # Getting the experiment now should return 404 Not Found
+    get_resp = await client.get(f"{EXPERIMENTS_API}/{exp_id}")
+    assert get_resp.status_code == 404
+
+    # Should not appear in list even with include_archived=True
+    list_resp = await client.get(f"{EXPERIMENTS_API}/?project_id={project_id}&include_archived=true")
     ids = [e["id"] for e in list_resp.json()]
     assert exp_id not in ids

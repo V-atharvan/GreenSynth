@@ -5,7 +5,7 @@
  */
 
 import React, { useEffect, useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import type {
   ExperimentCreate,
   ExperimentStatus,
@@ -44,7 +44,11 @@ const EMPTY_FORM: ExperimentCreate = {
 export default function Experiments() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
+  const location = useLocation()
 
+  const [notification, setNotification] = useState<string | null>(
+    (location.state as { notification?: string } | null)?.notification ?? null
+  )
   const [experiments, setExperiments] = useState<ExperimentSummary[]>([])
   const [projects, setProjects] = useState<ProjectSummary[]>([])
   const [loading, setLoading] = useState(true)
@@ -164,6 +168,43 @@ export default function Experiments() {
 
   return (
     <div>
+      {notification && (
+        <div
+          style={{
+            backgroundColor: '#ecfdf5',
+            borderLeft: '4px solid #10b981',
+            color: '#065f46',
+            padding: '0.75rem 1rem',
+            borderRadius: '6px',
+            marginBottom: '1.25rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 500 }}>
+            <span>✅</span>
+            <span>{notification}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setNotification(null)}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: '#065f46',
+              fontSize: '1rem',
+              lineHeight: 1,
+            }}
+            aria-label="Dismiss notification"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       <PageHeader
         title="Experiments"
         subtitle={`${experiments.length} experiment${experiments.length !== 1 ? 's' : ''}`}

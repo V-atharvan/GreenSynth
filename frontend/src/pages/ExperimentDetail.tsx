@@ -9,7 +9,7 @@
  */
 
 import React, { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import type {
   ExperimentParameter,
   ExperimentStatus,
@@ -29,6 +29,7 @@ import { StatusBadge } from '@/components/StatusBadge'
 import { PageHeader } from '@/components/PageHeader'
 import { ParameterDisplay } from '@/components/ParameterDisplay'
 import { DynamicParameterForm } from '@/components/DynamicParameterForm'
+import { DeleteExperimentModal } from '@/components/DeleteExperimentModal'
 import type { ApiError } from '@/types'
 
 const STATUSES: ExperimentStatus[] = [
@@ -47,6 +48,7 @@ const SAMPLE_STATUS_OPTIONS: { value: SampleStatus; label: string }[] = [
 
 export default function ExperimentDetail() {
   const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
 
   const [experiment, setExperiment] = useState<ExperimentWithProject | null>(null)
   const [samples, setSamples] = useState<SampleSummary[]>([])
@@ -56,6 +58,29 @@ export default function ExperimentDetail() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'overview' | 'parameters' | 'samples'>('overview')
+
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+
+  const handleDeleteExperiment = async () => {
+    if (!id) return
+    setIsDeleting(true)
+    setDeleteError(null)
+    try {
+      await experimentService.delete(id)
+      setShowDeleteModal(false)
+      navigate('/experiments', {
+        state: { notification: 'Experiment deleted successfully.' },
+      })
+    } catch (e: unknown) {
+      setDeleteError(
+        (e as ApiError)?.message ?? 'Unable to delete experiment. Please try again.'
+      )
+    } finally {
+      setIsDeleting(false)
+    }
+  }
 
   const [editingExp, setEditingExp] = useState(false)
   const [editExpForm, setEditExpForm] = useState<ExperimentUpdate>({})
@@ -266,21 +291,32 @@ export default function ExperimentDetail() {
           <div className="card-header">
             <h2>A. Experiment Information</h2>
             {!editingExp && (
-              <button
-                className="btn btn-secondary btn-sm"
-                onClick={() => {
-                  setEditExpForm({
-                    title: experiment.title,
-                    status: experiment.status,
-                    experiment_date: experiment.experiment_date ?? undefined,
-                    researcher: experiment.researcher ?? undefined,
-                    notes: experiment.notes ?? undefined,
-                  })
-                  setEditingExp(true)
-                }}
-              >
-                ✏ Edit Info
-              </button>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <button
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => {
+                    setEditExpForm({
+                      title: experiment.title,
+                      status: experiment.status,
+                      experiment_date: experiment.experiment_date ?? undefined,
+                      researcher: experiment.researcher ?? undefined,
+                      notes: experiment.notes ?? undefined,
+                    })
+                    setEditingExp(true)
+                  }}
+                >
+                  ✏ Edit Info
+                </button>
+                <button
+                  className="btn btn-danger btn-sm"
+                  onClick={() => {
+                    setDeleteError(null)
+                    setShowDeleteModal(true)
+                  }}
+                >
+                  🗑 Delete Experiment
+                </button>
+              </div>
             )}
           </div>
           <div className="card-body">
@@ -590,6 +626,22 @@ export default function ExperimentDetail() {
           </div>
         </div>
       )}
+
+      {/* Delete Experiment Modal */}
+      <DeleteExperimentModal
+        isOpen={showDeleteModal}
+        experimentCode={experiment.experiment_code}
+        experimentTitle={experiment.title}
+        isDeleting={isDeleting}
+        error={deleteError}
+        onConfirm={handleDeleteExperiment}
+        onCancel={() => {
+          if (!isDeleting) {
+            setShowDeleteModal(false)
+            setDeleteError(null)
+          }
+        }}
+      />
     </div>
   )
 }

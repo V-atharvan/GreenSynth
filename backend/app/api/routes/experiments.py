@@ -109,13 +109,13 @@ async def update_experiment(
 @router.delete(
     "/{experiment_id}",
     status_code=status.HTTP_204_NO_CONTENT,
-    summary="Archive an experiment",
+    summary="Delete an experiment",
 )
 async def delete_experiment(
     experiment_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
 ) -> None:
-    """Archive an experiment (soft delete)."""
+    """Permanently delete an experiment and all dependent records."""
     service = ExperimentService(db)
     try:
         await service.delete(experiment_id)

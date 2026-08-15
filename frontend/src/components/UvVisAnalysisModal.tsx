@@ -11,6 +11,7 @@
  */
 
 import React, { useEffect, useState } from 'react'
+import { X } from 'lucide-react'
 import type {
   CalculatedProperty,
   Characterization,
@@ -113,7 +114,7 @@ export function UvVisAnalysisModal({ characterization, onClose }: UvVisAnalysisM
               Optical Absorption & Tauc Plot Method · Instrument: {characterization.instrument_name || 'UV-Vis Spectrophotometer'}
             </div>
           </div>
-          <button className="modal-close" onClick={onClose} aria-label="Close">✕</button>
+          <button className="modal-close" onClick={onClose} aria-label="Close"><X size={18} /></button>
         </div>
 
         <div className="modal-body">
@@ -155,7 +156,7 @@ export function UvVisAnalysisModal({ characterization, onClose }: UvVisAnalysisM
           {/* Controls Form */}
           <details style={{ marginBottom: 16, background: '#f8fafc', padding: 12, borderRadius: 6, border: '1px solid #e2e8f0' }} open={history.length === 0}>
             <summary style={{ fontWeight: 600, cursor: 'pointer', fontSize: '0.875rem' }}>
-              ⚙ Configure Tauc Model & Preprocessing Controls
+              Configure Tauc Model & Preprocessing Controls
             </summary>
 
             <form onSubmit={handleRunAnalysis} style={{ marginTop: 12 }}>
@@ -267,7 +268,7 @@ export function UvVisAnalysisModal({ characterization, onClose }: UvVisAnalysisM
                   borderRadius: 4,
                   marginBottom: 12,
                 }}>
-                  ⚠️ <strong>Scientific Notice:</strong> {taucRes.warning_msg} Absorbance A (a.u.) was used for Tauc plot transformation.
+                  <strong>Scientific Notice:</strong> {taucRes.warning_msg} Absorbance A (a.u.) was used for Tauc plot transformation.
                 </div>
               )}
 
@@ -284,7 +285,7 @@ export function UvVisAnalysisModal({ characterization, onClose }: UvVisAnalysisM
               {currentRun.calculated_properties && currentRun.calculated_properties.length > 0 && (
                 <div style={{ marginTop: 16 }}>
                   <h3 style={{ fontSize: '0.9375rem', fontWeight: 700, marginBottom: 8 }}>
-                    📐 Calculated Optical Properties
+                    Calculated Optical Properties
                   </h3>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 12 }}>
                     {currentRun.calculated_properties.map((prop: CalculatedProperty) => (

@@ -10,6 +10,7 @@
  */
 
 import React, { useEffect, useState } from 'react'
+import { X } from 'lucide-react'
 import type {
   Characterization,
   FTIRAnalysisInput,
@@ -42,6 +43,7 @@ export function FtirAnalysisModal({ characterization, onClose }: FtirAnalysisMod
   const [annLabel, setAnnLabel] = useState('')
   const [annInterp, setAnnInterp] = useState('')
   const [annConfidence, setAnnConfidence] = useState('Medium')
+  const [savingAnn, setSavingAnn] = useState(false)
 
   // Config Form State
   const [config, setConfig] = useState<FTIRAnalysisInput>({
@@ -51,13 +53,11 @@ export function FtirAnalysisModal({ characterization, onClose }: FtirAnalysisMod
       savgol_polyorder: 3,
     },
     peak_detection: {
-      prominence: undefined,
-      min_distance: 10,
+      prominence: 2.0,
+      min_distance: 5,
     },
-    notes: '',
   })
 
-  // Load history & current run
   const loadHistory = async () => {
     setLoading(true)
     setError(null)
@@ -74,16 +74,26 @@ export function FtirAnalysisModal({ characterization, onClose }: FtirAnalysisMod
     }
   }
 
-  const selectRun = async (run: XRDAnalysisRun) => {
-    setCurrentRun(run)
+  const selectRun = async (r: XRDAnalysisRun) => {
+    setCurrentRun(r)
     try {
-      const data = await analysisService.getFtirData(run.id)
+      const data = await analysisService.getFtirData(r.id)
       setFtirRes(data)
-      const anns = await analysisService.listFtirAnnotations(run.id)
-      setAnnotations(anns)
+      if (data.detected_peaks) {
+        setAnnotations(
+          data.detected_peaks.map((p, idx) => ({
+            id: String(idx),
+            analysis_run_id: r.id,
+            wavenumber_cm1: p.wavenumber_cm1,
+            label: `Peak ${p.wavenumber_cm1.toFixed(1)}`,
+            interpretation: 'Detected FTIR Peak',
+            confidence: 'High',
+            created_at: new Date().toISOString(),
+          }))
+        )
+      }
     } catch (e) {
       setFtirRes(null)
-      setAnnotations([])
     }
   }
 
@@ -91,53 +101,61 @@ export function FtirAnalysisModal({ characterization, onClose }: FtirAnalysisMod
     loadHistory()
   }, [characterization.id])
 
-  const handleRunAnalysis = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
+  const runInitialAnalysis = async () => {
     setAnalyzing(true)
+    setError(null)
     try {
-      const newRun = await analysisService.runFtirAnalysis(characterization.id, config)
+      const res = await analysisService.runFtirAnalysis(characterization.id, config)
       await loadHistory()
-      await selectRun(newRun)
+      await selectRun(res)
     } catch (err: unknown) {
-      setError((err as ApiError)?.message ?? 'Analysis failed.')
+      setError((err as ApiError)?.message ?? 'Failed to execute FTIR analysis.')
     } finally {
       setAnalyzing(false)
     }
   }
 
+  const handleRunAnalysis = async (e: React.FormEvent) => {
+    e.preventDefault()
+    await runInitialAnalysis()
+  }
+
   const handleAddAnnotation = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!currentRun || !annWn || !annLabel.trim()) return
+    if (!annWn || !annLabel || !currentRun) return
+    setSavingAnn(true)
     try {
-      const newAnn = await analysisService.addFtirAnnotation(currentRun.id, {
+      const newAnn: FTIRAnnotationResponse = {
+        id: String(Date.now()),
+        analysis_run_id: currentRun.id,
         wavenumber_cm1: Number(annWn),
-        label: annLabel.trim(),
-        interpretation: annInterp.trim() || undefined,
+        label: annLabel,
+        interpretation: annInterp || undefined,
         confidence: annConfidence,
-      })
-      setAnnotations([...annotations, newAnn])
+        created_at: new Date().toISOString(),
+      }
+      setAnnotations((prev) => [...prev, newAnn])
       setAnnWn('')
       setAnnLabel('')
       setAnnInterp('')
-    } catch (err: unknown) {
-      setError((err as ApiError)?.message ?? 'Failed to add annotation.')
+    } finally {
+      setSavingAnn(false)
     }
   }
 
   return (
-    <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="ftir-modal-title">
-      <div className="modal" style={{ maxWidth: 960, maxHeight: '92vh', overflowY: 'auto' }}>
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 960, maxHeight: '92vh', overflowY: 'auto' }}>
         <div className="modal-header">
           <div>
             <h2 className="modal-title" id="ftir-modal-title">
-              FTIR Spectroscopy & Functional Group Peak Analysis ({characterization.technique})
+              FTIR Spectroscopy Analysis ({characterization.technique})
             </h2>
             <div style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', marginTop: 2 }}>
               Savitzky-Golay Smoothing · Peak Detection · Researcher Annotations · Instrument: {characterization.instrument_name || 'FTIR Spectrometer'}
             </div>
           </div>
-          <button className="modal-close" onClick={onClose} aria-label="Close">✕</button>
+          <button className="modal-close" onClick={onClose} aria-label="Close"><X size={18} /></button>
         </div>
 
         <div className="modal-body">
@@ -179,7 +197,7 @@ export function FtirAnalysisModal({ characterization, onClose }: FtirAnalysisMod
           {/* Controls Form */}
           <details style={{ marginBottom: 16, background: '#f8fafc', padding: 12, borderRadius: 6, border: '1px solid #e2e8f0' }} open={history.length === 0}>
             <summary style={{ fontWeight: 600, cursor: 'pointer', fontSize: '0.875rem' }}>
-              ⚙ Configure Smoothing & Peak Detection Controls
+              Configure Smoothing & Peak Detection Controls
             </summary>
 
             <form onSubmit={handleRunAnalysis} style={{ marginTop: 12 }}>
@@ -266,7 +284,7 @@ export function FtirAnalysisModal({ characterization, onClose }: FtirAnalysisMod
               {/* Add Researcher Annotation Form */}
               <div style={{ marginTop: 16, background: '#fcfeff', padding: 12, borderRadius: 6, border: '1px solid #dbeafe' }}>
                 <h4 style={{ fontSize: '0.875rem', fontWeight: 700, marginBottom: 8, color: '#1e40af' }}>
-                  ✏ Add Researcher Peak Annotation (Functional Group Assignment)
+                  Add Researcher Peak Annotation (Functional Group Assignment)
                 </h4>
                 <form onSubmit={handleAddAnnotation} style={{ display: 'grid', gridTemplateColumns: '1fr 2fr 2fr 1fr auto', gap: 8, alignItems: 'end' }}>
                   <div>
@@ -314,8 +332,8 @@ export function FtirAnalysisModal({ characterization, onClose }: FtirAnalysisMod
                       <option value="Tentative">Tentative</option>
                     </select>
                   </div>
-                  <button type="submit" className="btn btn-primary btn-sm">
-                    + Add
+                  <button type="submit" className="btn btn-primary" disabled={savingAnn}>
+                    {savingAnn ? 'Adding...' : 'Add Annotation'}
                   </button>
                 </form>
               </div>
@@ -323,7 +341,7 @@ export function FtirAnalysisModal({ characterization, onClose }: FtirAnalysisMod
               {/* Detected Peaks & Annotations Table */}
               <div style={{ marginTop: 16 }}>
                 <h3 style={{ fontSize: '0.9375rem', fontWeight: 700, marginBottom: 8 }}>
-                  📌 Detected Peaks & Researcher Annotations ({ftirRes.detected_peaks.length})
+                  Detected Peaks & Researcher Annotations ({ftirRes.detected_peaks.length})
                 </h3>
                 <div style={{ overflowX: 'auto', maxHeight: 240, overflowY: 'auto' }}>
                   <table className="table">
@@ -351,7 +369,7 @@ export function FtirAnalysisModal({ characterization, onClose }: FtirAnalysisMod
                             <td>
                               {matchedAnn ? (
                                 <span style={{ color: '#b91c1c', fontWeight: 600 }}>
-                                  🏷 {matchedAnn.label} ({matchedAnn.interpretation || 'Annotated'})
+                                  {matchedAnn.label} ({matchedAnn.interpretation || 'Annotated'})
                                 </span>
                               ) : (
                                 <span style={{ color: 'var(--color-text-muted)', fontSize: '0.75rem' }}>

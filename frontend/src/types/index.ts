@@ -36,6 +36,7 @@ export interface ProjectSummary {
   name: string
   material: string
   synthesis_method: string
+  solvent?: string
   status: ProjectStatus
   created_at: string
 }

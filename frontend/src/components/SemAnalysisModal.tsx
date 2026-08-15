@@ -10,6 +10,7 @@
  */
 
 import React, { useEffect, useState } from 'react'
+import { X } from 'lucide-react'
 import { apiClient } from '@/services/api'
 import type {
   Characterization,
@@ -154,7 +155,7 @@ export function SemAnalysisModal({ characterization, file, onClose }: SemAnalysi
               File: {file.original_filename} · Instrument: {characterization.instrument_name || 'FE-SEM'}
             </div>
           </div>
-          <button className="modal-close" onClick={onClose} aria-label="Close">✕</button>
+          <button className="modal-close" onClick={onClose} aria-label="Close"><X size={18} /></button>
         </div>
 
         <div className="modal-body">
@@ -214,14 +215,14 @@ export function SemAnalysisModal({ characterization, file, onClose }: SemAnalysi
                     borderRadius: 4,
                     marginTop: 12,
                   }}>
-                    ⚠️ <strong>Scale Calibration Missing:</strong> Physical distance measurements are unavailable because image scale is not calibrated. Enter scale bar information in the right panel to calibrate.
+                    <strong>Scale Calibration Missing:</strong> Physical distance measurements are unavailable because image scale is not calibrated. Enter scale bar information in the right panel to calibrate.
                   </div>
                 )}
 
                 {/* Manual Measurement Tool Form */}
                 <div style={{ marginTop: 16, background: '#f8fafc', padding: 12, borderRadius: 6, border: '1px solid #e2e8f0' }}>
                   <h4 style={{ fontSize: '0.875rem', fontWeight: 700, marginBottom: 8, color: '#0f172a' }}>
-                    📏 Manual Distance Measurement Tool (Researcher Measurement)
+                    Manual Distance Measurement Tool (Researcher Measurement)
                   </h4>
                   <form onSubmit={handleAddMeasurement} style={{ display: 'grid', gridTemplateColumns: '1fr 2fr auto', gap: 8, alignItems: 'end' }}>
                     <div>
@@ -287,7 +288,7 @@ export function SemAnalysisModal({ characterization, file, onClose }: SemAnalysi
               {/* Right Column: Metadata & Scale Calibration Controls */}
               <div style={{ background: '#f8fafc', padding: 14, borderRadius: 6, border: '1px solid #e2e8f0' }}>
                 <h3 style={{ fontSize: '0.9375rem', fontWeight: 700, marginBottom: 12 }}>
-                  ⚙ SEM Image Metadata & Scale Calibration
+                  SEM Image Metadata & Scale Calibration
                 </h3>
 
                 <form onSubmit={handleUpdateMetadata}>
@@ -340,7 +341,7 @@ export function SemAnalysisModal({ characterization, file, onClose }: SemAnalysi
 
                   <hr style={{ margin: '12px 0', borderColor: '#cbd5e1' }} />
                   <div style={{ fontSize: '0.8125rem', fontWeight: 700, color: '#1e293b', marginBottom: 8 }}>
-                    📏 Scale Bar Calibration
+                    Scale Bar Calibration
                   </div>
 
                   <div className="form-group" style={{ marginBottom: 10 }}>
@@ -368,7 +369,7 @@ export function SemAnalysisModal({ characterization, file, onClose }: SemAnalysi
                   </div>
 
                   <button type="submit" className="btn btn-primary btn-sm" style={{ width: '100%', marginTop: 8 }} disabled={savingMeta}>
-                    {savingMeta ? <InlineSpinner /> : '💾 Save Calibration & Metadata'}
+                    {savingMeta ? <InlineSpinner /> : 'Save Calibration & Metadata'}
                   </button>
                 </form>
               </div>

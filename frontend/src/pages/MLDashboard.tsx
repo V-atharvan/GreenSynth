@@ -6,9 +6,10 @@
 
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { Cpu, Database, ShieldCheck, TrendingUp, BarChart3 } from 'lucide-react'
 import { projectService } from '@/services/projectService'
-import type { ProjectSummary } from '@/types'
 import { mlService, MLDataset, MLModel, MLPrediction } from '@/services/mlService'
+import type { ProjectSummary } from '@/types'
 
 export default function MLDashboard() {
   const [projects, setProjects] = useState<ProjectSummary[]>([])
@@ -19,40 +20,27 @@ export default function MLDashboard() {
   const [loading, setLoading] = useState<boolean>(true)
 
   useEffect(() => {
-    async function loadInitial() {
-      try {
-        const projs = await projectService.getAll()
-        setProjects(projs)
-        if (projs.length > 0) setSelectedProject(projs[0].id)
-      } catch (err) {
-        console.error('Failed to load projects:', err)
-      } finally {
-        setLoading(false)
+    projectService.getProjects().then((pList) => {
+      setProjects(pList)
+      if (pList.length > 0) {
+        setSelectedProject(pList[0].id)
       }
-    }
-    loadInitial()
+    }).catch(console.error)
   }, [])
 
   useEffect(() => {
     if (!selectedProject) return
-    async function loadMLData() {
-      setLoading(true)
-      try {
-        const [dsList, mList, pList] = await Promise.all([
-          mlService.getDatasets(selectedProject),
-          mlService.getModels(),
-          mlService.getPredictions(),
-        ])
-        setDatasets(dsList)
-        setModels(mList)
-        setPredictions(pList)
-      } catch (err) {
-        console.error('Failed to load ML data:', err)
-      } finally {
-        setLoading(false)
-      }
-    }
-    loadMLData()
+    setLoading(true)
+
+    Promise.all([
+      mlService.getDatasets(selectedProject),
+      mlService.getModels(),
+      mlService.getPredictions(),
+    ]).then(([dList, mList, pList]) => {
+      setDatasets(dList)
+      setModels(mList)
+      setPredictions(pList)
+    }).catch(console.error).finally(() => setLoading(false))
   }, [selectedProject])
 
   const approvedModels = models.filter((m) => m.status === 'PRODUCTION_CANDIDATE')
@@ -63,8 +51,10 @@ export default function MLDashboard() {
       {/* Header */}
       <div className="gs-page-header">
         <div>
-          <div className="gs-page-title">
-            <div className="gs-page-title-icon teal">🤖</div>
+          <div className="gs-page-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div className="gs-page-title-icon teal" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Cpu size={20} />
+            </div>
             Machine Learning Center
           </div>
           <p className="gs-page-subtitle">
@@ -85,7 +75,7 @@ export default function MLDashboard() {
             ))}
           </select>
           <Link to="/ml/datasets/new" className="gs-btn gs-btn-teal">
-            ＋ New Dataset
+            + New Dataset
           </Link>
         </div>
       </div>
@@ -93,22 +83,30 @@ export default function MLDashboard() {
       {/* Metric cards */}
       <div className="gs-metrics-row">
         <div className="gs-metric-card teal">
-          <div className="gs-metric-icon teal">🗄️</div>
+          <div className="gs-metric-icon teal" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Database size={18} />
+          </div>
           <div className="gs-metric-value">{datasets.length}</div>
           <div className="gs-metric-label">ML Datasets</div>
         </div>
         <div className="gs-metric-card indigo">
-          <div className="gs-metric-icon indigo">🧠</div>
+          <div className="gs-metric-icon indigo" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Cpu size={18} />
+          </div>
           <div className="gs-metric-value">{models.length}</div>
           <div className="gs-metric-label">Trained Models</div>
         </div>
         <div className="gs-metric-card emerald">
-          <div className="gs-metric-icon emerald">✅</div>
+          <div className="gs-metric-icon emerald" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <ShieldCheck size={18} />
+          </div>
           <div className="gs-metric-value">{approvedModels.length}</div>
           <div className="gs-metric-label">Approved Candidates</div>
         </div>
         <div className="gs-metric-card purple">
-          <div className="gs-metric-icon purple">📈</div>
+          <div className="gs-metric-icon purple" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <TrendingUp size={18} />
+          </div>
           <div className="gs-metric-value">{predictions.length}</div>
           <div className="gs-metric-label">Predictions Generated</div>
         </div>
@@ -117,7 +115,9 @@ export default function MLDashboard() {
       {/* Pipeline action tiles */}
       <div className="gs-action-grid">
         <Link to="/ml/datasets/new" className="gs-action-card teal">
-          <div className="gs-action-card-icon teal">🗄️</div>
+          <div className="gs-action-card-icon teal" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Database size={20} />
+          </div>
           <div className="gs-action-card-title">1. Build Dataset</div>
           <div className="gs-action-card-desc">
             Extract completed experiments, select features &amp; targets, validate eligibility &amp; eliminate target leakage.
@@ -126,7 +126,9 @@ export default function MLDashboard() {
         </Link>
 
         <Link to="/ml/training" className="gs-action-card indigo">
-          <div className="gs-action-card-icon indigo">🧠</div>
+          <div className="gs-action-card-icon indigo" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Cpu size={20} />
+          </div>
           <div className="gs-action-card-title">2. Model Training &amp; CV</div>
           <div className="gs-action-card-desc">
             Train baseline, linear, Ridge, Random Forest &amp; Gradient Boosting models with cross-validation &amp; diagnostic charts.
@@ -135,7 +137,9 @@ export default function MLDashboard() {
         </Link>
 
         <Link to="/ml/predict" className="gs-action-card purple">
-          <div className="gs-action-card-icon purple">📊</div>
+          <div className="gs-action-card-icon purple" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <BarChart3 size={20} />
+          </div>
           <div className="gs-action-card-title">3. Prediction &amp; Bounds</div>
           <div className="gs-action-card-desc">
             Generate property predictions with uncertainty intervals &amp; applicability domain boundary checks.
@@ -144,7 +148,9 @@ export default function MLDashboard() {
         </Link>
 
         <Link to="/ml/validation" className="gs-action-card emerald">
-          <div className="gs-action-card-icon emerald">🛡️</div>
+          <div className="gs-action-card-icon emerald" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <ShieldCheck size={20} />
+          </div>
           <div className="gs-action-card-title">4. Validation Studio</div>
           <div className="gs-action-card-desc">
             Compare predictions against actual laboratory measurements. Track model health, bias, and drift over time.
@@ -156,7 +162,7 @@ export default function MLDashboard() {
       {/* Datasets table */}
       <div className="gs-panel">
         <div className="gs-panel-header">
-          <span className="gs-panel-title">📋 Project Datasets</span>
+          <span className="gs-panel-title">Project Datasets</span>
           <Link to="/ml/datasets/new" className="gs-btn gs-btn-outline gs-btn-sm">
             + Add
           </Link>
@@ -169,7 +175,9 @@ export default function MLDashboard() {
           </div>
         ) : datasets.length === 0 ? (
           <div className="gs-empty">
-            <div className="gs-empty-icon">🗄️</div>
+            <div className="gs-empty-icon" style={{ display: 'flex', justifyContent: 'center' }}>
+              <Database size={32} />
+            </div>
             <div className="gs-empty-title">No Datasets Yet</div>
             <div className="gs-empty-text">
               Build your first dataset from completed experiments to begin the ML pipeline.
@@ -181,26 +189,20 @@ export default function MLDashboard() {
               <thead>
                 <tr>
                   <th>Dataset Name</th>
-                  <th>Version</th>
                   <th>Target Property</th>
-                  <th>Eligible Records</th>
-                  <th>Excluded</th>
+                  <th>Observations</th>
                   <th>Status</th>
+                  <th>Created</th>
                 </tr>
               </thead>
               <tbody>
                 {datasets.map((d) => (
                   <tr key={d.id}>
                     <td style={{ fontWeight: 600 }}>{d.name}</td>
-                    <td><span className="gs-badge slate">{d.version}</span></td>
-                    <td style={{ color: '#0d9488' }}>{d.target_property} ({d.target_unit})</td>
-                    <td style={{ fontWeight: 700, color: '#059669' }}>{d.eligible_count}</td>
-                    <td style={{ color: '#b45309' }}>{d.excluded_count}</td>
-                    <td>
-                      <span className={`gs-chip ${d.status === 'IMMUTABLE' ? 'production' : d.status === 'ACTIVE' ? 'active' : 'inactive'}`}>
-                        {d.status}
-                      </span>
-                    </td>
+                    <td>{d.target_property}</td>
+                    <td>{d.eligible_count}</td>
+                    <td><span className="gs-chip info">READY</span></td>
+                    <td>{new Date(d.created_at).toLocaleDateString()}</td>
                   </tr>
                 ))}
               </tbody>
@@ -213,7 +215,7 @@ export default function MLDashboard() {
       {models.length > 0 && (
         <div className="gs-panel">
           <div className="gs-panel-header">
-            <span className="gs-panel-title">🧠 Trained Models</span>
+            <span className="gs-panel-title">Trained Models</span>
           </div>
           <div className="gs-table-wrapper">
             <table className="gs-table">

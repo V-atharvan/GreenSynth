@@ -3,72 +3,63 @@
  */
 
 import React, { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Cpu, AlertTriangle, Check, X } from 'lucide-react'
 import { projectService } from '@/services/projectService'
 import type { ProjectSummary } from '@/types'
 import { mlService, MLDataset, MLModel } from '@/services/mlService'
 
-const ALGO_OPTIONS = [
-  { id: 'MEAN_BASELINE', label: 'Mean Baseline' },
-  { id: 'LINEAR_REGRESSION', label: 'Linear Regression' },
-  { id: 'RIDGE', label: 'Ridge Regression' },
-  { id: 'RANDOM_FOREST', label: 'Random Forest' },
-  { id: 'GRADIENT_BOOSTING', label: 'Gradient Boosting' },
-]
-
 export default function MLModelTraining() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const preselectedDatasetId = searchParams.get('dataset')
+
   const [projects, setProjects] = useState<ProjectSummary[]>([])
-  const [selectedProject, setSelectedProject] = useState<string>('')
+  const [selectedProjectId, setSelectedProjectId] = useState<string>('')
   const [datasets, setDatasets] = useState<MLDataset[]>([])
-  const [selectedDatasetId, setSelectedDatasetId] = useState<string>('')
-  const [selectedModels, setSelectedModels] = useState<string[]>(['MEAN_BASELINE','LINEAR_REGRESSION','RIDGE','RANDOM_FOREST','GRADIENT_BOOSTING'])
-  const [scaling, setScaling] = useState<string>('STANDARD')
+  const [selectedDatasetId, setSelectedDatasetId] = useState<string>(preselectedDatasetId || '')
+
+  const [targetProperty, setTargetProperty] = useState<string>('band_gap_ev')
   const [cvFolds, setCvFolds] = useState<number>(5)
   const [randomSeed, setRandomSeed] = useState<number>(42)
-  const [training, setTraining] = useState<boolean>(false)
+
   const [models, setModels] = useState<MLModel[]>([])
   const [selectedModel, setSelectedModel] = useState<MLModel | null>(null)
+
+  const [loading, setLoading] = useState(false)
+  const [training, setTraining] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    projectService.getAll().then((p) => { setProjects(p); if (p.length > 0) setSelectedProject(p[0].id) }).catch(console.error)
+    projectService.getProjects().then((data) => {
+      setProjects(data)
+      if (data.length > 0) setSelectedProjectId(data[0].id)
+    }).catch(() => {})
   }, [])
 
   useEffect(() => {
-    if (!selectedProject) return
-    mlService.getDatasets(selectedProject).then((d) => {
-      setDatasets(d)
-      if (d.length > 0) setSelectedDatasetId(d[0].id)
-    }).catch(console.error)
-  }, [selectedProject])
-
-  useEffect(() => {
-    if (!selectedDatasetId) return
-    mlService.getModels(selectedDatasetId).then((m) => {
-      setModels(m)
-      if (m.length > 0) setSelectedModel(m[0])
-    }).catch(console.error)
-  }, [selectedDatasetId])
-
-  const handleToggle = (id: string) => {
-    if (selectedModels.includes(id)) {
-      if (selectedModels.length > 1) setSelectedModels(selectedModels.filter((m) => m !== id))
-    } else {
-      setSelectedModels([...selectedModels, id])
-    }
-  }
+    if (!selectedProjectId) return
+    mlService.getDatasets(selectedProjectId).then((ds) => {
+      setDatasets(ds)
+      if (ds.length > 0 && !selectedDatasetId) setSelectedDatasetId(ds[0].id)
+    }).catch(() => {})
+  }, [selectedProjectId])
 
   const handleRunTraining = async () => {
     if (!selectedDatasetId) return
     setTraining(true)
     setError(null)
     try {
-      const trained = await mlService.trainModels({ dataset_id: selectedDatasetId, model_types: selectedModels, scaling, cv_folds: cvFolds, random_seed: randomSeed })
-      setModels(trained)
-      if (trained.length > 0) setSelectedModel(trained[0])
+      const res = await mlService.trainModels({
+        dataset_id: selectedDatasetId,
+        model_types: ['BASELINE', 'RIDGE', 'RANDOM_FOREST', 'GRADIENT_BOOSTING'],
+        cv_folds: cvFolds,
+        random_seed: randomSeed,
+      })
+      setModels(res)
+      if (res.length > 0) setSelectedModel(res[0])
     } catch (err: any) {
-      setError(err?.message || 'Model training failed.')
+      setError(err?.response?.data?.detail || err?.message || 'Training failed.')
     } finally {
       setTraining(false)
     }
@@ -76,30 +67,35 @@ export default function MLModelTraining() {
 
   const handleApproveModel = async (modelId: string) => {
     try {
-      const updated = await mlService.approveModel(modelId, 'Researcher verified CV metrics & diagnostic performance')
-      setModels(models.map((m) => (m.id === modelId ? updated : m)))
+      const updated = await mlService.approveModel(modelId)
+      setModels((prev) => prev.map((m) => (m.id === modelId ? updated : m)))
       if (selectedModel?.id === modelId) setSelectedModel(updated)
-    } catch (err) { console.error('Approve error:', err) }
+    } catch (err: any) {
+      setError(err?.response?.data?.detail || 'Failed to approve model.')
+    }
   }
 
   const handleRejectModel = async (modelId: string) => {
     try {
-      const updated = await mlService.rejectModel(modelId, 'High validation error or poor generalization')
-      setModels(models.map((m) => (m.id === modelId ? updated : m)))
+      const updated = await mlService.rejectModel(modelId)
+      setModels((prev) => prev.map((m) => (m.id === modelId ? updated : m)))
       if (selectedModel?.id === modelId) setSelectedModel(updated)
-    } catch (err) { console.error('Reject error:', err) }
+    } catch (err: any) {
+      setError(err?.response?.data?.detail || 'Failed to reject model.')
+    }
   }
 
   return (
-    <div className="gs-page">
-
+    <div className="gs-ml-container">
       {/* Header */}
       <div className="gs-page-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <button onClick={() => navigate('/ml')} className="gs-btn gs-btn-outline" style={{ padding: '8px 12px' }}>← Back</button>
           <div>
-            <div className="gs-page-title">
-              <div className="gs-page-title-icon indigo">🧠</div>
+            <div className="gs-page-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div className="gs-page-title-icon indigo" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Cpu size={20} />
+              </div>
               Model Training &amp; Cross-Validation
             </div>
             <p className="gs-page-subtitle">Train baseline, linear, Ridge, Random Forest, &amp; Gradient Boosting models with K-fold cross validation.</p>
@@ -107,7 +103,7 @@ export default function MLModelTraining() {
         </div>
       </div>
 
-      {error && <div className="gs-alert error">⚠️ {error}</div>}
+      {error && <div className="gs-alert error" style={{ display: 'flex', alignItems: 'center', gap: 8 }}><AlertTriangle size={16} /> {error}</div>}
 
       {/* Config Panel */}
       <div className="gs-panel">
@@ -118,52 +114,34 @@ export default function MLModelTraining() {
           <div className="gs-form-row">
             <div className="gs-field">
               <label className="gs-label">Project</label>
-              <select value={selectedProject} onChange={(e) => setSelectedProject(e.target.value)} className="gs-input">
-                {projects.map((p) => <option key={p.id} value={p.id}>{p.project_code} — {p.name}</option>)}
+              <select value={selectedProjectId} onChange={(e) => setSelectedProjectId(e.target.value)} className="gs-select">
+                {projects.map((p) => (
+                  <option key={p.id} value={p.id}>{p.project_code} — {p.name}</option>
+                ))}
               </select>
             </div>
             <div className="gs-field">
-              <label className="gs-label">ML Dataset</label>
-              <select value={selectedDatasetId} onChange={(e) => setSelectedDatasetId(e.target.value)} className="gs-input">
-                {datasets.length === 0 && <option value="">— No datasets —</option>}
-                {datasets.map((d) => <option key={d.id} value={d.id}>{d.name} ({d.eligible_count} samples)</option>)}
+              <label className="gs-label">Dataset</label>
+              <select value={selectedDatasetId} onChange={(e) => setSelectedDatasetId(e.target.value)} className="gs-select">
+                {datasets.map((d) => (
+                  <option key={d.id} value={d.id}>{d.name} ({d.eligible_count} samples)</option>
+                ))}
               </select>
             </div>
             <div className="gs-field">
-              <label className="gs-label">Feature Scaling</label>
-              <select value={scaling} onChange={(e) => setScaling(e.target.value)} className="gs-input">
-                <option value="STANDARD">StandardScaler (Mean=0, Std=1)</option>
-                <option value="NONE">Passthrough (None)</option>
+              <label className="gs-label">Target Property</label>
+              <select value={targetProperty} onChange={(e) => setTargetProperty(e.target.value)} className="gs-select">
+                <option value="band_gap_ev">Optical Band Gap Eg (eV)</option>
+                <option value="crystallite_size_nm">Crystallite Size D (nm)</option>
+                <option value="electrical_conductivity_s_cm">Electrical Conductivity σ (S/cm)</option>
               </select>
             </div>
           </div>
 
-          <div>
-            <label className="gs-label" style={{ marginBottom: 10, display: 'block' }}>Candidate Algorithms</label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              {ALGO_OPTIONS.map((m) => (
-                <button
-                  key={m.id}
-                  type="button"
-                  onClick={() => handleToggle(m.id)}
-                  className="gs-btn"
-                  style={{
-                    background: selectedModels.includes(m.id) ? '#e0e7ff' : 'var(--color-bg)',
-                    color: selectedModels.includes(m.id) ? '#3730a3' : 'var(--color-text-secondary)',
-                    border: selectedModels.includes(m.id) ? '1.5px solid #a5b4fc' : '1px solid var(--color-border)',
-                    fontWeight: selectedModels.includes(m.id) ? 700 : 500,
-                  }}
-                >
-                  {m.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="gs-form-row" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
+          <div className="gs-form-row">
             <div className="gs-field">
-              <label className="gs-label">CV Folds</label>
-              <input type="number" value={cvFolds} onChange={(e) => setCvFolds(parseInt(e.target.value) || 5)} min={2} max={20} className="gs-input" />
+              <label className="gs-label">CV Folds (K)</label>
+              <input type="number" min={2} max={10} value={cvFolds} onChange={(e) => setCvFolds(parseInt(e.target.value) || 5)} className="gs-input" />
             </div>
             <div className="gs-field">
               <label className="gs-label">Random Seed</label>
@@ -171,7 +149,7 @@ export default function MLModelTraining() {
             </div>
             <div className="gs-field" style={{ display: 'flex', alignItems: 'flex-end' }}>
               <button onClick={handleRunTraining} disabled={training || !selectedDatasetId} className="gs-btn gs-btn-indigo" style={{ width: '100%', justifyContent: 'center' }}>
-                {training ? '⏳ Training Models…' : '🚀 Run Training & Cross Validation'}
+                {training ? 'Training Models…' : 'Run Training & Cross Validation'}
               </button>
             </div>
           </div>
@@ -182,7 +160,7 @@ export default function MLModelTraining() {
       {models.length > 0 && (
         <div className="gs-panel">
           <div className="gs-panel-header">
-            <span className="gs-panel-title">📊 2. Model Performance &amp; Comparison</span>
+            <span className="gs-panel-title">2. Model Performance &amp; Comparison</span>
             <span className="gs-chip info">{models.length} models trained</span>
           </div>
           <div className="gs-table-wrapper">
@@ -219,10 +197,14 @@ export default function MLModelTraining() {
                       <td>
                         <span style={{ display: 'inline-flex', gap: 6 }} onClick={(e) => e.stopPropagation()}>
                           {m.status !== 'PRODUCTION_CANDIDATE' && (
-                            <button onClick={() => handleApproveModel(m.id)} className="gs-btn gs-btn-emerald gs-btn-sm">✓ Approve</button>
+                            <button onClick={() => handleApproveModel(m.id)} className="gs-btn gs-btn-emerald gs-btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                              <Check size={14} /> Approve
+                            </button>
                           )}
                           {m.status !== 'REJECTED' && (
-                            <button onClick={() => handleRejectModel(m.id)} className="gs-btn gs-btn-danger gs-btn-sm">✗ Reject</button>
+                            <button onClick={() => handleRejectModel(m.id)} className="gs-btn gs-btn-danger gs-btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                              <X size={14} /> Reject
+                            </button>
                           )}
                         </span>
                       </td>
@@ -239,15 +221,15 @@ export default function MLModelTraining() {
       {selectedModel && (
         <div className="gs-panel">
           <div className="gs-panel-header">
-            <span className="gs-panel-title">🔍 Diagnostics: {selectedModel.name}</span>
+            <span className="gs-panel-title">Diagnostics: {selectedModel.name}</span>
             <span style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', fontFamily: 'var(--font-mono)' }}>
               scikit-learn {selectedModel.library_versions?.['scikit-learn']}
             </span>
           </div>
           <div className="gs-panel-body" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             {selectedModel.metrics.overfitting_warning && (
-              <div className="gs-alert warning">
-                ⚠️ Potential Overfitting: Train R² ({selectedModel.metrics.train_r2}) significantly exceeds CV R² ({selectedModel.metrics.cv_r2}).
+              <div className="gs-alert warning" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <AlertTriangle size={16} /> Potential Overfitting: Train R² ({selectedModel.metrics.train_r2}) significantly exceeds CV R² ({selectedModel.metrics.cv_r2}).
               </div>
             )}
 

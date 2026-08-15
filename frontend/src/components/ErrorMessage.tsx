@@ -3,6 +3,7 @@
  */
 
 import React from 'react'
+import { AlertTriangle } from 'lucide-react'
 import type { ApiError } from '@/types'
 
 interface ErrorMessageProps {
@@ -19,7 +20,7 @@ export function ErrorMessage({ error, onRetry }: ErrorMessageProps) {
 
   return (
     <div className="alert alert-error" role="alert">
-      <span aria-hidden="true">⚠</span>
+      <AlertTriangle size={18} aria-hidden="true" style={{ flexShrink: 0, marginTop: 2 }} />
       <div style={{ flex: 1 }}>
         <strong>Error: </strong>{message}
         {onRetry && (

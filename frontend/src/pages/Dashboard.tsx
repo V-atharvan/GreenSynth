@@ -7,6 +7,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { FolderKanban, FlaskConical, TestTube2, BarChart3, RotateCw } from 'lucide-react'
 import type { DashboardStats, ExperimentStatus } from '@/types'
 import { dashboardService } from '@/services/dashboardService'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
@@ -58,7 +59,7 @@ export default function Dashboard() {
         subtitle="Overview of all active research projects and experiments"
         actions={
           <button className="btn btn-secondary btn-sm" onClick={fetchStats}>
-            ↻ Refresh
+            <RotateCw size={14} style={{ marginRight: 6 }} /> Refresh
           </button>
         }
       />
@@ -71,7 +72,7 @@ export default function Dashboard() {
         marginBottom: 'var(--space-8)',
       }}>
         <div className="stat-card">
-          <div className="stat-icon blue">📁</div>
+          <div className="stat-icon blue"><FolderKanban size={24} /></div>
           <div>
             <div className="stat-value">{s.total_projects}</div>
             <div className="stat-label">Active Projects</div>
@@ -79,7 +80,7 @@ export default function Dashboard() {
         </div>
 
         <div className="stat-card">
-          <div className="stat-icon green">🔬</div>
+          <div className="stat-icon green"><FlaskConical size={24} /></div>
           <div>
             <div className="stat-value">{s.total_experiments}</div>
             <div className="stat-label">Experiments</div>
@@ -87,7 +88,7 @@ export default function Dashboard() {
         </div>
 
         <div className="stat-card">
-          <div className="stat-icon amber">🧪</div>
+          <div className="stat-icon amber"><TestTube2 size={24} /></div>
           <div>
             <div className="stat-value">{s.total_samples}</div>
             <div className="stat-label">Samples</div>
@@ -95,7 +96,7 @@ export default function Dashboard() {
         </div>
 
         <div className="stat-card">
-          <div className="stat-icon purple">📊</div>
+          <div className="stat-icon purple"><BarChart3 size={24} /></div>
           <div>
             <div className="stat-value">
               {s.experiments_by_status['COMPLETED'] ?? 0}
@@ -219,13 +220,13 @@ export default function Dashboard() {
           </div>
           <div className="card-body" style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
             <Link to="/projects" className="btn btn-primary">
-              📁 Browse Projects
+              Browse Projects
             </Link>
             <Link to="/experiments" className="btn btn-secondary">
-              🔬 View Experiments
+              View Experiments
             </Link>
             <Link to="/samples" className="btn btn-secondary">
-              🧪 View Samples
+              View Samples
             </Link>
           </div>
         </div>

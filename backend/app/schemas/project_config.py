@@ -48,6 +48,7 @@ class ProjectConfigurationResponse(BaseModel):
     extract: str
     solvent: str
     synthesis_method: str
+    method_code: str | None = None
     current_version: str
     characterization_capabilities: dict[str, bool]
     analysis_capabilities: dict[str, bool]

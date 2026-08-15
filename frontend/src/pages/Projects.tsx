@@ -408,7 +408,7 @@ export default function Projects() {
                 className="gs-btn gs-btn-emerald"
                 style={{ width: '100%', justifyContent: 'center' }}
               >
-                {evaluatingComp ? 'Evaluating Rules...' : '⚡ Check Scientific Comparability'}
+                {evaluatingComp ? 'Evaluating Rules...' : 'Check Scientific Comparability'}
               </button>
 
               {compResult && (
@@ -423,11 +423,6 @@ export default function Projects() {
                     }`}
                   >
                     <div style={{ fontWeight: 700, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
-                      {compResult.comparability_status === 'COMPARABLE' ? (
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                      ) : (
-                        <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
-                      )}
                       Status: {compResult.comparability_status}
                     </div>
                     <div style={{ fontSize: '0.8125rem' }}>{compResult.reason}</div>
@@ -454,7 +449,7 @@ export default function Projects() {
                 className="modal-close"
                 onClick={() => { setShowCreate(false); setFormError(null); setForm(EMPTY_FORM) }}
                 aria-label="Close"
-              >✕</button>
+              ><X size={18} /></button>
             </div>
             <form onSubmit={handleCreate}>
               <div className="modal-body">

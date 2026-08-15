@@ -138,7 +138,7 @@ export const DOEAnalysisView: React.FC<DOEAnalysisViewProps> = ({ doe }) => {
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <h4 style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span>📈</span> Factor Main Effects Plot (E_A = Y_high - Y_low)
+                Factor Main Effects Plot (E_A = Y_high - Y_low)
               </h4>
               <span className="badge badge-planned font-mono">
                 Sample Size N = {analysis.sample_count}

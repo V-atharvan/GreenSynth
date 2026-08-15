@@ -6,6 +6,7 @@
  */
 
 import React, { useState } from 'react'
+import { Upload, ShieldCheck, X } from 'lucide-react'
 import type { Characterization } from '@/types'
 import { TECHNIQUE_ALLOWED_EXTENSIONS } from '@/types'
 import { characterizationService } from '@/services/characterizationService'
@@ -39,17 +40,12 @@ export function UploadRawFileModal({
       return
     }
 
+    // Client-side extension check
     const ext = file.name.split('.').pop()?.toLowerCase() ?? ''
-    if (!allowedExts.includes(ext)) {
+    if (allowedExts.length > 0 && !allowedExts.includes(ext)) {
       setError(
-        `File format '.${ext}' is not supported for ${characterization.technique}. Allowed: ${allowedExts.join(', ')}`
+        `Invalid file type .${ext}. Allowed formats for ${characterization.technique}: ${allowedExts.map((x) => `.${x}`).join(', ')}`
       )
-      setSelectedFile(null)
-      return
-    }
-
-    if (file.size > 50 * 1024 * 1024) {
-      setError('File size exceeds maximum allowed limit of 50 MB.')
       setSelectedFile(null)
       return
     }
@@ -59,29 +55,32 @@ export function UploadRawFileModal({
 
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!selectedFile) return
+    if (!selectedFile) {
+      setError('Please select a file to upload.')
+      return
+    }
 
-    setError(null)
     setUploading(true)
+    setError(null)
     try {
       await characterizationService.uploadRawFile(characterization.id, selectedFile)
       onUploaded()
       onClose()
     } catch (err: unknown) {
-      setError((err as ApiError)?.message ?? 'Upload failed.')
+      setError((err as ApiError)?.message ?? 'Failed to upload raw file.')
     } finally {
       setUploading(false)
     }
   }
 
   return (
-    <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="upload-modal-title">
-      <div className="modal" style={{ maxWidth: 540 }}>
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 500 }}>
         <div className="modal-header">
           <h2 className="modal-title" id="upload-modal-title">
             Upload Raw File ({characterization.technique})
           </h2>
-          <button className="modal-close" onClick={onClose} aria-label="Close">✕</button>
+          <button className="modal-close" onClick={onClose} aria-label="Close"><X size={18} /></button>
         </div>
 
         <form onSubmit={handleUpload}>
@@ -96,7 +95,9 @@ export function UploadRawFileModal({
               textAlign: 'center',
               marginBottom: 16,
             }}>
-              <div style={{ fontSize: '2rem', marginBottom: 8 }}>📁</div>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
+                <Upload size={32} style={{ color: 'var(--color-primary)' }} />
+              </div>
               <input
                 type="file"
                 id="raw-file-input"
@@ -123,7 +124,7 @@ export function UploadRawFileModal({
               ) : (
                 <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', marginTop: 8 }}>
                   Click to select original laboratory file.<br />
-                  Allowed formats for <strong>{characterization.technique}</strong>: {allowedExts.join(', ')} (Max: 50 MB)
+                  Allowed formats: {allowedExts.join(', ')}
                 </p>
               )}
             </div>
@@ -135,8 +136,12 @@ export function UploadRawFileModal({
               padding: 10,
               borderRadius: 6,
               borderLeft: '3px solid var(--color-info)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
             }}>
-              🔒 <strong>Raw File Guarantee:</strong> Uploaded files are stored in immutable raw storage. SHA-256 integrity checksums are generated automatically upon upload.
+              <ShieldCheck size={16} style={{ color: 'var(--color-info)', flexShrink: 0 }} />
+              <div><strong>Raw File Guarantee:</strong> Uploaded files are stored in immutable raw storage. SHA-256 integrity checksums are generated automatically upon upload.</div>
             </div>
           </div>
 

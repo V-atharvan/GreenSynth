@@ -5,6 +5,7 @@
  */
 
 import React, { useEffect, useState } from 'react'
+import { X } from 'lucide-react'
 import type { DatasetCreateInput, ProjectSummary, SampleSummary } from '@/types'
 import { experimentService } from '@/services/experimentService'
 import { projectService } from '@/services/projectService'
@@ -109,9 +110,9 @@ export function DatasetBuilderModal({ onClose, onDatasetCreated }: DatasetBuilde
       <div className="modal" style={{ maxWidth: 800, maxHeight: '90vh', overflowY: 'auto' }}>
         <div className="modal-header">
           <h2 className="modal-title" id="dataset-builder-title">
-            📐 Dataset Builder (Sample & Variable Selection)
+            Dataset Builder (Sample & Variable Selection)
           </h2>
-          <button className="modal-close" onClick={onClose} aria-label="Close">✕</button>
+          <button className="modal-close" onClick={onClose} aria-label="Close"><X size={18} /></button>
         </div>
 
         <div className="modal-body">
@@ -165,7 +166,7 @@ export function DatasetBuilderModal({ onClose, onDatasetCreated }: DatasetBuilde
               {/* Step 3: Select Variables */}
               <div style={{ marginBottom: 16, background: '#f8fafc', padding: 12, borderRadius: 6, border: '1px solid #e2e8f0' }}>
                 <label className="form-label" style={{ fontWeight: 700, marginBottom: 8 }}>
-                  🔬 Select Synthesis Parameters & Material Properties ({selectedVars.length} selected)
+                  Select Synthesis Parameters & Material Properties ({selectedVars.length} selected)
                 </label>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 8 }}>
                   {DEFAULT_VARIABLES.map((v) => (
@@ -185,7 +186,7 @@ export function DatasetBuilderModal({ onClose, onDatasetCreated }: DatasetBuilde
               <div style={{ marginBottom: 16 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                   <label className="form-label" style={{ fontWeight: 700, margin: 0 }}>
-                    🧪 Select Project Samples ({selectedSampleIds.length} of {samples.length} selected)
+                    Select Project Samples ({selectedSampleIds.length} of {samples.length} selected)
                   </label>
                   <button
                     type="button"
@@ -232,7 +233,7 @@ export function DatasetBuilderModal({ onClose, onDatasetCreated }: DatasetBuilde
                   className="btn btn-primary"
                   disabled={submitting || selectedSampleIds.length === 0 || selectedVars.length === 0 || !name.trim()}
                 >
-                  {submitting ? <InlineSpinner /> : '🚀 Create Comparison Dataset'}
+                  {submitting ? <InlineSpinner /> : 'Create Comparison Dataset'}
                 </button>
               </div>
             </form>

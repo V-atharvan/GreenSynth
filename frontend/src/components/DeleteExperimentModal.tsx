@@ -3,6 +3,7 @@
  */
 
 import React, { useState, useEffect } from 'react'
+import { AlertTriangle, X } from 'lucide-react'
 import { InlineSpinner } from './LoadingSpinner'
 import { ErrorMessage } from './ErrorMessage'
 
@@ -99,7 +100,7 @@ export function DeleteExperimentModal({
               margin: 0,
             }}
           >
-            Delete Experiment?
+            Delete Experiment
           </h2>
           <button
             type="button"
@@ -110,12 +111,14 @@ export function DeleteExperimentModal({
             style={{
               background: 'none',
               border: 'none',
-              fontSize: '1.25rem',
               cursor: isDeleting ? 'not-allowed' : 'pointer',
               color: '#6b7280',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
-            ✕
+            <X size={18} />
           </button>
         </div>
 
@@ -165,8 +168,8 @@ export function DeleteExperimentModal({
                 fontSize: '0.875rem',
               }}
             >
-              <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>
-                ⚠️ Permanent Action Warning
+              <div style={{ fontWeight: 600, marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <AlertTriangle size={16} /> Permanent Action Warning
               </div>
               <div>This will permanently delete the experiment and its associated data:</div>
               <ul

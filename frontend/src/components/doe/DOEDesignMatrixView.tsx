@@ -52,7 +52,7 @@ export const DOEDesignMatrixView: React.FC<DOEDesignMatrixViewProps> = ({ doe, p
               rel="noreferrer"
               className="gs-btn gs-btn-outline gs-btn-sm"
             >
-              📥 Export CSV
+              Export CSV
             </a>
             {doe.status !== 'APPROVED' && (
               <button
@@ -60,7 +60,7 @@ export const DOEDesignMatrixView: React.FC<DOEDesignMatrixViewProps> = ({ doe, p
                 disabled={loadingId === 'approve_study'}
                 className="gs-btn gs-btn-emerald gs-btn-sm"
               >
-                {loadingId === 'approve_study' ? '⏳ Approving…' : '🔒 Approve Study & Lock V1'}
+                {loadingId === 'approve_study' ? 'Approving…' : 'Approve Study & Lock V1'}
               </button>
             )}
           </div>
@@ -70,12 +70,12 @@ export const DOEDesignMatrixView: React.FC<DOEDesignMatrixViewProps> = ({ doe, p
         </div>
       </div>
 
-      {error && <div className="gs-alert error">⚠️ {error}</div>}
+      {error && <div className="gs-alert error">{error}</div>}
 
       {/* Design Matrix Table */}
       <div className="gs-panel">
         <div className="gs-panel-header">
-          <span className="gs-panel-title">🧪 Design Matrix Runs ({proposedRuns.length})</span>
+          <span className="gs-panel-title">Design Matrix Runs ({proposedRuns.length})</span>
           <span style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', fontStyle: 'italic' }}>
             Replicates: {doe.replicates} | Seed: {doe.random_seed} · PROPOSED conditions await researcher approval
           </span>
@@ -125,7 +125,7 @@ export const DOEDesignMatrixView: React.FC<DOEDesignMatrixViewProps> = ({ doe, p
                         disabled={loadingId === r.id}
                         className="gs-btn gs-btn-indigo gs-btn-sm"
                       >
-                        {loadingId === r.id ? '⏳ Converting…' : '🔬 Convert to Experiment'}
+                        {loadingId === r.id ? 'Converting…' : 'Convert to Experiment'}
                       </button>
                     )}
                   </td>

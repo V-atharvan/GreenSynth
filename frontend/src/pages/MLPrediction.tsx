@@ -4,6 +4,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { TrendingUp, AlertTriangle } from 'lucide-react'
 import { mlService, MLModel, MLPrediction } from '@/services/mlService'
 
 export default function MLPredictionPage() {
@@ -54,23 +55,26 @@ export default function MLPredictionPage() {
     setError(null)
     setPrediction(null)
     try {
-      const result = await mlService.generatePrediction(selectedModelId, { input_parameters: inputFields, notes })
-      setPrediction(result)
+      const res = await mlService.generatePrediction(selectedModelId, {
+        input_parameters: inputFields,
+        notes: notes || undefined,
+      })
+      setPrediction(res)
     } catch (err: any) {
-      setError(err?.message || 'Failed to generate prediction.')
+      setError(err?.response?.data?.detail || err?.message || 'Prediction failed.')
     } finally {
       setPredicting(false)
     }
   }
 
-  const domainColor = (status: string) => {
-    if (status === 'VALID' || status === 'IN_DOMAIN') return 'stable'
-    if (status === 'CAUTION' || status === 'NEAR_BOUNDARY') return 'warning'
-    return 'critical'
+  const domainColor = (status?: string) => {
+    if (status === 'IN_DOMAIN') return 'production'
+    if (status === 'OUT_OF_DOMAIN') return 'critical'
+    return 'warning'
   }
 
   return (
-    <div className="gs-page">
+    <div className="gs-ml-container">
 
       {/* Header */}
       <div className="gs-page-header">
@@ -83,8 +87,10 @@ export default function MLPredictionPage() {
             ← Back
           </button>
           <div>
-            <div className="gs-page-title">
-              <div className="gs-page-title-icon purple">📈</div>
+            <div className="gs-page-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div className="gs-page-title-icon purple" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <TrendingUp size={20} />
+              </div>
               ML Prediction &amp; Uncertainty Bounds
             </div>
             <p className="gs-page-subtitle">
@@ -94,13 +100,13 @@ export default function MLPredictionPage() {
         </div>
       </div>
 
-      {error && <div className="gs-alert error">⚠️ {error}</div>}
+      {error && <div className="gs-alert error" style={{ display: 'flex', alignItems: 'center', gap: 8 }}><AlertTriangle size={16} /> {error}</div>}
 
       {/* Model Selection & Input Form */}
       <form onSubmit={handlePredict}>
         <div className="gs-panel">
           <div className="gs-panel-header">
-            <span className="gs-panel-title">⚙️ Select Model &amp; Enter Synthesis Parameters</span>
+            <span className="gs-panel-title">Select Model &amp; Enter Synthesis Parameters</span>
           </div>
           <div className="gs-panel-body" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             <div className="gs-field">
@@ -165,7 +171,7 @@ export default function MLPredictionPage() {
                 disabled={predicting || !selectedModelId}
                 className="gs-btn gs-btn-indigo"
               >
-                {predicting ? '⏳ Calculating…' : '⚡ Generate Property Prediction'}
+                {predicting ? 'Calculating…' : 'Generate Property Prediction'}
               </button>
             </div>
           </div>
@@ -176,7 +182,7 @@ export default function MLPredictionPage() {
       {prediction && (
         <div className="gs-panel">
           <div className="gs-panel-header">
-            <span className="gs-panel-title">✅ Prediction Output &amp; Uncertainty Bounds</span>
+            <span className="gs-panel-title">Prediction Output &amp; Uncertainty Bounds</span>
             <span className={`gs-chip ${domainColor(prediction.applicability_status)}`}>
               Domain: {prediction.applicability_status}
             </span>
@@ -212,7 +218,9 @@ export default function MLPredictionPage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <div className="gs-label">Applicability Warnings</div>
                 {prediction.warnings.map((w, idx) => (
-                  <div key={idx} className="gs-alert warning">⚠️ {w}</div>
+                  <div key={idx} className="gs-alert warning" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <AlertTriangle size={16} /> {w}
+                  </div>
                 ))}
               </div>
             )}

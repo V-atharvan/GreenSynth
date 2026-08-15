@@ -14,6 +14,7 @@
  */
 
 import React, { useEffect, useState } from 'react'
+import { X } from 'lucide-react'
 import type {
   CalculatedProperty,
   Characterization,
@@ -110,18 +111,18 @@ export function ElectricalAnalysisModal({ characterization, onClose }: Electrica
   }
 
   return (
-    <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="elec-modal-title">
-      <div className="modal" style={{ maxWidth: 960, maxHeight: '92vh', overflowY: 'auto' }}>
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 960, maxHeight: '92vh', overflowY: 'auto' }}>
         <div className="modal-header">
           <div>
-            <h2 className="modal-title" id="elec-modal-title">
-              Electrical Property Analysis ({characterization.technique})
+            <h2 className="modal-title" id="electrical-modal-title">
+              Electrical Property & I-V Curve Analysis ({characterization.technique})
             </h2>
             <div style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', marginTop: 2 }}>
               I-V Linear Regression · Resistance, Resistivity & Conductivity Calculation · Instrument: {characterization.instrument_name || 'SourceMeter'}
             </div>
           </div>
-          <button className="modal-close" onClick={onClose} aria-label="Close">✕</button>
+          <button className="modal-close" onClick={onClose} aria-label="Close"><X size={18} /></button>
         </div>
 
         <div className="modal-body">
@@ -163,7 +164,7 @@ export function ElectricalAnalysisModal({ characterization, onClose }: Electrica
           {/* Controls Form */}
           <details style={{ marginBottom: 16, background: '#f8fafc', padding: 12, borderRadius: 6, border: '1px solid #e2e8f0' }} open={history.length === 0}>
             <summary style={{ fontWeight: 600, cursor: 'pointer', fontSize: '0.875rem' }}>
-              ⚙ Configure Units & Sample Geometry Controls
+              Configure Units & Sample Geometry Controls
             </summary>
 
             <form onSubmit={handleRunAnalysis} style={{ marginTop: 12 }}>
@@ -323,7 +324,7 @@ export function ElectricalAnalysisModal({ characterization, onClose }: Electrica
                   borderRadius: 4,
                   marginBottom: 12,
                 }}>
-                  ⚠️ <strong>Scientific Notice:</strong> {elecRes.warning_msg}
+                  <strong>Scientific Notice:</strong> {elecRes.warning_msg}
                 </div>
               )}
 
@@ -340,7 +341,7 @@ export function ElectricalAnalysisModal({ characterization, onClose }: Electrica
               {currentRun.calculated_properties && currentRun.calculated_properties.length > 0 && (
                 <div style={{ marginTop: 16 }}>
                   <h3 style={{ fontSize: '0.9375rem', fontWeight: 700, marginBottom: 8 }}>
-                    📐 Calculated Electrical Properties ({currentRun.calculated_properties.length})
+                    Calculated Electrical Properties ({currentRun.calculated_properties.length})
                   </h3>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12 }}>
                     {currentRun.calculated_properties.map((prop: CalculatedProperty) => (

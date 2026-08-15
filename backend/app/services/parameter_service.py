@@ -22,6 +22,7 @@ from app.models.parameter import (
     ParameterStatus,
 )
 from app.models.experiment import Experiment
+from app.models.project import Project
 from app.schemas.parameter import (
     ExperimentParameterCreate,
     ParameterDefinitionCreate,
@@ -185,6 +186,20 @@ class ParameterService:
 
         # Build validation map from submitted inputs
         input_map = {inp.parameter_definition_id: inp for inp in parameter_inputs}
+
+        # Method-aware parameter validation check
+        proj_res = await self.db.execute(select(Project).where(Project.id == experiment.project_id))
+        proj = proj_res.scalar_one_or_none()
+        if proj:
+            from app.core.method_config import validate_parameters_for_project
+            params_to_check = {
+                def_map[inp.parameter_definition_id].parameter_code: inp.value
+                for inp in parameter_inputs
+                if inp.parameter_definition_id in def_map
+            }
+            valid_method, err_msg = validate_parameters_for_project(proj.project_code, params_to_check)
+            if not valid_method and err_msg:
+                raise ParameterValidationError(err_msg)
 
         # 1. Validate required parameters
         for pdef in definitions:

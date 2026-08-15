@@ -4,6 +4,7 @@
  */
 
 import React, { useState } from 'react';
+import { X } from 'lucide-react';
 import { doeService, FactorDefinition, DOEWorkloadPreview } from '@/services/doeService';
 
 interface DOEWizardModalProps {
@@ -183,7 +184,7 @@ export const DOEWizardModal: React.FC<DOEWizardModalProps> = ({ projectId, isOpe
             </h2>
           </div>
           <button className="modal-close" onClick={onClose} aria-label="Close">
-            ✕
+            <X size={18} />
           </button>
         </div>
 
@@ -466,7 +467,7 @@ export const DOEWizardModal: React.FC<DOEWizardModalProps> = ({ projectId, isOpe
                           style={{ color: 'var(--color-danger)', borderColor: 'var(--color-danger-light)' }}
                           onClick={() => handleRemoveFactor(idx)}
                         >
-                          ✕
+                          <X size={16} />
                         </button>
                       </div>
                     </div>
@@ -615,7 +616,7 @@ export const DOEWizardModal: React.FC<DOEWizardModalProps> = ({ projectId, isOpe
                 }}
               >
                 <h3 style={{ fontSize: '0.9375rem', fontWeight: 700, margin: 0, color: 'var(--color-primary)' }}>
-                  🧪 Workload Calculation &amp; Design Resolution
+                  Workload Calculation &amp; Design Resolution
                 </h3>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 12, textWrap: 'nowrap' }}>
@@ -657,7 +658,7 @@ export const DOEWizardModal: React.FC<DOEWizardModalProps> = ({ projectId, isOpe
                       fontSize: '0.8125rem',
                     }}
                   >
-                    ⚠️ <strong>Experimental Workload Warning:</strong> {preview.warning_message}
+                    <strong>Experimental Workload Warning:</strong> {preview.warning_message}
                   </div>
                 )}
               </div>
@@ -689,7 +690,7 @@ export const DOEWizardModal: React.FC<DOEWizardModalProps> = ({ projectId, isOpe
 
           {step === 4 && (
             <button className="btn btn-primary" onClick={handleGenerateDOE} disabled={loading} style={{ fontWeight: 700 }}>
-              {loading ? 'Generating...' : '🚀 Generate & Save DOE Matrix'}
+              {loading ? 'Generating...' : 'Generate & Save DOE Matrix'}
             </button>
           )}
         </div>

@@ -6,13 +6,15 @@
 
 import React from 'react'
 import type { ExperimentParameter } from '@/types'
+import { getDynamicParameterLabel } from '@/config/methodConfig'
 
 interface ParameterDisplayProps {
   parameters: ExperimentParameter[]
   onEdit?: () => void
+  projectCode?: string
 }
 
-export function ParameterDisplay({ parameters, onEdit }: ParameterDisplayProps) {
+export function ParameterDisplay({ parameters, onEdit, projectCode }: ParameterDisplayProps) {
   if (parameters.length === 0) {
     return (
       <div style={{ padding: 'var(--space-6)', textAlign: 'center', color: 'var(--color-text-secondary)' }}>
@@ -42,11 +44,12 @@ export function ParameterDisplay({ parameters, onEdit }: ParameterDisplayProps) 
           {parameters.map((param) => {
             const def = param.parameter_definition
             const hasValue = param.value !== null && param.value.trim() !== ''
+            const displayLabel = getDynamicParameterLabel(def.parameter_code, projectCode) || def.parameter_name
 
             return (
               <tr key={param.id}>
                 <td style={{ fontWeight: 600 }}>
-                  {def.parameter_name}
+                  {displayLabel}
                   {def.required && <span style={{ color: 'var(--color-danger)', marginLeft: 4 }}>*</span>}
                 </td>
                 <td className="text-mono" style={{

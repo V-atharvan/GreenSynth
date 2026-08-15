@@ -10,6 +10,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import { X } from 'lucide-react'
 import type {
   ExperimentParameter,
   ExperimentStatus,
@@ -256,7 +257,7 @@ export default function ExperimentDetail() {
               onClick={handleDownloadPdf}
               disabled={downloadingPdf}
             >
-              {downloadingPdf ? '⏳ Generating PDF...' : '📄 Export PDF Report'}
+              {downloadingPdf ? 'Generating PDF...' : 'Export PDF Report'}
             </button>
             <StatusBadge status={experiment.status} />
           </div>
@@ -305,7 +306,7 @@ export default function ExperimentDetail() {
                     setEditingExp(true)
                   }}
                 >
-                  ✏ Edit Info
+                  Edit Info
                 </button>
                 <button
                   className="btn btn-danger btn-sm"
@@ -314,7 +315,7 @@ export default function ExperimentDetail() {
                     setShowDeleteModal(true)
                   }}
                 >
-                  🗑 Delete Experiment
+                  Delete Experiment
                 </button>
               </div>
             )}
@@ -399,6 +400,17 @@ export default function ExperimentDetail() {
                   </span>
                 </div>
                 <div className="detail-item">
+                  <span className="detail-label">Method & Solvent</span>
+                  <span className="detail-value">
+                    <span className="badge badge-planned" style={{ marginRight: 6 }}>
+                      {experiment.project.synthesis_method}
+                    </span>
+                    <span className="badge badge-completed">
+                      {experiment.project.solvent}
+                    </span>
+                  </span>
+                </div>
+                <div className="detail-item">
                   <span className="detail-label">Date Conducted</span>
                   <span className="detail-value">
                     {experiment.experiment_date
@@ -437,7 +449,7 @@ export default function ExperimentDetail() {
             <h2>B. Synthesis Parameters</h2>
             {!editingParams ? (
               <button className="btn btn-secondary btn-sm" onClick={() => setEditingParams(true)}>
-                ✏ Edit Parameters
+                Edit Parameters
               </button>
             ) : (
               <div style={{ display: 'flex', gap: 8 }}>
@@ -464,11 +476,13 @@ export default function ExperimentDetail() {
                     [defId]: { value: val, notes },
                   }))
                 }}
+                projectCode={experiment?.project?.project_code}
               />
             ) : (
               <ParameterDisplay
                 parameters={parameters}
                 onEdit={() => setEditingParams(true)}
+                projectCode={experiment?.project?.project_code}
               />
             )}
           </div>
@@ -550,7 +564,7 @@ export default function ExperimentDetail() {
           <div className="modal" style={{ maxWidth: 540 }}>
             <div className="modal-header">
               <h2 className="modal-title">Add Sample to Experiment</h2>
-              <button className="modal-close" onClick={() => setShowAddSample(false)}>✕</button>
+              <button className="modal-close" onClick={() => setShowAddSample(false)}><X size={18} /></button>
             </div>
             <form onSubmit={handleAddSample}>
               <div className="modal-body">

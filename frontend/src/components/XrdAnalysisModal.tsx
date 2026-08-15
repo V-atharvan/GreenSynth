@@ -12,6 +12,7 @@
  */
 
 import React, { useEffect, useState } from 'react'
+import { X } from 'lucide-react'
 import type {
   CalculatedProperty,
   Characterization,
@@ -37,6 +38,7 @@ export function XrdAnalysisModal({ characterization, onClose }: XrdAnalysisModal
   const [loading, setLoading] = useState(true)
   const [analyzing, setAnalyzing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showConfig, setShowConfig] = useState(false)
 
   // Config Form State
   const [config, setConfig] = useState<XRDAnalysisInput>({
@@ -117,11 +119,119 @@ export function XrdAnalysisModal({ characterization, onClose }: XrdAnalysisModal
               Sample Characterization · Instrument: {characterization.instrument_name || 'Standard XRD'}
             </div>
           </div>
-          <button className="modal-close" onClick={onClose} aria-label="Close">✕</button>
+          <button className="modal-close" onClick={onClose} aria-label="Close"><X size={18} /></button>
         </div>
 
         <div className="modal-body">
           {error && <ErrorMessage error={error} />}
+
+          {/* Configuration Controls */}
+          <div className="card" style={{ marginBottom: 16 }}>
+            <div className="card-header" style={{ cursor: 'pointer' }} onClick={() => setShowConfig(!showConfig)}>
+              <h3 style={{ fontSize: '0.875rem', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span>Configure Analysis & Preprocessing Parameters</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--color-primary)' }}>{showConfig ? 'Hide' : 'Show'}</span>
+              </h3>
+            </div>
+            
+            {showConfig && (
+              <form onSubmit={handleRunAnalysis} style={{ padding: 12 }}>
+                <div className="form-grid">
+                  {/* 1. Preprocessing */}
+                  <div className="form-group span-2">
+                    <label className="form-label" style={{ fontWeight: 600 }}>Preprocessing</label>
+                    <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.8125rem' }}>
+                        <input
+                          type="checkbox"
+                          checked={config.preprocessing.baseline_subtraction}
+                          onChange={(e) => setConfig({
+                            ...config,
+                            preprocessing: { ...config.preprocessing, baseline_subtraction: e.target.checked }
+                          })}
+                        />
+                        Rolling Baseline Subtraction
+                      </label>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.8125rem' }}>
+                        <input
+                          type="checkbox"
+                          checked={config.preprocessing.smoothing}
+                          onChange={(e) => setConfig({
+                            ...config,
+                            preprocessing: { ...config.preprocessing, smoothing: e.target.checked }
+                          })}
+                        />
+                        Savitzky-Golay Noise Smoothing
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* 2. Peak Detection */}
+                  <div className="form-group">
+                    <label className="form-label">Min Peak Prominence</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      className="form-control"
+                      value={config.peak_detection.prominence ?? ''}
+                      onChange={(e) => setConfig({
+                        ...config,
+                        peak_detection: { ...config.peak_detection, prominence: e.target.value ? parseFloat(e.target.value) : null }
+                      })}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Min Distance (points)</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      value={config.peak_detection.min_distance}
+                      onChange={(e) => setConfig({
+                        ...config,
+                        peak_detection: { ...config.peak_detection, min_distance: parseInt(e.target.value, 10) || 5 }
+                      })}
+                    />
+                  </div>
+
+                  {/* 3. Scherrer Equation */}
+                  <div className="form-group">
+                    <label className="form-label">X-Ray Wavelength λ (nm)</label>
+                    <input
+                      type="number"
+                      step="0.00001"
+                      className="form-control"
+                      value={config.scherrer.wavelength_nm}
+                      onChange={(e) => setConfig({
+                        ...config,
+                        scherrer: { ...config.scherrer, wavelength_nm: parseFloat(e.target.value) || 0.15406 }
+                      })}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Scherrer Shape Factor K</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      className="form-control"
+                      value={config.scherrer.shape_factor_k}
+                      onChange={(e) => setConfig({
+                        ...config,
+                        scherrer: { ...config.scherrer, shape_factor_k: parseFloat(e.target.value) || 0.9 }
+                      })}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ marginTop: 12, textAlign: 'right' }}>
+                  <button type="submit" className="btn btn-primary btn-sm" disabled={analyzing}>
+                    {analyzing ? <InlineSpinner /> : 'Run Analysis'}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
 
           {/* Analysis History Run Selector */}
           {history.length > 0 && (
@@ -159,7 +269,7 @@ export function XrdAnalysisModal({ characterization, onClose }: XrdAnalysisModal
           {/* Controls Form */}
           <details style={{ marginBottom: 16, background: '#f8fafc', padding: 12, borderRadius: 6, border: '1px solid #e2e8f0' }} open={history.length === 0}>
             <summary style={{ fontWeight: 600, cursor: 'pointer', fontSize: '0.875rem' }}>
-              ⚙ Configure Analysis & Preprocessing Parameters
+              Configure Analysis & Preprocessing Parameters
             </summary>
 
             <form onSubmit={handleRunAnalysis} style={{ marginTop: 12 }}>
@@ -273,7 +383,7 @@ export function XrdAnalysisModal({ characterization, onClose }: XrdAnalysisModal
               {currentRun.calculated_properties && currentRun.calculated_properties.length > 0 && (
                 <div style={{ marginTop: 16 }}>
                   <h3 style={{ fontSize: '0.9375rem', fontWeight: 700, marginBottom: 8 }}>
-                    📐 Calculated Scientific Properties
+                    Calculated Scientific Properties
                   </h3>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 12 }}>
                     {currentRun.calculated_properties.map((prop: CalculatedProperty) => (

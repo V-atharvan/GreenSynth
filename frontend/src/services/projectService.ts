@@ -19,6 +19,10 @@ export const projectService = {
     return response.data
   },
 
+  async getProjects(includeArchived = false): Promise<ProjectSummary[]> {
+    return projectService.getAll(includeArchived)
+  },
+
   /**
    * Fetch a single project by ID.
    */

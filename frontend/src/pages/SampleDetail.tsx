@@ -134,7 +134,7 @@ export default function SampleDetail() {
           <div style={{ display: 'flex', gap: 8 }}>
             {!editing && (
               <button className="btn btn-secondary" onClick={startEdit}>
-                ✏ Edit Metadata
+                Edit Metadata
               </button>
             )}
             <StatusBadge status={sample.status} />
@@ -311,7 +311,7 @@ export default function SampleDetail() {
                           className="btn btn-primary btn-sm"
                           onClick={() => setAnalyzingXrdChar(ch)}
                         >
-                          🔬 Analyze XRD Pattern
+                          Analyze XRD Pattern
                         </button>
                       )}
                       {ch.technique === 'UV_VIS' && ch.raw_files.length > 0 && (
@@ -319,7 +319,7 @@ export default function SampleDetail() {
                           className="btn btn-primary btn-sm"
                           onClick={() => setAnalyzingUvVisChar(ch)}
                         >
-                          🔬 Analyze UV-Vis Spectrum
+                          Analyze UV-Vis Spectrum
                         </button>
                       )}
                       {ch.technique === 'ELECTRICAL' && ch.raw_files.length > 0 && (
@@ -327,7 +327,7 @@ export default function SampleDetail() {
                           className="btn btn-primary btn-sm"
                           onClick={() => setAnalyzingElecChar(ch)}
                         >
-                          🔬 Analyze Electrical Data
+                          Analyze Electrical Data
                         </button>
                       )}
                       {ch.technique === 'FTIR' && ch.raw_files.length > 0 && (
@@ -335,7 +335,7 @@ export default function SampleDetail() {
                           className="btn btn-primary btn-sm"
                           onClick={() => setAnalyzingFtirChar(ch)}
                         >
-                          🔬 Analyze FTIR Spectrum
+                          Analyze FTIR Spectrum
                         </button>
                       )}
                       {ch.technique === 'SEM' && ch.raw_files.length > 0 && (
@@ -343,14 +343,14 @@ export default function SampleDetail() {
                           className="btn btn-primary btn-sm"
                           onClick={() => setInspectingSemChar(ch)}
                         >
-                          🔬 Inspect SEM Image & Measurements
+                          Inspect SEM Image & Measurements
                         </button>
                       )}
                       <button
                         className="btn btn-secondary btn-sm"
                         onClick={() => setUploadingForChar(ch)}
                       >
-                        ⬆ Upload Raw File
+                        Upload Raw File
                       </button>
                     </div>
                   </div>
@@ -419,7 +419,7 @@ export default function SampleDetail() {
                                       className="btn btn-secondary btn-sm"
                                       onClick={() => setSelectedFileMeta(file)}
                                     >
-                                      🔍 Metadata
+                                      Metadata
                                     </button>
                                     <a
                                       href={characterizationService.getDownloadUrl(file.id)}
@@ -451,7 +451,7 @@ export default function SampleDetail() {
         <AddCharacterizationModal
           sampleId={sample.id}
           onClose={() => setShowAddCharModal(false)}
-          onCreated={fetchSampleAndChars}
+          onSuccess={fetchSampleAndChars}
         />
       )}
 

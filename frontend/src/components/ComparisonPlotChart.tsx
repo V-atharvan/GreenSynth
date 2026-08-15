@@ -103,7 +103,7 @@ export function ComparisonPlotChart({
         </div>
         {regression && (
           <div style={{ fontSize: '0.75rem', background: '#eff6ff', color: '#1e40af', padding: '4px 8px', borderRadius: 4, fontWeight: 600 }}>
-            📈 OLS Linear Fit: R² = {regression.rSquared.toFixed(3)}
+            OLS Linear Fit: R² = {regression.rSquared.toFixed(3)}
           </div>
         )}
       </div>

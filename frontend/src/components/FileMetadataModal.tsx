@@ -6,15 +6,19 @@
  */
 
 import React, { useState } from 'react'
+import { X } from 'lucide-react'
 import type { RawFile } from '@/types'
 import { characterizationService } from '@/services/characterizationService'
 
 interface FileMetadataModalProps {
   file: RawFile
+  isOpen?: boolean
   onClose: () => void
 }
 
-export function FileMetadataModal({ file, onClose }: FileMetadataModalProps) {
+export function FileMetadataModal({ file, isOpen = true, onClose }: FileMetadataModalProps) {
+  if (!isOpen) return null
+
   const [copied, setCopied] = useState(false)
 
   const downloadUrl = characterizationService.getDownloadUrl(file.id)
@@ -27,7 +31,7 @@ export function FileMetadataModal({ file, onClose }: FileMetadataModalProps) {
 
   const formatBytes = (bytes: number): string => {
     if (bytes < 1024) return `${bytes} B`
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
     return `${(bytes / (1024 * 1024)).toFixed(2)} MB`
   }
 
@@ -38,7 +42,7 @@ export function FileMetadataModal({ file, onClose }: FileMetadataModalProps) {
           <h2 className="modal-title" id="file-meta-title">
             Raw File Metadata
           </h2>
-          <button className="modal-close" onClick={onClose} aria-label="Close">✕</button>
+          <button className="modal-close" onClick={onClose} aria-label="Close"><X size={18} /></button>
         </div>
 
         <div className="modal-body">
@@ -76,7 +80,7 @@ export function FileMetadataModal({ file, onClose }: FileMetadataModalProps) {
                   {file.checksum}
                 </span>
                 <button className="btn btn-secondary btn-sm" onClick={handleCopyChecksum}>
-                  {copied ? '✓ Copied' : 'Copy'}
+                  {copied ? 'Copied' : 'Copy'}
                 </button>
               </div>
             </div>

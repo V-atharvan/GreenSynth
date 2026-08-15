@@ -97,13 +97,13 @@ export function UvVisPlotChart({
             className={`btn btn-sm ${activeTab === 'tauc' ? 'btn-primary' : 'btn-secondary'}`}
             onClick={() => setActiveTab('tauc')}
           >
-            📐 Tauc Plot ({transitionType === 'DIRECT_ALLOWED' ? 'Direct n=2' : 'Indirect n=0.5'})
+            Tauc Plot ({transitionType === 'DIRECT_ALLOWED' ? 'Direct n=2' : 'Indirect n=0.5'})
           </button>
           <button
             className={`btn btn-sm ${activeTab === 'spectrum' ? 'btn-primary' : 'btn-secondary'}`}
             onClick={() => setActiveTab('spectrum')}
           >
-            📊 Absorbance Spectrum (λ vs A)
+            Absorbance Spectrum (λ vs A)
           </button>
         </div>
 

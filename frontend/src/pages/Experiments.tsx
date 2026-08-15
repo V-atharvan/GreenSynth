@@ -6,6 +6,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import { FlaskConical, Check, X } from 'lucide-react'
 import type {
   ExperimentCreate,
   ExperimentStatus,
@@ -202,7 +203,7 @@ export default function Experiments() {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 500 }}>
-            <span>✅</span>
+            <Check size={16} />
             <span>{notification}</span>
           </div>
           <button
@@ -218,7 +219,7 @@ export default function Experiments() {
             }}
             aria-label="Dismiss notification"
           >
-            ✕
+            <X size={16} />
           </button>
         </div>
       )}
@@ -278,7 +279,7 @@ export default function Experiments() {
       ) : filtered.length === 0 ? (
         <div className="card">
           <EmptyState
-            icon="🔬"
+            icon={<FlaskConical size={32} />}
             title={search || statusFilter || projectFilter ? 'No matching experiments' : 'No experiments yet'}
             description="Create a new experiment to record a laboratory synthesis run."
             action={
@@ -352,7 +353,7 @@ export default function Experiments() {
           <div className="modal" style={{ maxWidth: 720 }}>
             <div className="modal-header">
               <h2 className="modal-title">Create Experiment</h2>
-              <button className="modal-close" onClick={() => setShowCreate(false)} aria-label="Close">✕</button>
+              <button className="modal-close" onClick={() => setShowCreate(false)} aria-label="Close"><X size={18} /></button>
             </div>
             <form onSubmit={handleCreate}>
               <div className="modal-body">
@@ -446,6 +447,7 @@ export default function Experiments() {
                         definitions={paramDefs}
                         values={paramValues}
                         onChange={handleParamChange}
+                        projectCode={projects.find((p) => p.id === form.project_id)?.project_code}
                       />
                     )}
                   </div>

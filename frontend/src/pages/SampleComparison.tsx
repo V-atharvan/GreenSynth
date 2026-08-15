@@ -187,7 +187,7 @@ export function SampleComparison() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--color-heading)', margin: 0 }}>
-            📊 Sample Comparison & Statistical Analysis
+            Sample Comparison & Statistical Analysis
           </h1>
           <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem', marginTop: 4 }}>
             Multi-sample dataset evaluation, synthesis parameter correlations, linear regression fits, and descriptive statistics.
@@ -250,7 +250,7 @@ export function SampleComparison() {
 
         {selectedDatasetId && (
           <button className="btn btn-secondary btn-sm" onClick={handleExportCsv} style={{ marginLeft: 'auto' }}>
-            📥 Export Dataset CSV
+            Export Dataset CSV
           </button>
         )}
       </div>
@@ -271,7 +271,7 @@ export function SampleComparison() {
               color: '#92400e',
               marginBottom: 16,
             }}>
-              ⚠️ <strong>Data Quality Report ({tableData.quality_report.status}):</strong>
+              <strong>Data Quality Report ({tableData.quality_report.status}):</strong>
               <ul style={{ margin: '4px 0 0 16px', padding: 0 }}>
                 {tableData.quality_report.warnings.map((w, idx) => (
                   <li key={idx}>{w}</li>
@@ -284,7 +284,7 @@ export function SampleComparison() {
           <div style={{ background: 'white', borderRadius: 8, padding: 16, border: '1px solid var(--color-border)', marginBottom: 24 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <h3 style={{ fontSize: '1rem', fontWeight: 700, margin: 0 }}>
-                📋 Multi-Sample Comparison Table ({tableData.total_samples} Samples)
+                Multi-Sample Comparison Table ({tableData.total_samples} Samples)
               </h3>
               <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>
                 Provenance: <span style={{ color: '#047857', fontWeight: 600 }}>MEASURED</span> · <span style={{ color: '#2563eb', fontWeight: 600 }}>CALCULATED</span> · <span style={{ color: '#dc2626', fontWeight: 600 }}>MISSING</span>
@@ -349,7 +349,7 @@ export function SampleComparison() {
           {descStats.length > 0 && (
             <div style={{ marginBottom: 24 }}>
               <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 12 }}>
-                📐 Summary Descriptive Statistics
+                Summary Descriptive Statistics
               </h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 14 }}>
                 {descStats.map((st) => (
@@ -374,7 +374,7 @@ export function SampleComparison() {
           {/* Statistical Analysis Control & Chart Section */}
           <div style={{ background: '#f8fafc', padding: 16, borderRadius: 8, border: '1px solid #e2e8f0', marginBottom: 24 }}>
             <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 12 }}>
-              ⚙ Statistical Analysis & Relationship Visualizer
+              Statistical Analysis & Relationship Visualizer
             </h3>
 
             <form onSubmit={handleRunAnalysis} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: 12, alignItems: 'end', marginBottom: 16 }}>
@@ -419,7 +419,7 @@ export function SampleComparison() {
               </div>
 
               <button type="submit" className="btn btn-primary" disabled={analyzing}>
-                {analyzing ? <InlineSpinner /> : '▶ Run Analysis'}
+                {analyzing ? <InlineSpinner /> : 'Run Analysis'}
               </button>
             </form>
 
@@ -427,7 +427,7 @@ export function SampleComparison() {
             {statResult && (
               <div style={{ background: '#f0f9ff', padding: 14, borderRadius: 6, border: '1px solid #bae6fd', marginBottom: 16 }}>
                 <h4 style={{ fontSize: '0.875rem', fontWeight: 700, color: '#0369a1', margin: '0 0 6px 0' }}>
-                  📌 {statResult.method} Results (n = {statResult.sample_size})
+                  {statResult.method} Results (n = {statResult.sample_size})
                 </h4>
 
                 {statResult.analysis_type === 'REGRESSION' && regressionData && (
@@ -447,7 +447,7 @@ export function SampleComparison() {
 
                 {(statResult.warnings_json as any)?.warnings && Array.isArray((statResult.warnings_json as any).warnings) && (
                   <div style={{ marginTop: 8, fontSize: '0.75rem', color: '#92400e', background: '#fef3c7', padding: '6px 10px', borderRadius: 4 }}>
-                    ⚠️ {((statResult.warnings_json as any)?.warnings as string[])?.join(' ')}
+                    {((statResult.warnings_json as any)?.warnings as string[])?.join(' ')}
                   </div>
                 )}
               </div>

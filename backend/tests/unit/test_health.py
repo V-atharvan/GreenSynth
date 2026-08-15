@@ -10,19 +10,11 @@ from httpx import AsyncClient
 
 @pytest.mark.asyncio
 async def test_health_returns_ok(client: AsyncClient) -> None:
-    """GET /health must return {"status": "ok"}."""
+    """GET /health must return status and database info."""
     response = await client.get("/health")
     assert response.status_code == 200
-    assert response.json() == {"status": "ok"}
-
-
-@pytest.mark.asyncio
-async def test_health_db_returns_connected(client: AsyncClient) -> None:
-    """GET /health/db must return {"status": "ok", "database": "connected"}."""
-    response = await client.get("/health/db")
-    assert response.status_code == 200
     data = response.json()
-    assert data["status"] == "ok"
+    assert data["status"] == "healthy"
     assert data["database"] == "connected"
 
 

@@ -6,6 +6,7 @@
  */
 
 import React, { useState } from 'react'
+import { X } from 'lucide-react'
 import type {
   ParameterDataType,
   ParameterDefinition,
@@ -112,7 +113,7 @@ export function ParameterManagementModal({
           <h2 className="modal-title" id="param-mgmt-title">
             Manage Synthesis Parameter Definitions
           </h2>
-          <button className="modal-close" onClick={onClose} aria-label="Close">✕</button>
+          <button className="modal-close" onClick={onClose} aria-label="Close"><X size={18} /></button>
         </div>
 
         <div className="modal-body">
@@ -317,9 +318,9 @@ export function ParameterManagementModal({
                           <button
                             type="button"
                             onClick={() => handleRemoveEnumOption(opt)}
-                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'red' }}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'red', display: 'inline-flex', alignItems: 'center' }}
                           >
-                            ✕
+                            <X size={12} />
                           </button>
                         </span>
                       ))}

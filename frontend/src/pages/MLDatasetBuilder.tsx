@@ -333,7 +333,7 @@ export default function MLDatasetBuilder() {
                   color: '#92400e',
                 }}
               >
-                <strong>⚠️ Scientific Warning:</strong> Dataset contains {createdDataset.eligible_count} eligible observation(s). Dataset creation is valid, but model training recommends at least 5 observations for stable cross-validation.
+                <strong>Scientific Warning:</strong> Dataset contains {createdDataset.eligible_count} eligible observation(s). Dataset creation is valid, but model training recommends at least 5 observations for stable cross-validation.
               </div>
             )}
 

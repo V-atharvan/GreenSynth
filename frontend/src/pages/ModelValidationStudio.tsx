@@ -1,86 +1,91 @@
 /**
  * GreenSynth Analytics — Phase 17 Model Health & Experimental Validation Studio
  */
-
-import React, { useEffect, useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { ShieldCheck, Ban, Check, AlertTriangle, BarChart3 } from 'lucide-react'
 import { mlService, MLModel, MLPrediction } from '@/services/mlService'
 
 export default function ModelValidationStudio() {
   const [models, setModels] = useState<MLModel[]>([])
   const [selectedModelId, setSelectedModelId] = useState<string>('')
-  const [modelHealth, setModelHealth] = useState<any>(null)
+  const [selectedModel, setSelectedModel] = useState<MLModel | null>(null)
+  const [modelHealth, setModelHealth] = useState<any | null>(null)
   const [predictions, setPredictions] = useState<MLPrediction[]>([])
   const [selectedPrediction, setSelectedPrediction] = useState<MLPrediction | null>(null)
   const [actualValueInput, setActualValueInput] = useState<string>('')
-  const [validationSuccessMsg, setValidationSuccessMsg] = useState<string>('')
-  const [errorMsg, setErrorMsg] = useState<string>('')
-  const [loading, setLoading] = useState<boolean>(true)
+  const [validationSuccessMsg, setValidationSuccessMsg] = useState<string | null>(null)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const [loading, setLoading] = useState<boolean>(false)
 
   useEffect(() => {
-    async function loadModels() {
-      try {
-        const mList = await mlService.getModels()
-        setModels(mList)
-        if (mList.length > 0) setSelectedModelId(mList[0].id)
-      } catch (err) {
-        console.error('Failed to load ML models:', err)
-      } finally {
-        setLoading(false)
+    mlService.getModels().then((mList) => {
+      setModels(mList)
+      if (mList.length > 0) {
+        setSelectedModelId(mList[0].id)
+        setSelectedModel(mList[0])
       }
-    }
-    loadModels()
+    }).catch(console.error)
   }, [])
 
   useEffect(() => {
     if (!selectedModelId) return
-    async function loadHealthAndPredictions() {
-      setLoading(true)
-      try {
-        const health = await mlService.getModelHealth(selectedModelId)
-        setModelHealth(health)
-        const pList = await mlService.getPredictions(selectedModelId)
-        setPredictions(pList)
-        setSelectedPrediction(pList.length > 0 ? pList[0] : null)
-      } catch (err) {
-        console.error('Failed to load model health:', err)
-      } finally {
-        setLoading(false)
-      }
-    }
-    loadHealthAndPredictions()
-  }, [selectedModelId])
+    setLoading(true)
+    const m = models.find((x) => x.id === selectedModelId) || null
+    setSelectedModel(m)
+
+    Promise.all([
+      mlService.getModelHealth(selectedModelId),
+      mlService.getPredictions(selectedModelId),
+    ]).then(([health, unvalPreds]) => {
+      setModelHealth(health)
+      setPredictions(unvalPreds)
+      if (unvalPreds.length > 0) setSelectedPrediction(unvalPreds[0])
+      else setSelectedPrediction(null)
+    }).catch((err) => {
+      console.error('Failed to load model validation data:', err)
+    }).finally(() => setLoading(false))
+  }, [selectedModelId, models])
 
   const handleValidatePrediction = async () => {
     if (!selectedPrediction || !actualValueInput) return
-    setErrorMsg('')
-    setValidationSuccessMsg('')
+    const val = parseFloat(actualValueInput)
+    if (isNaN(val)) {
+      setErrorMsg('Please enter a valid numeric value for actual measurement.')
+      return
+    }
+
+    setErrorMsg(null)
+    setValidationSuccessMsg(null)
     try {
-      const valNum = parseFloat(actualValueInput)
-      if (isNaN(valNum)) { setErrorMsg('Please enter a valid numeric actual laboratory result.'); return }
-      const res = await mlService.validatePrediction(
-        selectedPrediction.id, valNum, undefined,
-        selectedPrediction.predicted_property, selectedPrediction.unit, selectedPrediction.input_parameters
-      )
-      setValidationSuccessMsg(`Prediction validated! Signed Error: ${res.error}, Abs Error: ${res.absolute_error}`)
-      const updatedHealth = await mlService.getModelHealth(selectedModelId)
-      setModelHealth(updatedHealth)
+      await mlService.validatePrediction(selectedPrediction.id, val)
+      setValidationSuccessMsg(`Validation recorded! Actual: ${val} ${selectedPrediction.unit}. Error metrics updated.`)
+      setActualValueInput('')
+      const [health, unvalPreds] = await Promise.all([
+        mlService.getModelHealth(selectedModelId),
+        mlService.getPredictions(selectedModelId),
+      ])
+      setModelHealth(health)
+      setPredictions(unvalPreds)
+      if (unvalPreds.length > 0) setSelectedPrediction(unvalPreds[0])
+      else setSelectedPrediction(null)
     } catch (err: any) {
-      setErrorMsg(err?.response?.data?.detail || 'Failed to validate prediction.')
+      setErrorMsg(err?.response?.data?.detail || err?.message || 'Failed to validate prediction.')
     }
   }
 
   const handleRetireModel = async () => {
     if (!selectedModelId) return
-    if (!window.confirm('Retire this model? It will no longer generate predictions.')) return
+    if (!window.confirm('Are you sure you want to RETIRE this model? It will no longer be available for predictions.')) return
     try {
-      await mlService.retireModel(selectedModelId, 'Researcher retired model due to performance review.')
-      const mList = await mlService.getModels()
-      setModels(mList)
-    } catch (err) { console.error('Failed to retire model:', err) }
+      const updated = await mlService.retireModel(selectedModelId)
+      setModels((prev) => prev.map((m) => (m.id === selectedModelId ? updated : m)))
+      setSelectedModel(updated)
+    } catch (err: any) {
+      setErrorMsg(err?.response?.data?.detail || 'Failed to retire model.')
+    }
   }
 
-  const selectedModel = models.find((m) => m.id === selectedModelId)
-  const healthStatus = modelHealth?.status?.toLowerCase() || 'insufficient'
+  const healthStatus = modelHealth?.status === 'HEALTHY' ? 'healthy' : modelHealth?.status === 'DRIFTED' ? 'warning' : 'critical'
 
   return (
     <div className="gs-page">
@@ -88,8 +93,10 @@ export default function ModelValidationStudio() {
       {/* Header */}
       <div className="gs-page-header">
         <div>
-          <div className="gs-page-title">
-            <div className="gs-page-title-icon indigo">📡</div>
+          <div className="gs-page-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div className="gs-page-title-icon indigo" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <ShieldCheck size={20} />
+            </div>
             Model Monitoring &amp; Experimental Validation Studio
           </div>
           <p className="gs-page-subtitle">
@@ -111,8 +118,8 @@ export default function ModelValidationStudio() {
             </select>
           )}
           {selectedModel && selectedModel.status !== 'RETIRED' && (
-            <button onClick={handleRetireModel} className="gs-btn gs-btn-danger">
-              🚫 Retire Model
+            <button onClick={handleRetireModel} className="gs-btn gs-btn-danger" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <Ban size={14} /> Retire Model
             </button>
           )}
         </div>
@@ -153,12 +160,12 @@ export default function ModelValidationStudio() {
         {/* Left: Select Prediction */}
         <div className="gs-panel">
           <div className="gs-panel-header">
-            <span className="gs-panel-title">🔗 1. Select Prediction &amp; Link Experiment</span>
+            <span className="gs-panel-title">1. Select Prediction &amp; Link Experiment</span>
           </div>
           <div className="gs-panel-body">
             {predictions.length === 0 ? (
               <div className="gs-empty" style={{ padding: '40px 0' }}>
-                <div className="gs-empty-icon">📊</div>
+                <div className="gs-empty-icon" style={{ display: 'flex', justifyContent: 'center' }}><BarChart3 size={32} /></div>
                 <div className="gs-empty-title">No Predictions Available</div>
                 <div className="gs-empty-text">Generate predictions from the ML Center first, then return here to validate them.</div>
               </div>
@@ -196,7 +203,7 @@ export default function ModelValidationStudio() {
 
                     <div style={{ paddingTop: 10, borderTop: '1px solid var(--color-border-light)' }}>
                       <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#b45309', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
-                        ⚗️ Proposed / Prediction-Derived Conditions
+                        Proposed / Prediction-Derived Conditions
                       </div>
                       <div className="gs-param-grid">
                         {Object.entries(selectedPrediction.input_parameters).map(([k, v]) => (
@@ -217,7 +224,7 @@ export default function ModelValidationStudio() {
         {/* Right: Enter Lab Result */}
         <div className="gs-panel">
           <div className="gs-panel-header">
-            <span className="gs-panel-title">🧪 2. Enter Actual Laboratory Measurement</span>
+            <span className="gs-panel-title">2. Enter Actual Laboratory Measurement</span>
           </div>
           <div className="gs-panel-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div className="gs-field">
@@ -237,20 +244,20 @@ export default function ModelValidationStudio() {
               </div>
             </div>
 
-            {errorMsg && <div className="gs-alert error">⚠️ {errorMsg}</div>}
-            {validationSuccessMsg && <div className="gs-alert success">✅ {validationSuccessMsg}</div>}
+            {errorMsg && <div className="gs-alert error" style={{ display: 'flex', alignItems: 'center', gap: 8 }}><AlertTriangle size={16} /> {errorMsg}</div>}
+            {validationSuccessMsg && <div className="gs-alert success" style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Check size={16} /> {validationSuccessMsg}</div>}
 
             <button
               onClick={handleValidatePrediction}
               disabled={!selectedPrediction || !actualValueInput}
               className="gs-btn gs-btn-teal"
-              style={{ width: '100%', justifyContent: 'center' }}
+              style={{ width: '100%', justifyContent: 'center', display: 'flex', alignItems: 'center', gap: 6 }}
             >
-              ✓ Validate Prediction &amp; Calculate Error
+              <Check size={14} /> Validate Prediction &amp; Calculate Error
             </button>
 
             <div className="gs-info-banner amber">
-              <div className="gs-info-banner-icon">⚠️</div>
+              <div className="gs-info-banner-icon" style={{ display: 'flex', alignItems: 'center' }}><AlertTriangle size={18} /></div>
               <div>
                 <div className="gs-info-banner-title">Immutability Guarantee</div>
                 <div className="gs-info-banner-text">

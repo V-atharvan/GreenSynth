@@ -4,6 +4,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { TestTube2, X } from 'lucide-react'
 import type {
   ExperimentSummary,
   SampleCreate,
@@ -161,7 +162,7 @@ export default function Samples() {
       ) : filtered.length === 0 ? (
         <div className="card">
           <EmptyState
-            icon="🧪"
+            icon={<TestTube2 size={32} />}
             title={search || statusFilter || expFilter ? 'No matching samples' : 'No samples yet'}
             description="Create a new physical sample associated with an experiment."
             action={
@@ -231,7 +232,7 @@ export default function Samples() {
           <div className="modal" style={{ maxWidth: 540 }}>
             <div className="modal-header">
               <h2 className="modal-title">Create Physical Sample</h2>
-              <button className="modal-close" onClick={() => setShowCreate(false)} aria-label="Close">✕</button>
+              <button className="modal-close" onClick={() => setShowCreate(false)} aria-label="Close"><X size={18} /></button>
             </div>
             <form onSubmit={handleCreate}>
               <div className="modal-body">

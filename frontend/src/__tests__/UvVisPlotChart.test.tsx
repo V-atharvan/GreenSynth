@@ -31,7 +31,7 @@ describe('UvVisPlotChart', () => {
     expect(screen.getByText('(A · hν)² (a.u.)')).toBeDefined()
 
     // Switch to Absorbance Spectrum tab
-    const specBtn = screen.getByText('📊 Absorbance Spectrum (λ vs A)')
+    const specBtn = screen.getByText('Absorbance Spectrum (λ vs A)')
     fireEvent.click(specBtn)
 
     expect(screen.getByText('Wavelength λ (nm)')).toBeDefined()

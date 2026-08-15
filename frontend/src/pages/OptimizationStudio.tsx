@@ -463,7 +463,7 @@ export default function OptimizationStudio() {
               style={{ width: '100%', justifyContent: 'center', display: 'inline-flex', alignItems: 'center', gap: 6 }}
             >
               <Zap className="w-4 h-4" />
-              {loading ? 'Generating Candidates…' : '⚡ Run Candidate Generation'}
+              {loading ? 'Generating Candidates…' : 'Run Candidate Generation'}
             </button>
           </div>
         </div>
@@ -546,10 +546,7 @@ export default function OptimizationStudio() {
                         </span>
                       </td>
                       <td>
-                        <span className="gs-chip info">{c.novelty_category}</span>
-                      </td>
-                      <td>
-                        <span className={`gs-chip ${c.status === 'CONVERTED_TO_EXPERIMENT' ? 'production' : c.status === 'SELECTED' ? 'stable' : 'muted'}`}>
+                        <span className={`gs-chip ${c.status === 'SELECTED' ? 'production' : c.status === 'CONVERTED_TO_EXPERIMENT' ? 'stable' : 'info'}`}>
                           {c.status}
                         </span>
                       </td>
@@ -560,7 +557,7 @@ export default function OptimizationStudio() {
                               onClick={() => handleSelectCandidate(c.id)}
                               className="gs-btn gs-btn-emerald gs-btn-sm"
                             >
-                              ✓ Select
+                              Select
                             </button>
                           )}
                           {c.status !== 'CONVERTED_TO_EXPERIMENT' && (
@@ -568,7 +565,7 @@ export default function OptimizationStudio() {
                               onClick={() => handleCreateExperiment(c.id)}
                               className="gs-btn gs-btn-indigo gs-btn-sm"
                             >
-                              🔬 Create Experiment
+                              Create Experiment
                             </button>
                           )}
                         </span>
@@ -596,7 +593,7 @@ export default function OptimizationStudio() {
             </div>
             <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div className="gs-alert warning">
-                ⚠️ {reportModal.disclaimer}
+                {reportModal.disclaimer}
               </div>
               <div className="gs-param-grid">
                 <div className="gs-param-item">

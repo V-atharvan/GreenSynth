@@ -124,18 +124,20 @@ async def get_project_configuration(
     char_caps = pdef.characterization_capabilities if pdef else {"XRD": True, "UV_Vis": True, "Electrical": True, "FTIR": True, "SEM": True}
     anal_caps = pdef.analysis_capabilities if pdef else {"PeakDetection": True, "TaucPlot": True, "ConductivityFit": True}
     opt_caps = pdef.optimization_capabilities if pdef else {"GridSearch": True, "RandomSearch": True, "ModelGuided": True}
-    biomass_val = "Rice husk" if proj.project_code in ("P5", "P6") else None
+    from app.core.method_config import get_project_spec
+    spec = get_project_spec(proj.project_code)
 
     return ProjectConfigurationResponse(
         project_id=proj.id,
         project_code=proj.project_code,
         name=proj.name,
-        material_system="BIOMASS_DERIVED" if biomass_val else "SINGLE_MATERIAL",
+        material_system=spec["material_system"],
         material=proj.material,
         biomass=biomass_val,
         extract=proj.extract,
         solvent=proj.solvent,
         synthesis_method=proj.synthesis_method,
+        method_code=spec["method"],
         current_version=curr_ver,
         characterization_capabilities=char_caps,
         analysis_capabilities=anal_caps,

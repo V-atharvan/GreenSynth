@@ -8,50 +8,14 @@
 
 import React from 'react'
 import type { ExperimentParameterCreate, ParameterDefinition } from '@/types'
+import { PARAMETER_SECTION_MAP, getDynamicParameterLabel } from '@/config/methodConfig'
 
 interface DynamicParameterFormProps {
   definitions: ParameterDefinition[]
   values: Record<string, { value: string; notes?: string }>
   onChange: (paramDefId: string, value: string, notes?: string) => void
   disabled?: boolean
-}
-
-const SECTION_MAP: Record<string, { title: string; icon: string }> = {
-  copper_precursor_salt: { title: 'A. Precursor & Extract', icon: '🧪' },
-  copper_precursor: { title: 'A. Precursor & Extract', icon: '🧪' },
-  precursor_concentration: { title: 'A. Precursor & Extract', icon: '🧪' },
-  precursor_solution_volume: { title: 'A. Precursor & Extract', icon: '🧪' },
-  precursor_volume: { title: 'A. Precursor & Extract', icon: '🧪' },
-  mulberry_extract_concentration: { title: 'A. Precursor & Extract', icon: '🧪' },
-  extract_concentration: { title: 'A. Precursor & Extract', icon: '🧪' },
-  mulberry_extract_volume: { title: 'A. Precursor & Extract', icon: '🧪' },
-  extract_volume: { title: 'A. Precursor & Extract', icon: '🧪' },
-  biomass_source_mass_g: { title: 'A. Precursor & Extract', icon: '🧪' },
-
-  ethanol_volume: { title: 'B. Solvent', icon: '💧' },
-  solvent_volume: { title: 'B. Solvent', icon: '💧' },
-  pretreatment_acid_concentration: { title: 'B. Solvent', icon: '💧' },
-
-  substrate_type: { title: 'C. Deposition Conditions', icon: '🔥' },
-  substrate_temperature_c: { title: 'C. Deposition Conditions', icon: '🔥' },
-  substrate_temperature: { title: 'C. Deposition Conditions', icon: '🔥' },
-  spray_duration_min: { title: 'C. Deposition Conditions', icon: '🔥' },
-  nozzle_substrate_distance_cm: { title: 'C. Deposition Conditions', icon: '🔥' },
-  sol_gel_aging_temperature_c: { title: 'C. Deposition Conditions', icon: '🔥' },
-  sol_gel_aging_time_h: { title: 'C. Deposition Conditions', icon: '🔥' },
-  hydrothermal_temperature_c: { title: 'C. Deposition Conditions', icon: '🔥' },
-  hydrothermal_reaction_time_h: { title: 'C. Deposition Conditions', icon: '🔥' },
-  autoclave_fill_factor_pct: { title: 'C. Deposition Conditions', icon: '🔥' },
-  calcination_temperature_c: { title: 'C. Deposition Conditions', icon: '🔥' },
-  calcination_duration_h: { title: 'C. Deposition Conditions', icon: '🔥' },
-
-  spray_rate_ml_min: { title: 'D. Spray System', icon: '⚙️' },
-  spray_rate: { title: 'D. Spray System', icon: '⚙️' },
-  carrier_gas_pressure_kpa: { title: 'D. Spray System', icon: '⚙️' },
-  spray_cycles: { title: 'D. Spray System', icon: '⚙️' },
-
-  ambient_temperature_c: { title: 'E. Ambient Conditions', icon: '🌡️' },
-  ambient_relative_humidity: { title: 'E. Ambient Conditions', icon: '🌡️' },
+  projectCode?: string
 }
 
 export function DynamicParameterForm({
@@ -59,6 +23,7 @@ export function DynamicParameterForm({
   values,
   onChange,
   disabled = false,
+  projectCode,
 }: DynamicParameterFormProps) {
   if (definitions.length === 0) {
     return (
@@ -69,11 +34,11 @@ export function DynamicParameterForm({
   }
 
   // Group definitions by section
-  const grouped: Record<string, { icon: string; items: ParameterDefinition[] }> = {}
+  const grouped: Record<string, { items: ParameterDefinition[] }> = {}
   definitions.forEach((pdef) => {
-    const sec = SECTION_MAP[pdef.parameter_code] ?? { title: 'General Parameters', icon: '🔬' }
+    const sec = PARAMETER_SECTION_MAP[pdef.parameter_code] ?? { title: 'General Parameters' }
     if (!grouped[sec.title]) {
-      grouped[sec.title] = { icon: sec.icon, items: [] }
+      grouped[sec.title] = { items: [] }
     }
     grouped[sec.title].items.push(pdef)
   })
@@ -98,19 +63,16 @@ export function DynamicParameterForm({
               textTransform: 'uppercase',
               letterSpacing: '0.05em',
               color: 'var(--color-primary)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
             }}
           >
-            <span>{section.icon}</span>
-            <span>{sectionTitle}</span>
+            {sectionTitle}
           </h4>
 
           <div className="form-grid">
             {section.items.map((pdef) => {
               const current = values[pdef.id] ?? { value: '' }
               const fieldId = `param-${pdef.id}`
+              const displayLabel = getDynamicParameterLabel(pdef.parameter_code, projectCode) || pdef.parameter_name
 
               return (
                 <div
@@ -136,7 +98,7 @@ export function DynamicParameterForm({
                       htmlFor={fieldId}
                       style={{ fontWeight: 600 }}
                     >
-                      {pdef.parameter_name}
+                      {displayLabel}
                     </label>
 
                     {pdef.unit && (

@@ -5,52 +5,60 @@
  */
 
 import React, { useState } from 'react'
+import { X } from 'lucide-react'
 import type { CharacterizationCreate, TechniqueType } from '@/types'
 import { characterizationService } from '@/services/characterizationService'
 import { ErrorMessage } from '@/components/ErrorMessage'
-import { InlineSpinner } from '@/components/LoadingSpinner'
 import type { ApiError } from '@/types'
+
+const TECHNIQUE_OPTIONS: { value: TechniqueType; label: string }[] = [
+  { value: 'XRD', label: 'X-Ray Diffraction (XRD)' },
+  { value: 'UV_VIS', label: 'UV-Vis Spectroscopy' },
+  { value: 'FTIR', label: 'FTIR Spectroscopy' },
+  { value: 'SEM', label: 'Scanning Electron Microscopy (SEM)' },
+  { value: 'ELECTRICAL', label: 'Electrical I-V Measurement' },
+]
 
 interface AddCharacterizationModalProps {
   sampleId: string
+  isOpen?: boolean
   onClose: () => void
-  onCreated: () => void
+  onSuccess: () => void
 }
-
-const TECHNIQUES: { value: TechniqueType; label: string; desc: string }[] = [
-  { value: 'XRD', label: 'XRD (X-Ray Diffraction)', desc: 'Phase identification & crystal structure' },
-  { value: 'UV_VIS', label: 'UV-Vis Spectroscopy', desc: 'Optical absorption & bandgap measurement' },
-  { value: 'FTIR', label: 'FTIR Spectroscopy', desc: 'Functional groups & chemical bonding' },
-  { value: 'SEM', label: 'SEM (Scanning Electron Microscopy)', desc: 'Surface morphology & microstructure' },
-  { value: 'ELECTRICAL', label: 'Electrical Measurements', desc: 'IV curves, resistivity & conductivity' },
-]
 
 export function AddCharacterizationModal({
   sampleId,
+  isOpen = true,
   onClose,
-  onCreated,
+  onSuccess,
 }: AddCharacterizationModalProps) {
-  const [form, setForm] = useState<CharacterizationCreate>({
-    sample_id: sampleId,
-    technique: 'XRD',
-    operator: '',
-    instrument_name: '',
-    instrument_model: '',
-    notes: '',
-  })
-  const [error, setError] = useState<string | null>(null)
+  if (!isOpen) return null
+
+  const [technique, setTechnique] = useState<TechniqueType>('XRD')
+  const [instrumentName, setInstrumentName] = useState('')
+  const [operator, setOperator] = useState('')
+  const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError(null)
     setSaving(true)
+    setError(null)
+
     try {
-      await characterizationService.createCharacterization(form)
-      onCreated()
+      const payload: CharacterizationCreate = {
+        sample_id: sampleId,
+        technique,
+        instrument_name: instrumentName.trim() || undefined,
+        operator: operator.trim() || undefined,
+        notes: notes.trim() || undefined,
+      }
+      await characterizationService.createCharacterization(payload)
+      onSuccess()
       onClose()
     } catch (err: unknown) {
-      setError((err as ApiError)?.message ?? 'Failed to create characterization run.')
+      setError((err as ApiError)?.message ?? 'Failed to record characterization run.')
     } finally {
       setSaving(false)
     }
@@ -63,7 +71,7 @@ export function AddCharacterizationModal({
           <h2 className="modal-title" id="add-char-title">
             Add Laboratory Characterization Run
           </h2>
-          <button className="modal-close" onClick={onClose} aria-label="Close">✕</button>
+          <button className="modal-close" onClick={onClose} aria-label="Close"><X size={18} /></button>
         </div>
 
         <form onSubmit={handleSubmit}>
@@ -78,27 +86,16 @@ export function AddCharacterizationModal({
                 <select
                   id="tech-select"
                   className="form-control"
-                  value={form.technique}
-                  onChange={(e) => setForm({ ...form, technique: e.target.value as TechniqueType })}
+                  value={technique}
+                  onChange={(e) => setTechnique(e.target.value as TechniqueType)}
                   required
                 >
-                  {TECHNIQUES.map((t) => (
+                  {TECHNIQUE_OPTIONS.map((t) => (
                     <option key={t.value} value={t.value}>
-                      {t.label} — {t.desc}
+                      {t.label}
                     </option>
                   ))}
                 </select>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label" htmlFor="char-date">Characterization Date</label>
-                <input
-                  id="char-date"
-                  type="date"
-                  className="form-control"
-                  value={form.characterization_date ?? ''}
-                  onChange={(e) => setForm({ ...form, characterization_date: e.target.value || undefined })}
-                />
               </div>
 
               <div className="form-group">
@@ -107,8 +104,8 @@ export function AddCharacterizationModal({
                   id="char-op"
                   className="form-control"
                   placeholder="e.g. Dr. Jane Doe"
-                  value={form.operator ?? ''}
-                  onChange={(e) => setForm({ ...form, operator: e.target.value })}
+                  value={operator}
+                  onChange={(e) => setOperator(e.target.value)}
                 />
               </div>
 
@@ -118,19 +115,8 @@ export function AddCharacterizationModal({
                   id="inst-name"
                   className="form-control"
                   placeholder="e.g. Rigaku SmartLab"
-                  value={form.instrument_name ?? ''}
-                  onChange={(e) => setForm({ ...form, instrument_name: e.target.value })}
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label" htmlFor="inst-model">Instrument Model</label>
-                <input
-                  id="inst-model"
-                  className="form-control"
-                  placeholder="e.g. SmartLab SE 9kW"
-                  value={form.instrument_model ?? ''}
-                  onChange={(e) => setForm({ ...form, instrument_model: e.target.value })}
+                  value={instrumentName}
+                  onChange={(e) => setInstrumentName(e.target.value)}
                 />
               </div>
 
@@ -141,8 +127,8 @@ export function AddCharacterizationModal({
                   className="form-control"
                   rows={3}
                   placeholder="Scan range, radiation wavelength, voltage, current, atmosphere, etc."
-                  value={form.notes ?? ''}
-                  onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
                 />
               </div>
             </div>
@@ -158,7 +144,7 @@ export function AddCharacterizationModal({
               Cancel
             </button>
             <button type="submit" className="btn btn-primary" disabled={saving}>
-              {saving ? <InlineSpinner /> : 'Create Characterization Record'}
+              {saving ? 'Saving...' : 'Create Characterization Record'}
             </button>
           </div>
         </form>

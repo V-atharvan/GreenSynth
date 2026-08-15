@@ -76,6 +76,7 @@ class ProjectSummary(BaseModel):
     name: str
     material: str
     synthesis_method: str
+    solvent: str | None = None
     status: ProjectStatus
     created_at: datetime
 

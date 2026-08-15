@@ -108,7 +108,7 @@ export default function ProjectDetail() {
           <div style={{ display: 'flex', gap: 8 }}>
             {!editing && (
               <button className="btn btn-secondary" onClick={startEdit}>
-                ✏ Edit
+                Edit
               </button>
             )}
             <StatusBadge status={project.status} />
@@ -335,7 +335,7 @@ export default function ProjectDetail() {
           <div className="card-header">
             <h2>Synthesis Parameter Definitions ({activeDefs.length})</h2>
             <button className="btn btn-primary btn-sm" onClick={() => setShowParamModal(true)}>
-              ⚙ Manage Definitions
+              Manage Definitions
             </button>
           </div>
           <div className="table-container">

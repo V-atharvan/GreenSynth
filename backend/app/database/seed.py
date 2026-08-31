@@ -16,20 +16,25 @@ import logging
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.security import hash_password
+from app.models.doe import Objective
+from app.models.optimization import OptimizationObjective
+from app.models.parameter import ParameterDataType, ParameterDefinition, ParameterStatus
 from app.models.project import Project, ProjectStatus
-from app.models.parameter import ParameterDefinition, ParameterDataType, ParameterStatus
 from app.models.project_config import (
-    MaterialCatalog,
     BiomassCatalog,
     ExtractCatalog,
+    MaterialCatalog,
+    ProjectDefinition,
     SolventCatalog,
     SynthesisMethodCatalog,
-    ProjectDefinition,
 )
-from app.models.optimization import OptimizationObjective
-from app.models.doe import Objective
+from app.models.user import User, UserRole
 
 logger = logging.getLogger(__name__)
+
+ADMIN_EMAIL = "v.atharvan@gmail.com"
+ADMIN_DEFAULT_PASSWORD = "aaaaaaaa"
 
 ALL_PROJECT_SPECS = [
     {
@@ -751,5 +756,40 @@ async def seed_demo_project(db: AsyncSession) -> None:
                 )
             )
 
+    await seed_admin_user(db)
     await db.commit()
-    logger.info("Seeded project definitions (P1-P8) and optimization objectives.")
+    logger.info("Seeded project definitions (P1-P8), optimization objectives, and admin user.")
+
+
+async def seed_admin_user(db: AsyncSession) -> None:
+    """
+    Idempotently seeds the system administrator user if not present.
+    Email: v.atharvan@gmail.com
+    Password: aaaaaaaa (hashed)
+    Role: ADMIN
+    """
+    res = await db.execute(select(User).where(User.email == ADMIN_EMAIL.lower()))
+    admin_user = res.scalar_one_or_none()
+
+    if admin_user is None:
+        admin_user = User(
+            username="admin",
+            email=ADMIN_EMAIL.lower(),
+            full_name="System Administrator",
+            department="System Administration",
+            phone="+1-000-000-0000",
+            roll_number="ADMIN-001",
+            role=UserRole.ADMIN,
+            password_hash=hash_password(ADMIN_DEFAULT_PASSWORD),
+            is_active=True,
+        )
+        db.add(admin_user)
+        await db.flush()
+        logger.info("Created system administrator account (%s).", ADMIN_EMAIL)
+    else:
+        # Ensure role is ADMIN and active
+        if admin_user.role != UserRole.ADMIN or not admin_user.is_active:
+            admin_user.role = UserRole.ADMIN
+            admin_user.is_active = True
+            await db.flush()
+            logger.info("Updated existing administrator account permissions.")

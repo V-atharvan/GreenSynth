@@ -1,7 +1,7 @@
 """
 GreenSynth Analytics — Parameters API Router
 
-REST API endpoints for parameter definitions and recorded experiment parameters.
+REST API endpoints for parameter definitions and recorded experiment parameters with full authorization.
 """
 
 from __future__ import annotations
@@ -11,7 +11,15 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_db
+from app.api.deps import (
+    get_authorized_project_ids,
+    get_current_project,
+    get_current_user,
+    get_db,
+    verify_project_access,
+)
+from app.models.project import Project
+from app.models.user import User
 from app.schemas.parameter import (
     BatchExperimentParametersInput,
     ExperimentParameterCreate,
@@ -20,6 +28,7 @@ from app.schemas.parameter import (
     ParameterDefinitionResponse,
     ParameterDefinitionUpdate,
 )
+from app.services.experiment_service import ExperimentNotFoundError, ExperimentService
 from app.services.parameter_service import (
     ParameterNotFoundError,
     ParameterService,
@@ -39,9 +48,14 @@ router = APIRouter(tags=["parameters"])
 async def get_project_parameters(
     project_id: uuid.UUID,
     include_inactive: bool = Query(default=False, description="Include inactive parameter definitions"),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> list[ParameterDefinitionResponse]:
-    """Return synthesis parameter definitions configured for a project."""
+    """Return synthesis parameter definitions configured for the authorized project."""
+    if not current_user.is_admin:
+        current_project = await get_current_project(current_user=current_user, db=db)
+        verify_project_access(project_id, current_project, current_user)
+
     service = ParameterService(db)
     definitions = await service.get_project_definitions(
         project_id, active_only=not include_inactive
@@ -58,9 +72,14 @@ async def get_project_parameters(
 async def create_project_parameter(
     project_id: uuid.UUID,
     data: ParameterDefinitionCreate,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> ParameterDefinitionResponse:
-    """Define a new synthesis parameter for a project."""
+    """Define a new synthesis parameter for the authorized project."""
+    if not current_user.is_admin:
+        current_project = await get_current_project(current_user=current_user, db=db)
+        verify_project_access(project_id, current_project, current_user)
+
     service = ParameterService(db)
     pdef = await service.create_definition(project_id, data)
     return ParameterDefinitionResponse.model_validate(pdef)
@@ -75,9 +94,14 @@ async def update_project_parameter(
     project_id: uuid.UUID,
     parameter_id: uuid.UUID,
     data: ParameterDefinitionUpdate,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> ParameterDefinitionResponse:
     """Update constraints, description, or status of a parameter definition."""
+    if not current_user.is_admin:
+        current_project = await get_current_project(current_user=current_user, db=db)
+        verify_project_access(project_id, current_project, current_user)
+
     service = ParameterService(db)
     try:
         pdef = await service.update_definition(parameter_id, data)
@@ -94,13 +118,17 @@ async def update_project_parameter(
 async def deactivate_project_parameter(
     project_id: uuid.UUID,
     parameter_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> ParameterDefinitionResponse:
     """
     Deactivate a parameter definition.
-
     Marks parameter status INACTIVE to preserve historical experiment integrity.
     """
+    if not current_user.is_admin:
+        current_project = await get_current_project(current_user=current_user, db=db)
+        verify_project_access(project_id, current_project, current_user)
+
     service = ParameterService(db)
     try:
         pdef = await service.deactivate_definition(parameter_id)
@@ -118,9 +146,20 @@ async def deactivate_project_parameter(
 )
 async def get_experiment_parameters(
     experiment_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> list[ExperimentParameterResponse]:
-    """Return recorded synthesis parameters for an experiment."""
+    """Return recorded synthesis parameters for an authorized experiment."""
+    exp_service = ExperimentService(db)
+    try:
+        exp = await exp_service.get_by_id(experiment_id)
+        if not current_user.is_admin:
+            auth_ids = await get_authorized_project_ids(current_user, db)
+            if exp.project_id not in auth_ids:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Experiment not found.")
+    except ExperimentNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+
     service = ParameterService(db)
     params = await service.get_experiment_parameters(experiment_id)
     return [ExperimentParameterResponse.model_validate(p) for p in params]
@@ -134,14 +173,23 @@ async def get_experiment_parameters(
 async def save_experiment_parameters(
     experiment_id: uuid.UUID,
     payload: BatchExperimentParametersInput,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> list[ExperimentParameterResponse]:
     """
-    Save or update synthesis parameters for an experiment.
-
+    Save or update synthesis parameters for an authorized experiment.
     Validates all values against project parameter definitions.
-    Raises 422 Unprocessable Entity if required parameters are missing or values are out of bounds.
     """
+    exp_service = ExperimentService(db)
+    try:
+        exp = await exp_service.get_by_id(experiment_id)
+        if not current_user.is_admin:
+            auth_ids = await get_authorized_project_ids(current_user, db)
+            if exp.project_id not in auth_ids:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Experiment not found.")
+    except ExperimentNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+
     service = ParameterService(db)
     try:
         saved = await service.save_experiment_parameters(experiment_id, payload.parameters)

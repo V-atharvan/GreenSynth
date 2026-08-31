@@ -23,17 +23,17 @@ import type {
   RegressionResponse,
   StatisticalAnalysisResponse,
 } from '@/types'
-import { projectService } from '@/services/projectService'
 import { analysisService } from '@/services/analysisService'
+import { useProjectContext } from '@/context/ProjectContext'
 import { ErrorMessage } from '@/components/ErrorMessage'
 import { InlineSpinner, LoadingSpinner } from '@/components/LoadingSpinner'
 import { DatasetBuilderModal } from '@/components/DatasetBuilderModal'
 import { ComparisonPlotChart } from '@/components/ComparisonPlotChart'
+import { FolderKanban } from 'lucide-react'
 import type { ApiError } from '@/types'
 
 export function SampleComparison() {
-  const [projects, setProjects] = useState<ProjectSummary[]>([])
-  const [selectedProjId, setSelectedProjId] = useState<string>('')
+  const { projectId, projectCode, projectName } = useProjectContext()
   const [datasets, setDatasets] = useState<DatasetResponse[]>([])
   const [selectedDatasetId, setSelectedDatasetId] = useState<string>('')
 
@@ -47,29 +47,23 @@ export function SampleComparison() {
   const [yVar, setYVar] = useState<string>('')
   const [groupVar, setGroupVar] = useState<string>('solvent')
 
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [loadingTable, setLoadingTable] = useState(false)
   const [analyzing, setAnalyzing] = useState(false)
   const [showBuilderModal, setShowBuilderModal] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Load Projects
-  useEffect(() => {
-    projectService.getAll()
-      .then((projs: ProjectSummary[]) => {
-        setProjects(projs)
-        if (projs.length > 0) {
-          setSelectedProjId(projs[0].id)
-        }
-      })
-      .catch((err: unknown) => setError((err as ApiError)?.message ?? 'Failed to load projects.'))
-      .finally(() => setLoading(false))
-  }, [])
-
   // Load Datasets when project changes
   useEffect(() => {
-    if (!selectedProjId) return
-    analysisService.listDatasets(selectedProjId)
+    if (!projectId) {
+      setDatasets([])
+      setSelectedDatasetId('')
+      setTableData(null)
+      setDescStats([])
+      return
+    }
+    setLoading(true)
+    analysisService.listDatasets(projectId)
       .then((dsList) => {
         setDatasets(dsList)
         if (dsList.length > 0) {
@@ -80,8 +74,9 @@ export function SampleComparison() {
           setDescStats([])
         }
       })
-      .catch((err: unknown) => setError((err as ApiError)?.message ?? 'Failed to load datasets.'))
-  }, [selectedProjId])
+      .catch((err: unknown) => setError((err as ApiError)?.message ?? 'Failed to load project datasets.'))
+      .finally(() => setLoading(false))
+  }, [projectId])
 
   // Load Comparison Table & Auto Run Descriptive Stats when dataset changes
   const loadDatasetDetails = async (dsId: string) => {
@@ -213,19 +208,24 @@ export function SampleComparison() {
         marginBottom: 20,
       }}>
         <div>
-          <label className="form-label" style={{ fontSize: '0.75rem', marginBottom: 2 }}>Project</label>
-          <select
-            className="form-control"
-            style={{ width: 'auto', fontSize: '0.875rem' }}
-            value={selectedProjId}
-            onChange={(e) => setSelectedProjId(e.target.value)}
+          <label className="form-label" style={{ fontSize: '0.75rem', marginBottom: 2 }}>Assigned Project</label>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 12px',
+              background: '#f8fafc',
+              border: '1px solid #cbd5e1',
+              borderRadius: 'var(--radius-sm)',
+              fontSize: '0.8125rem',
+              fontWeight: 600,
+              color: '#0f766e',
+            }}
           >
-            {projects.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.project_code} — {p.name}
-              </option>
-            ))}
-          </select>
+            <FolderKanban size={14} />
+            <span>{projectCode ? `${projectCode} — ${projectName || projectCode}` : 'Loading...'}</span>
+          </div>
         </div>
 
         <div>
@@ -474,8 +474,8 @@ export function SampleComparison() {
           onClose={() => setShowBuilderModal(false)}
           onDatasetCreated={(newId) => {
             setShowBuilderModal(false)
-            if (selectedProjId) {
-              analysisService.listDatasets(selectedProjId).then((dsList) => {
+            if (projectId) {
+              analysisService.listDatasets(projectId).then((dsList: DatasetResponse[]) => {
                 setDatasets(dsList)
                 setSelectedDatasetId(newId)
               })

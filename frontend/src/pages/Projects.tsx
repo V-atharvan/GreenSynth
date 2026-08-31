@@ -17,6 +17,7 @@ import { EmptyState } from '@/components/EmptyState'
 import { StatusBadge } from '@/components/StatusBadge'
 import { PageHeader } from '@/components/PageHeader'
 import { ConfirmModal } from '@/components/ConfirmModal'
+import { useProjectContext } from '@/context/ProjectContext'
 import type { ApiError } from '@/types'
 import {
   FolderKanban,
@@ -44,6 +45,7 @@ const EMPTY_FORM: ProjectCreate = {
 
 export default function Projects() {
   const navigate = useNavigate()
+  const { projectCode: assignedProjectCode } = useProjectContext()
   const [projects, setProjects] = useState<ProjectSummary[]>([])
   const [matrix, setMatrix] = useState<ProjectMatrixRow[]>([])
   const [loading, setLoading] = useState(true)
@@ -287,15 +289,20 @@ export default function Projects() {
                 {filteredMatrix.map((row) => {
                   const proj = projects.find((p) => p.project_code === row.project_code)
                   return (
-                    <tr key={row.project_code}>
+                    <tr key={row.project_code} style={{ background: row.project_code === assignedProjectCode ? '#f0fdf4' : undefined }}>
                       <td>
-                        {proj ? (
-                          <Link to={`/projects/${proj.id}`} style={{ fontWeight: 800, color: '#4f46e5', textDecoration: 'none', fontFamily: 'var(--font-mono)' }}>
-                            {row.project_code}
-                          </Link>
-                        ) : (
-                          <span style={{ fontWeight: 800, fontFamily: 'var(--font-mono)' }}>{row.project_code}</span>
-                        )}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          {proj ? (
+                            <Link to={`/projects/${proj.id}`} style={{ fontWeight: 800, color: '#4f46e5', textDecoration: 'none', fontFamily: 'var(--font-mono)' }}>
+                              {row.project_code}
+                            </Link>
+                          ) : (
+                            <span style={{ fontWeight: 800, fontFamily: 'var(--font-mono)' }}>{row.project_code}</span>
+                          )}
+                          {row.project_code === assignedProjectCode && (
+                            <span className="gs-badge green" style={{ fontSize: '0.6875rem' }}>Assigned</span>
+                          )}
+                        </div>
                       </td>
                       <td style={{ maxWidth: 260, fontWeight: 600 }}>{row.project_name}</td>
                       <td>

@@ -2,38 +2,27 @@
  * GreenSynth Analytics — ML Dataset Builder Page
  */
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Database, Plus, Trash2, CheckCircle2, AlertCircle, ArrowLeft } from 'lucide-react'
-import { projectService } from '@/services/projectService'
+import { Database, Plus, Trash2, CheckCircle2, AlertCircle, ArrowLeft, FolderKanban } from 'lucide-react'
 import { parameterService } from '@/services/parameterService'
-import type { ProjectSummary } from '@/types'
 import { mlService, MLDataset, MLDatasetFeatureSpec, MLDatasetRecord } from '@/services/mlService'
+import { useProjectContext } from '@/context/ProjectContext'
 
 export default function MLDatasetBuilder() {
   const navigate = useNavigate()
-  const [projects, setProjects] = useState<ProjectSummary[]>([])
-  const [selectedProject, setSelectedProject] = useState<string>('')
-  const [datasetName, setDatasetName] = useState<string>('CuO Conductivity Dataset')
-  const [description, setDescription] = useState<string>('Training dataset for CuO semiconductor conductivity')
+  const { projectId, projectCode, projectName } = useProjectContext()
+  const [datasetName, setDatasetName] = useState<string>('Synthesis Conductivity Dataset')
+  const [description, setDescription] = useState<string>('Training dataset for semiconductor conductivity prediction')
   const [targetProperty, setTargetProperty] = useState<string>('Electrical Conductivity')
   const [targetUnit, setTargetUnit] = useState<string>('S/cm')
   const [targetType, setTargetType] = useState<string>('CALCULATED')
 
   const [features, setFeatures] = useState<MLDatasetFeatureSpec[]>([
     { feature_name: 'precursor_concentration', source_parameter: 'precursor_concentration', unit: 'mol/L', data_type: 'NUMBER' },
-    { feature_name: 'precursor_solution_volume', source_parameter: 'precursor_solution_volume', unit: 'mL', data_type: 'NUMBER' },
-    { feature_name: 'mulberry_extract_concentration', source_parameter: 'mulberry_extract_concentration', unit: 'g/L', data_type: 'NUMBER' },
-    { feature_name: 'mulberry_extract_volume', source_parameter: 'mulberry_extract_volume', unit: 'mL', data_type: 'NUMBER' },
-    { feature_name: 'ethanol_volume', source_parameter: 'ethanol_volume', unit: 'mL', data_type: 'NUMBER' },
     { feature_name: 'substrate_temperature_c', source_parameter: 'substrate_temperature_c', unit: '°C', data_type: 'NUMBER' },
     { feature_name: 'spray_rate_ml_min', source_parameter: 'spray_rate_ml_min', unit: 'mL/min', data_type: 'NUMBER' },
     { feature_name: 'spray_duration_min', source_parameter: 'spray_duration_min', unit: 'min', data_type: 'NUMBER' },
-    { feature_name: 'nozzle_substrate_distance_cm', source_parameter: 'nozzle_substrate_distance_cm', unit: 'cm', data_type: 'NUMBER' },
-    { feature_name: 'carrier_gas_pressure_kpa', source_parameter: 'carrier_gas_pressure_kpa', unit: 'kPa', data_type: 'NUMBER' },
-    { feature_name: 'spray_cycles', source_parameter: 'spray_cycles', unit: 'cycles', data_type: 'NUMBER' },
-    { feature_name: 'ambient_temperature_c', source_parameter: 'ambient_temperature_c', unit: '°C', data_type: 'NUMBER' },
-    { feature_name: 'ambient_relative_humidity', source_parameter: 'ambient_relative_humidity', unit: '%', data_type: 'NUMBER' },
   ])
 
   const [building, setBuilding] = useState<boolean>(false)
@@ -41,43 +30,29 @@ export default function MLDatasetBuilder() {
   const [datasetRecords, setDatasetRecords] = useState<MLDatasetRecord[]>([])
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    async function loadProjects() {
-      try {
-        const projs = await projectService.getAll()
-        setProjects(projs)
-        if (projs.length > 0) {
-          setSelectedProject(projs[0].id)
-        }
-      } catch (err) {
-        console.error('Failed to load projects:', err)
+  const syncProjectFeatures = useCallback(async () => {
+    if (!projectId) return
+    try {
+      const defs = await parameterService.getProjectParameters(projectId)
+      const numDefs = defs.filter((d) => d.data_type === 'NUMBER')
+      if (numDefs.length > 0) {
+        setFeatures(
+          numDefs.map((d) => ({
+            feature_name: d.parameter_code,
+            source_parameter: d.parameter_code,
+            unit: d.unit ?? '',
+            data_type: 'NUMBER',
+          }))
+        )
       }
+    } catch (err) {
+      console.error('Failed to sync project parameter features:', err)
     }
-    loadProjects()
-  }, [])
+  }, [projectId])
 
   useEffect(() => {
-    if (!selectedProject) return
-    async function syncProjectFeatures() {
-      try {
-        const defs = await parameterService.getProjectParameters(selectedProject)
-        const numDefs = defs.filter((d) => d.data_type === 'NUMBER')
-        if (numDefs.length > 0) {
-          setFeatures(
-            numDefs.map((d) => ({
-              feature_name: d.parameter_code,
-              source_parameter: d.parameter_code,
-              unit: d.unit ?? '',
-              data_type: 'NUMBER',
-            }))
-          )
-        }
-      } catch (err) {
-        console.error('Failed to sync project parameter features:', err)
-      }
-    }
     syncProjectFeatures()
-  }, [selectedProject])
+  }, [syncProjectFeatures])
 
   const handleAddFeature = () => {
     setFeatures([
@@ -98,13 +73,23 @@ export default function MLDatasetBuilder() {
 
   const handleBuildDataset = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!selectedProject) return
+    if (!projectId) {
+      setError('Assigned project context is missing. Please ensure your research group is active.')
+      return
+    }
+
+    if (features.length === 0) {
+      setError('At least one numeric feature must be included in the dataset.')
+      return
+    }
+
     setBuilding(true)
     setError(null)
+    setCreatedDataset(null)
 
     try {
-      const ds = await mlService.createDataset({
-        project_id: selectedProject,
+      const dataset = await mlService.createDataset({
+        project_id: projectId,
         name: datasetName,
         description,
         target_property: targetProperty,
@@ -112,289 +97,265 @@ export default function MLDatasetBuilder() {
         target_unit: targetUnit,
         features,
       })
-      setCreatedDataset(ds)
 
-      const recs = await mlService.getDatasetRecords(ds.id)
-      setDatasetRecords(recs)
+      setCreatedDataset(dataset)
+      const records = await mlService.getDatasetRecords(dataset.id)
+      setDatasetRecords(records)
     } catch (err: any) {
-      console.error('Build dataset error:', err)
-      setError(err?.message || 'Failed to assemble dataset.')
+      setError(err?.message || 'Failed to construct dataset. Ensure eligible experiments exist.')
     } finally {
       setBuilding(false)
     }
   }
 
   return (
-    <div className="gs-page">
+    <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 24 }}>
       {/* Header */}
-      <div className="gs-page-header">
-        <div>
-          <div className="gs-page-title">
-            <button
-              onClick={() => navigate('/ml')}
-              className="btn btn-secondary btn-icon"
-              style={{ marginRight: 8 }}
-              title="Back to Machine Learning Studio"
-            >
-              <ArrowLeft className="w-4 h-4" />
-            </button>
-
-            <div className="gs-page-title-icon teal">
-              <Database className="w-5 h-5" />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button
+            onClick={() => navigate('/ml')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 36,
+              height: 36,
+              borderRadius: '50%',
+              background: '#ffffff',
+              border: '1px solid #e2e8f0',
+              cursor: 'pointer',
+            }}
+          >
+            <ArrowLeft className="w-5 h-5 text-slate-600" />
+          </button>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Database className="w-6 h-6 text-emerald-600" style={{ color: '#0f766e' }} />
+              <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0, color: '#1e3a5f' }}>
+                Multi-Modal ML Dataset Builder
+              </h1>
             </div>
-            <span>Dataset Builder Wizard</span>
+            <p style={{ color: '#64748b', fontSize: '0.875rem', margin: '4px 0 0 0' }}>
+              Assemble synthesis parameter vectors and characterization target measurements for model training.
+            </p>
           </div>
-          <div className="gs-page-subtitle">
-            Formulate an immutable ML dataset from completed experimental observations.
-          </div>
+        </div>
+
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '8px 14px',
+            background: '#f8fafc',
+            border: '1px solid #cbd5e1',
+            borderRadius: '6px',
+            fontSize: '13px',
+            fontWeight: 600,
+            color: '#0f766e',
+          }}
+        >
+          <FolderKanban size={15} />
+          <span>{projectCode ? `${projectCode} — ${projectName || projectCode}` : 'Loading project...'}</span>
         </div>
       </div>
 
       {error && (
-        <div className="alert alert-error">
+        <div className="alert alert-error" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px', background: '#fee2e2', borderRadius: '8px', color: '#991b1b' }}>
           <AlertCircle className="w-5 h-5 shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
       {/* Dataset Form Card */}
-      <form onSubmit={handleBuildDataset} className="card">
-        <div className="card-header">
-          <h2>1. Target & Project Configuration</h2>
+      <form onSubmit={handleBuildDataset} className="card" style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '24px' }}>
+        <div className="card-header" style={{ marginBottom: '16px' }}>
+          <h2 style={{ fontSize: '1.1rem', fontWeight: 600, color: '#1e3a5f', margin: 0 }}>1. Target &amp; Project Configuration</h2>
         </div>
 
         <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          <div className="form-grid">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
             <div className="form-group">
-              <label className="form-label required">Target Project</label>
-              <select
-                value={selectedProject}
-                onChange={(e) => setSelectedProject(e.target.value)}
-                className="form-control"
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>Assigned Project</label>
+              <div
+                style={{
+                  padding: '10px 12px',
+                  background: '#f1f5f9',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  color: '#0f766e',
+                }}
               >
-                {projects.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.project_code} — {p.name}
-                  </option>
-                ))}
-              </select>
+                {projectCode ? `${projectCode} — ${projectName || projectCode}` : 'Resolving project...'}
+              </div>
             </div>
 
             <div className="form-group">
-              <label className="form-label required">Dataset Name</label>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>Dataset Name</label>
               <input
                 type="text"
                 value={datasetName}
                 onChange={(e) => setDatasetName(e.target.value)}
                 required
-                className="form-control"
+                style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px' }}
               />
             </div>
 
             <div className="form-group">
-              <label className="form-label required">Target Property</label>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>Target Property</label>
               <input
                 type="text"
                 value={targetProperty}
                 onChange={(e) => setTargetProperty(e.target.value)}
                 required
-                placeholder="e.g. Electrical Conductivity"
-                className="form-control"
+                style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px' }}
               />
             </div>
 
             <div className="form-group">
-              <label className="form-label required">Target Unit</label>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>Target Unit</label>
               <input
                 type="text"
                 value={targetUnit}
                 onChange={(e) => setTargetUnit(e.target.value)}
                 required
-                placeholder="e.g. S/cm"
-                className="form-control"
+                style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px' }}
               />
             </div>
           </div>
 
-          <h2 style={{ fontSize: '1rem', fontWeight: 600, borderTop: '1px solid var(--color-border-light)', paddingTop: 16 }}>
-            2. Input Feature Definitions
-          </h2>
+          <div>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>Description</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={2}
+              style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px' }}
+            />
+          </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {features.map((feat, idx) => (
-              <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'var(--color-bg)', padding: '12px 16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border-light)' }}>
-                <div style={{ flex: 1 }}>
-                  <label className="form-label" style={{ fontSize: '0.75rem', marginBottom: 2 }}>Feature Name</label>
-                  <input
-                    type="text"
-                    value={feat.feature_name}
-                    onChange={(e) => handleFeatureChange(idx, 'feature_name', e.target.value)}
-                    placeholder="Feature Name"
-                    className="form-control"
-                  />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <label className="form-label" style={{ fontSize: '0.75rem', marginBottom: 2 }}>Source Parameter Code</label>
-                  <input
-                    type="text"
-                    value={feat.source_parameter}
-                    onChange={(e) => handleFeatureChange(idx, 'source_parameter', e.target.value)}
-                    placeholder="Source Parameter Code"
-                    className="form-control"
-                  />
-                </div>
-                <div style={{ width: 120 }}>
-                  <label className="form-label" style={{ fontSize: '0.75rem', marginBottom: 2 }}>Unit</label>
-                  <input
-                    type="text"
-                    value={feat.unit}
-                    onChange={(e) => handleFeatureChange(idx, 'unit', e.target.value)}
-                    placeholder="Unit"
-                    className="form-control"
-                  />
-                </div>
-                {features.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveFeature(idx)}
-                    className="btn btn-danger btn-sm"
-                    style={{ marginTop: 18 }}
-                    title="Remove feature"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-            ))}
-
-            <div>
+          {/* Features Table */}
+          <div style={{ marginTop: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#1e3a5f', margin: 0 }}>2. Parameter Feature Schema ({features.length} Features)</h3>
               <button
                 type="button"
                 onClick={handleAddFeature}
-                className="btn btn-secondary btn-sm"
+                style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#f8fafc', border: '1px solid #cbd5e1', padding: '6px 12px', borderRadius: '6px', fontSize: '13px', cursor: 'pointer' }}
               >
-                <Plus className="w-4 h-4" /> Add Input Feature
+                <Plus className="w-4 h-4" /> Add Custom Feature
               </button>
+            </div>
+
+            <div style={{ overflowX: 'auto', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                <thead style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                  <tr>
+                    <th style={{ padding: '10px 12px', textAlign: 'left' }}>Feature Code</th>
+                    <th style={{ padding: '10px 12px', textAlign: 'left' }}>Source Parameter</th>
+                    <th style={{ padding: '10px 12px', textAlign: 'left' }}>Unit</th>
+                    <th style={{ padding: '10px 12px', textAlign: 'center', width: '60px' }}>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {features.map((feat, idx) => (
+                    <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <td style={{ padding: '8px 12px' }}>
+                        <input
+                          type="text"
+                          value={feat.feature_name}
+                          onChange={(e) => handleFeatureChange(idx, 'feature_name', e.target.value)}
+                          style={{ width: '100%', padding: '6px 8px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '13px' }}
+                        />
+                      </td>
+                      <td style={{ padding: '8px 12px' }}>
+                        <input
+                          type="text"
+                          value={feat.source_parameter}
+                          onChange={(e) => handleFeatureChange(idx, 'source_parameter', e.target.value)}
+                          style={{ width: '100%', padding: '6px 8px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '13px' }}
+                        />
+                      </td>
+                      <td style={{ padding: '8px 12px' }}>
+                        <input
+                          type="text"
+                          value={feat.unit}
+                          onChange={(e) => handleFeatureChange(idx, 'unit', e.target.value)}
+                          style={{ width: '100%', padding: '6px 8px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '13px' }}
+                        />
+                      </td>
+                      <td style={{ padding: '8px 12px', textAlign: 'center' }}>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveFeature(idx)}
+                          style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '4px' }}
+                          title="Remove feature"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--color-border-light)', paddingTop: 16 }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px' }}>
             <button
               type="submit"
-              disabled={building}
-              className="btn btn-primary"
+              disabled={building || !projectId}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '10px 24px',
+                background: '#0f766e',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '6px',
+                fontSize: '14px',
+                fontWeight: 600,
+                cursor: building || !projectId ? 'not-allowed' : 'pointer',
+                opacity: building || !projectId ? 0.7 : 1,
+              }}
             >
-              {building ? 'Assembling Dataset...' : 'Build & Validate Dataset'}
+              <Database className="w-4 h-4" />
+              <span>{building ? 'Constructing Feature Vectors...' : 'Build ML Dataset'}</span>
             </button>
           </div>
         </div>
       </form>
 
-      {/* Dataset Preview */}
+      {/* Dataset Success View */}
       {createdDataset && (
-        <div className="card">
-          <div className="card-header">
-            <div>
-              <h2 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                Dataset Created: {createdDataset.name} (v{createdDataset.version})
-              </h2>
-              <p className="text-muted" style={{ fontSize: '0.8125rem', marginTop: 2 }}>
-                Target Property: <strong>{createdDataset.target_property}</strong> ({createdDataset.target_unit})
-              </p>
-            </div>
-            <button
-              onClick={() => navigate('/ml/training')}
-              className="btn btn-primary btn-sm"
-              disabled={createdDataset.eligible_count === 0}
-            >
-              Proceed to Model Training →
-            </button>
+        <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '12px', padding: '24px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#16a34a', marginBottom: '12px' }}>
+            <CheckCircle2 className="w-6 h-6" />
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 700, margin: 0 }}>Dataset Constructed Successfully</h3>
           </div>
+          <p style={{ color: '#334155', fontSize: '14px', margin: '0 0 16px 0' }}>
+            <strong>{createdDataset.name}</strong> (v{createdDataset.version}) assembled with <strong>{createdDataset.eligible_count}</strong> eligible training records ({createdDataset.excluded_count} excluded due to quality/completeness criteria).
+          </p>
 
-          <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            {createdDataset.eligible_count === 0 && (
-              <div className="alert alert-error" style={{ margin: 0 }}>
-                <AlertCircle className="w-5 h-5 shrink-0" />
-                <span>
-                  <strong>At least 1 eligible record is required to proceed to model training.</strong> Please complete experiments, record synthesis parameters, and perform characterization analysis.
-                </span>
-              </div>
-            )}
-
-            {createdDataset.eligible_count > 0 && createdDataset.eligible_count < 5 && (
-              <div
-                style={{
-                  background: '#fffbebfb',
-                  borderLeft: '4px solid #f59e0b',
-                  padding: '12px 16px',
-                  borderRadius: 4,
-                  fontSize: '0.875rem',
-                  color: '#92400e',
-                }}
-              >
-                <strong>Scientific Warning:</strong> Dataset contains {createdDataset.eligible_count} eligible observation(s). Dataset creation is valid, but model training recommends at least 5 observations for stable cross-validation.
-              </div>
-            )}
-
-            <div className="gs-metrics-row">
-              <div className="gs-metric-card emerald">
-                <span className="gs-metric-label">Eligible Records</span>
-                <span className="gs-metric-value">{createdDataset.eligible_count}</span>
-              </div>
-              <div className="gs-metric-card amber">
-                <span className="gs-metric-label">Excluded Records</span>
-                <span className="gs-metric-value">{createdDataset.excluded_count}</span>
-              </div>
-              <div className="gs-metric-card teal">
-                <span className="gs-metric-label">Dataset Status</span>
-                <span className="gs-metric-value" style={{ fontSize: '1.25rem' }}>{createdDataset.status}</span>
-              </div>
-            </div>
-
-            {/* Record Preview Table */}
-            <div>
-              <h3 style={{ fontSize: '0.9375rem', fontWeight: 600, marginBottom: 12 }}>Record Preview & Eligibility</h3>
-              <div className="table-container">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Experiment ID</th>
-                      <th>Sample ID</th>
-                      {features.map((f) => (
-                        <th key={f.feature_name}>{f.feature_name}</th>
-                      ))}
-                      <th>Target ({createdDataset.target_unit})</th>
-                      <th>Status</th>
-                      <th>Exclusion Reason</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {datasetRecords.map((r) => (
-                      <tr key={r.id} style={{ background: r.is_eligible ? undefined : 'var(--color-danger-bg)' }}>
-                        <td className="text-mono">{r.experiment_id.substring(0, 8)}...</td>
-                        <td className="text-mono">{r.sample_id.substring(0, 8)}...</td>
-                        {features.map((f) => (
-                          <td key={f.feature_name}>
-                            {r.feature_values[f.feature_name] ?? 'N/A'}
-                          </td>
-                        ))}
-                        <td style={{ fontWeight: 600, color: 'var(--color-primary)' }}>{r.target_value ?? 'N/A'}</td>
-                        <td>
-                          {r.is_eligible ? (
-                            <span className="badge badge-active">Eligible</span>
-                          ) : (
-                            <span className="badge badge-failed">Excluded</span>
-                          )}
-                        </td>
-                        <td className="text-muted">{r.exclusion_reason ?? '—'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
+          <button
+            onClick={() => navigate('/ml/training')}
+            style={{
+              padding: '10px 20px',
+              background: '#0f766e',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '6px',
+              fontSize: '14px',
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            Proceed to Model Training &rarr;
+          </button>
         </div>
       )}
     </div>

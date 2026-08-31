@@ -137,6 +137,9 @@ class RawFile(Base):
         String(64), nullable=False, index=True, comment="SHA-256 checksum"
     )
     storage_path: Mapped[str] = mapped_column(Text, nullable=False)
+    storage_backend: Mapped[str] = mapped_column(
+        String(32), nullable=False, default="local", server_default="local", index=True, comment="Storage backend: local or s3"
+    )
 
     uploaded_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()

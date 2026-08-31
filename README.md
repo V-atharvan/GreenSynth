@@ -75,6 +75,41 @@ CRTD/
 
 ---
 
+## Quick Start (One-Click Windows Launcher)
+
+For Windows local development, you can start the entire platform with one click:
+
+### Start GreenSynth
+Double-click:
+```
+Start GreenSynth.bat
+```
+*(Or run `Start GreenSynth.bat` from CMD / PowerShell).*
+
+**What happens automatically:**
+1. Validates repository structure and paths (supports spaces and any project directory).
+2. Verifies Python (3.11+) and Node.js (18+) / npm dependencies.
+3. Prepares `.env` and installs `frontend/node_modules` if missing.
+4. Starts FastAPI backend on `http://localhost:8000` with hot-reload in a dedicated terminal.
+5. Starts Vite frontend dev server on `http://localhost:5173` with hot-reload in a dedicated terminal.
+6. Automatically opens `http://localhost:5173` in your default web browser.
+
+### Check Service Status
+Double-click:
+```
+GreenSynth Status.bat
+```
+Displays live status and health metrics for Backend, Frontend, and Database.
+
+### Stop GreenSynth
+Double-click:
+```
+Stop GreenSynth.bat
+```
+Safely terminates only the GreenSynth backend and frontend processes (without affecting other applications).
+
+---
+
 ## Quick Start (Docker Compose)
 
 The easiest way to start the entire development stack is with Docker Compose:

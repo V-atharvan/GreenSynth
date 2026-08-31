@@ -14,7 +14,9 @@ from app.models.sample import Sample
 
 
 @pytest.mark.asyncio
-async def test_phase17_closed_loop_pipeline(client: AsyncClient, db_session: AsyncSession):
+async def test_phase17_closed_loop_pipeline(
+    client: AsyncClient, db_session: AsyncSession, default_auth_context
+):
     """End-to-end integration test for Phase 17 Closed-Loop Validation & Model Health Monitoring."""
 
     # 1. Create Project 7, MLDataset, MLModel, and MLPrediction
@@ -30,6 +32,7 @@ async def test_phase17_closed_loop_pipeline(client: AsyncClient, db_session: Asy
         status=ProjectStatus.ACTIVE,
     )
     db_session.add(proj)
+    default_auth_context["group"].project_id = proj.id
     await db_session.commit()
 
     ds = MLDataset(

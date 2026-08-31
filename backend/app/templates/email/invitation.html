@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+<p style="font-size: 16px; margin-top: 0;">Hello <strong>{{ recipient_name }}</strong>,</p>
+
+<p>You have been invited to join a collaborative research group on the <strong>GreenSynth Analytics Platform</strong>.</p>
+
+<div class="info-box">
+    <p><strong>Research Group:</strong> {{ group_name }}</p>
+    <p><strong>Invited By:</strong> {{ inviter_name }}</p>
+    <p><strong>Assigned Project:</strong> {{ project_code }} &mdash; {{ project_name }}</p>
+    {% if expiration_time %}
+    <p><strong>Invitation Valid Until:</strong> {{ expiration_time }}</p>
+    {% endif %}
+</div>
+
+<p>GreenSynth enables researchers to manage experimental conditions, record multi-modal characterization data (XRD, UV-Vis, FTIR, SEM, Electrical), and train machine learning models for green synthesis optimization.</p>
+
+<div style="text-align: center; margin: 30px 0;">
+    <a href="{{ invitation_link }}" class="button">Accept Invitation &amp; Join Group</a>
+</div>
+
+<p style="font-size: 13px; color: #64748b;">If the button above does not work, copy and paste this link into your browser:</p>
+<p class="url-fallback">{{ invitation_link }}</p>
+
+<p style="margin-top: 28px; font-size: 14px; color: #475569;">
+    Regards,<br>
+    <strong>The GreenSynth Platform Team</strong>
+</p>
+{% endblock %}

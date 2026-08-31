@@ -1,21 +1,19 @@
 /**
  * GreenSynth Analytics — Experiments List Page (Phase 2 Update)
  *
- * Dynamically loads project parameter definitions when creating a new experiment.
+ * Scoped to the authenticated user's assigned research project (P1–P8).
  */
 
-import React, { useEffect, useState } from 'react'
-import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
-import { FlaskConical, Check, X } from 'lucide-react'
+import React, { useEffect, useState, useCallback } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { FlaskConical, Check, X, FolderKanban } from 'lucide-react'
 import type {
   ExperimentCreate,
   ExperimentStatus,
   ExperimentSummary,
   ParameterDefinition,
-  ProjectSummary,
 } from '@/types'
 import { experimentService } from '@/services/experimentService'
-import { projectService } from '@/services/projectService'
 import { parameterService } from '@/services/parameterService'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { ErrorMessage } from '@/components/ErrorMessage'
@@ -23,6 +21,7 @@ import { EmptyState } from '@/components/EmptyState'
 import { StatusBadge } from '@/components/StatusBadge'
 import { PageHeader } from '@/components/PageHeader'
 import { DynamicParameterForm } from '@/components/DynamicParameterForm'
+import { useProjectContext } from '@/context/ProjectContext'
 import type { ApiError } from '@/types'
 
 const STATUSES: { value: ExperimentStatus | ''; label: string }[] = [
@@ -43,122 +42,105 @@ const EMPTY_FORM: ExperimentCreate = {
 }
 
 export default function Experiments() {
-  const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const location = useLocation()
+  const { projectId, projectCode, projectName } = useProjectContext()
 
   const [notification, setNotification] = useState<string | null>(
     (location.state as { notification?: string } | null)?.notification ?? null
   )
   const [experiments, setExperiments] = useState<ExperimentSummary[]>([])
-  const [projects, setProjects] = useState<ProjectSummary[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('')
-  const [projectFilter, setProjectFilter] = useState<string>(
-    searchParams.get('project_id') ?? ''
-  )
   const [showCreate, setShowCreate] = useState(false)
-  const [form, setForm] = useState<ExperimentCreate>({
-    ...EMPTY_FORM,
-    project_id: searchParams.get('project_id') ?? '',
-  })
+  const [form, setForm] = useState<ExperimentCreate>(EMPTY_FORM)
   const [paramDefs, setParamDefs] = useState<ParameterDefinition[]>([])
   const [paramValues, setParamValues] = useState<Record<string, { value: string; notes?: string }>>({})
   const [loadingParams, setLoadingParams] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
+    if (!projectId) return
     setLoading(true)
     setError(null)
     try {
-      const [exps, projs] = await Promise.all([
-        experimentService.getAll({
-          project_id: projectFilter || undefined,
-          status: statusFilter || undefined,
-        }),
-        projectService.getAll(),
-      ])
+      const exps = await experimentService.getAll({
+        project_id: projectId,
+        status: statusFilter || undefined,
+      })
       setExperiments(exps)
-      setProjects(projs)
-
-      if (projs.length > 0) {
-        if (projectFilter && !projs.some((p) => p.id === projectFilter)) {
-          setProjectFilter('')
-        }
-        if (!form.project_id || !projs.some((p) => p.id === form.project_id)) {
-          setForm((prev) => ({ ...prev, project_id: projs[0].id }))
-        }
-      }
     } catch (e: unknown) {
       setError((e as ApiError)?.message ?? 'Failed to load experiments.')
     } finally {
       setLoading(false)
     }
-  }
+  }, [projectId, statusFilter])
 
-  useEffect(() => { fetchData() }, [projectFilter, statusFilter])
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
 
   const handleOpenCreate = () => {
     setFormError(null)
-    const validProjId = projects.some((p) => p.id === projectFilter)
-      ? projectFilter
-      : projects[0]?.id ?? ''
-    setForm({ ...EMPTY_FORM, project_id: validProjId })
+    setForm({
+      ...EMPTY_FORM,
+      project_id: projectId || '',
+      experiment_code: projectCode ? `${projectCode}-EXP-` : '',
+    })
     setShowCreate(true)
   }
 
-  // When project_id changes in creation form, fetch parameter definitions
+  // When projectId is active, fetch parameter definitions
   useEffect(() => {
-    if (!form.project_id) {
+    if (!projectId) {
       setParamDefs([])
       setParamValues({})
       return
     }
 
-    const loadDefs = async () => {
-      setLoadingParams(true)
-      try {
-        const defs = await parameterService.getProjectParameters(form.project_id)
+    setLoadingParams(true)
+    parameterService
+      .getProjectParameters(projectId, true)
+      .then((defs) => {
         setParamDefs(defs)
-        // Initialize values object
-        const initVal: Record<string, { value: string }> = {}
+        const initial: Record<string, { value: string; notes?: string }> = {}
         defs.forEach((d) => {
-          initVal[d.id] = { value: '' }
+          initial[d.id] = { value: '', notes: '' }
         })
-        setParamValues(initVal)
-      } catch {
-        setParamDefs([])
-      } finally {
-        setLoadingParams(false)
-      }
+        setParamValues(initial)
+      })
+      .catch((err) => console.error('Failed to load project parameter definitions:', err))
+      .finally(() => setLoadingParams(false))
+  }, [projectId])
+
+  const filtered = experiments.filter((e) => {
+    const q = search.toLowerCase()
+    const matchesSearch =
+      !search ||
+      e.experiment_code.toLowerCase().includes(q) ||
+      e.title.toLowerCase().includes(q) ||
+      (e.researcher ?? '').toLowerCase().includes(q)
+    return matchesSearch
+  })
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!projectId) {
+      setFormError('No assigned project available. Please activate your research group.')
+      return
     }
 
-    loadDefs()
-  }, [form.project_id])
-
-  const filtered = experiments.filter((e) =>
-    `${e.experiment_code} ${e.title} ${e.researcher ?? ''}`
-      .toLowerCase()
-      .includes(search.toLowerCase())
-  )
-
-  const handleParamChange = (defId: string, val: string, notes?: string) => {
-    setParamValues((prev) => ({
-      ...prev,
-      [defId]: { value: val, notes },
-    }))
-  }
-
-  const handleCreate = async (evt: React.FormEvent) => {
-    evt.preventDefault()
-    setFormError(null)
     setSaving(true)
+    setFormError(null)
     try {
       // 1. Create Experiment
-      const exp = await experimentService.create(form)
+      const exp = await experimentService.create({
+        ...form,
+        project_id: projectId,
+      })
 
       // 2. Save parameters if any parameter inputs are provided
       const paramList = Object.entries(paramValues)
@@ -174,7 +156,7 @@ export default function Experiments() {
       }
 
       setShowCreate(false)
-      setForm({ ...EMPTY_FORM, project_id: projectFilter })
+      setForm(EMPTY_FORM)
       setParamValues({})
       await fetchData()
       navigate(`/experiments/${exp.id}`)
@@ -199,11 +181,10 @@ export default function Experiments() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 500 }}>
-            <Check size={16} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Check size={18} />
             <span>{notification}</span>
           </div>
           <button
@@ -226,9 +207,9 @@ export default function Experiments() {
 
       <PageHeader
         title="Experiments"
-        subtitle={`${experiments.length} experiment${experiments.length !== 1 ? 's' : ''}`}
+        subtitle={`${experiments.length} experiment${experiments.length !== 1 ? 's' : ''} in assigned project ${projectCode || ''}`}
         actions={
-          <button className="btn btn-primary" onClick={handleOpenCreate}>
+          <button className="btn btn-primary" onClick={handleOpenCreate} disabled={!projectId}>
             + New Experiment
           </button>
         }
@@ -239,7 +220,7 @@ export default function Experiments() {
         <input
           type="text"
           className="form-control search-input"
-          placeholder="Search experiments…"
+          placeholder="Search experiments in assigned project…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           aria-label="Search experiments"
@@ -257,19 +238,24 @@ export default function Experiments() {
             <option key={s.value} value={s.value}>{s.label}</option>
           ))}
         </select>
-        <select
-          className="form-control"
-          style={{ width: 220 }}
-          value={projectFilter}
-          onChange={(e) => setProjectFilter(e.target.value)}
-          aria-label="Filter by project"
-          id="project-filter"
+        <div
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '8px 14px',
+            background: '#f8fafc',
+            border: '1px solid #cbd5e1',
+            borderRadius: '6px',
+            fontSize: '13px',
+            fontWeight: 600,
+            color: '#0f766e',
+            whiteSpace: 'nowrap',
+          }}
         >
-          <option value="">All Projects</option>
-          {projects.map((p) => (
-            <option key={p.id} value={p.id}>{p.project_code} — {p.name.slice(0, 40)}</option>
-          ))}
-        </select>
+          <FolderKanban size={15} />
+          <span>Project: {projectCode ? `${projectCode} — ${projectName || projectCode}` : 'Loading...'}</span>
+        </div>
       </div>
 
       {loading ? (
@@ -280,10 +266,10 @@ export default function Experiments() {
         <div className="card">
           <EmptyState
             icon={<FlaskConical size={32} />}
-            title={search || statusFilter || projectFilter ? 'No matching experiments' : 'No experiments yet'}
-            description="Create a new experiment to record a laboratory synthesis run."
+            title={search || statusFilter ? 'No matching experiments' : 'No experiments yet'}
+            description="No experiments have been created for this project yet. Create an experiment to record a synthesis run."
             action={
-              <button className="btn btn-primary" onClick={handleOpenCreate}>
+              <button className="btn btn-primary" onClick={handleOpenCreate} disabled={!projectId}>
                 Create Experiment
               </button>
             }
@@ -298,9 +284,9 @@ export default function Experiments() {
                   <th>Code</th>
                   <th>Title</th>
                   <th>Status</th>
-                  <th>Project</th>
-                  <th>Date</th>
                   <th>Researcher</th>
+                  <th>Date</th>
+                  <th>Created</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -308,29 +294,15 @@ export default function Experiments() {
                 {filtered.map((exp) => (
                   <tr key={exp.id}>
                     <td>
-                      <Link to={`/experiments/${exp.id}`} className="table-link text-mono">
+                      <Link to={`/experiments/${exp.id}`} className="font-mono font-bold">
                         {exp.experiment_code}
                       </Link>
                     </td>
-                    <td>
-                      <Link to={`/experiments/${exp.id}`} className="table-link">
-                        {exp.title}
-                      </Link>
-                    </td>
+                    <td>{exp.title}</td>
                     <td><StatusBadge status={exp.status} /></td>
-                    <td>
-                      <Link to={`/projects/${exp.project_id}`} className="table-link text-mono">
-                        {exp.project_id.slice(0, 8)}…
-                      </Link>
-                    </td>
-                    <td style={{ color: 'var(--color-text-secondary)' }}>
-                      {exp.experiment_date
-                        ? new Date(exp.experiment_date).toLocaleDateString()
-                        : '—'}
-                    </td>
-                    <td style={{ color: 'var(--color-text-secondary)' }}>
-                      {exp.researcher ?? '—'}
-                    </td>
+                    <td>{exp.researcher ?? '—'}</td>
+                    <td>{exp.experiment_date ? new Date(exp.experiment_date).toLocaleDateString() : '—'}</td>
+                    <td>{new Date(exp.created_at).toLocaleDateString()}</td>
                     <td>
                       <button
                         className="btn btn-secondary btn-sm"
@@ -360,21 +332,21 @@ export default function Experiments() {
                 {formError && <ErrorMessage error={formError} />}
                 <div className="form-grid">
                   <div className="form-group">
-                    <label className="form-label required" htmlFor="exp-project">Project</label>
-                    <select
+                    <label className="form-label required" htmlFor="exp-project">Assigned Project</label>
+                    <div
                       id="exp-project"
-                      className="form-control"
-                      value={form.project_id}
-                      onChange={(e) => setForm({ ...form, project_id: e.target.value })}
-                      required
+                      style={{
+                        padding: '10px 12px',
+                        background: '#f1f5f9',
+                        border: '1px solid #cbd5e1',
+                        borderRadius: '6px',
+                        fontSize: '14px',
+                        fontWeight: 600,
+                        color: '#0f766e',
+                      }}
                     >
-                      <option value="">— Select project —</option>
-                      {projects.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.project_code} — {p.name.slice(0, 50)}
-                        </option>
-                      ))}
-                    </select>
+                      {projectCode ? `${projectCode} — ${projectName || projectCode}` : 'Resolving project...'}
+                    </div>
                   </div>
                   <div className="form-group">
                     <label className="form-label required" htmlFor="exp-code">Experiment Code</label>
@@ -392,7 +364,7 @@ export default function Experiments() {
                     <input
                       id="exp-title"
                       className="form-control"
-                      placeholder="Brief descriptive title"
+                      placeholder="e.g. Spray Pyrolysis CuO Synthesis with Mulberry Extract"
                       value={form.title}
                       onChange={(e) => setForm({ ...form, title: e.target.value })}
                       required
@@ -406,64 +378,42 @@ export default function Experiments() {
                       value={form.status}
                       onChange={(e) => setForm({ ...form, status: e.target.value as ExperimentStatus })}
                     >
-                      <option value="PLANNED">Planned</option>
-                      <option value="IN_PROGRESS">In Progress</option>
-                      <option value="COMPLETED">Completed</option>
-                      <option value="FAILED">Failed</option>
+                      {STATUSES.filter((s) => s.value).map((s) => (
+                        <option key={s.value} value={s.value}>{s.label}</option>
+                      ))}
                     </select>
                   </div>
                   <div className="form-group">
-                    <label className="form-label" htmlFor="exp-date">Experiment Date</label>
-                    <input
-                      id="exp-date"
-                      type="date"
-                      className="form-control"
-                      value={form.experiment_date ?? ''}
-                      onChange={(e) => setForm({ ...form, experiment_date: e.target.value || undefined })}
-                    />
-                  </div>
-                  <div className="form-group span-2">
                     <label className="form-label" htmlFor="exp-researcher">Researcher</label>
                     <input
                       id="exp-researcher"
                       className="form-control"
-                      placeholder="Name of conducting researcher"
-                      value={form.researcher ?? ''}
+                      placeholder="e.g. Atharva Kulkarni"
+                      value={form.researcher}
                       onChange={(e) => setForm({ ...form, researcher: e.target.value })}
                     />
                   </div>
                 </div>
 
-                {/* Synthesis Parameters Section */}
-                {form.project_id && (
-                  <div style={{ marginTop: 24, borderTop: '1px solid var(--color-border)', paddingTop: 16 }}>
-                    <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 12 }}>
-                      Synthesis Parameters
-                    </h3>
-                    {loadingParams ? (
-                      <LoadingSpinner message="Loading project parameter definitions…" size="sm" />
-                    ) : (
-                      <DynamicParameterForm
-                        definitions={paramDefs}
-                        values={paramValues}
-                        onChange={handleParamChange}
-                        projectCode={projects.find((p) => p.id === form.project_id)?.project_code}
-                      />
-                    )}
-                  </div>
-                )}
+                {/* Dynamic Parameter Form */}
+                <div style={{ marginTop: 24 }}>
+                  <DynamicParameterForm
+                    definitions={paramDefs}
+                    values={paramValues}
+                    onChange={(defId, val, notes) =>
+                      setParamValues((prev) => ({
+                        ...prev,
+                        [defId]: { value: val, notes },
+                      }))
+                    }
+                  />
+                </div>
               </div>
-
               <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => setShowCreate(false)}
-                  disabled={saving}
-                >
+                <button type="button" className="btn btn-secondary" onClick={() => setShowCreate(false)}>
                   Cancel
                 </button>
-                <button type="submit" className="btn btn-primary" disabled={saving}>
+                <button type="submit" className="btn btn-primary" disabled={saving || !projectId}>
                   {saving ? 'Creating…' : 'Create Experiment'}
                 </button>
               </div>

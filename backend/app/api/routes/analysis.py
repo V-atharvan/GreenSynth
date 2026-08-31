@@ -1,8 +1,8 @@
 """
 GreenSynth Analytics — Analysis & XRD API Router
 
-REST API endpoints for running scientific XRD analysis, fetching detected peaks,
-retrieving calculated properties, and obtaining processed XY curves for Plotly visualization.
+REST API endpoints for running scientific XRD, FTIR, UV-Vis, SEM, and Electrical analysis,
+fetching detected peaks, retrieving calculated properties, and obtaining processed XY curves with authorization.
 """
 
 from __future__ import annotations
@@ -10,9 +10,16 @@ from __future__ import annotations
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_db
+from app.api.deps import get_current_project, get_current_user, get_db
+from app.models.analysis import AnalysisRun
+from app.models.characterization import Characterization, RawFile
+from app.models.experiment import Experiment
+from app.models.project import Project
+from app.models.sample import Sample
+from app.models.user import User
 from app.scientific.electrical.parser import ElectricalParseError
 from app.scientific.electrical.schemas import ElectricalAnalysisInput, ElectricalProcessedResponse
 from app.scientific.electrical.service import ElectricalAnalysisService
@@ -53,6 +60,80 @@ from app.services.characterization_service import (
 router = APIRouter(tags=["analysis"])
 
 
+async def _verify_characterization_project(
+    characterization_id: uuid.UUID,
+    project_id: uuid.UUID,
+    db: AsyncSession,
+    current_user: User | None = None,
+) -> None:
+    if current_user and current_user.is_admin:
+        stmt = select(Characterization.id).where(Characterization.id == characterization_id)
+        res = await db.execute(stmt)
+        if res.scalar_one_or_none() is None:
+            raise HTTPException(status_code=404, detail="Characterization not found")
+        return
+
+    stmt = (
+        select(Characterization.id)
+        .join(Sample, Characterization.sample_id == Sample.id)
+        .join(Experiment, Sample.experiment_id == Experiment.id)
+        .where(Characterization.id == characterization_id, Experiment.project_id == project_id)
+    )
+    res = await db.execute(stmt)
+    if res.scalar_one_or_none() is None:
+        raise HTTPException(status_code=404, detail="Characterization not found")
+
+
+async def _verify_raw_file_project(
+    file_id: uuid.UUID,
+    project_id: uuid.UUID,
+    db: AsyncSession,
+    current_user: User | None = None,
+) -> None:
+    if current_user and current_user.is_admin:
+        stmt = select(RawFile.id).where(RawFile.id == file_id)
+        res = await db.execute(stmt)
+        if res.scalar_one_or_none() is None:
+            raise HTTPException(status_code=404, detail="Raw file not found")
+        return
+
+    stmt = (
+        select(RawFile.id)
+        .join(Characterization, RawFile.characterization_id == Characterization.id)
+        .join(Sample, Characterization.sample_id == Sample.id)
+        .join(Experiment, Sample.experiment_id == Experiment.id)
+        .where(RawFile.id == file_id, Experiment.project_id == project_id)
+    )
+    res = await db.execute(stmt)
+    if res.scalar_one_or_none() is None:
+        raise HTTPException(status_code=404, detail="Raw file not found")
+
+
+async def _verify_analysis_run_project(
+    analysis_run_id: uuid.UUID,
+    project_id: uuid.UUID,
+    db: AsyncSession,
+    current_user: User | None = None,
+) -> None:
+    if current_user and current_user.is_admin:
+        stmt = select(AnalysisRun.id).where(AnalysisRun.id == analysis_run_id)
+        res = await db.execute(stmt)
+        if res.scalar_one_or_none() is None:
+            raise HTTPException(status_code=404, detail="Analysis run not found")
+        return
+
+    stmt = (
+        select(AnalysisRun.id)
+        .join(Characterization, AnalysisRun.characterization_id == Characterization.id)
+        .join(Sample, Characterization.sample_id == Sample.id)
+        .join(Experiment, Sample.experiment_id == Experiment.id)
+        .where(AnalysisRun.id == analysis_run_id, Experiment.project_id == project_id)
+    )
+    res = await db.execute(stmt)
+    if res.scalar_one_or_none() is None:
+        raise HTTPException(status_code=404, detail="Analysis run not found")
+
+
 # ─────────────────────────────────────────────────────────────
 # FTIR ENDPOINTS
 # ─────────────────────────────────────────────────────────────
@@ -67,9 +148,15 @@ async def run_ftir_analysis(
     characterization_id: uuid.UUID,
     input_data: FTIRAnalysisInput,
     raw_file_id: uuid.UUID | None = None,
+    current_project: Project = Depends(get_current_project),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> XRDAnalysisRunResponse:
-    """Execute FTIR spectrum parsing, Savitzky-Golay noise smoothing, and peak detection."""
+    """Execute FTIR spectrum parsing, Savitzky-Golay noise smoothing, and peak detection for authorized project."""
+    await _verify_characterization_project(characterization_id, current_project.id, db, current_user)
+    if raw_file_id:
+        await _verify_raw_file_project(raw_file_id, current_project.id, db, current_user)
+
     service = FTIRAnalysisService(db)
     try:
         run = await service.run_analysis(
@@ -96,9 +183,12 @@ async def run_ftir_analysis(
 )
 async def get_analysis_ftir_data(
     analysis_run_id: uuid.UUID,
+    current_project: Project = Depends(get_current_project),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> FTIRProcessedResponse:
-    """Return Wavenumber cm^-1, Signal, and detected peak list."""
+    """Return Wavenumber cm^-1, Signal, and detected peak list for authorized project."""
+    await _verify_analysis_run_project(analysis_run_id, current_project.id, db, current_user)
     service = FTIRAnalysisService(db)
     try:
         return await service.get_ftir_data(analysis_run_id)
@@ -115,9 +205,12 @@ async def get_analysis_ftir_data(
 async def add_ftir_annotation(
     analysis_run_id: uuid.UUID,
     payload: FTIRAnnotationCreate,
+    current_project: Project = Depends(get_current_project),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> FTIRAnnotationResponse:
     """Add researcher peak annotation (e.g. C=O functional group stretch)."""
+    await _verify_analysis_run_project(analysis_run_id, current_project.id, db, current_user)
     service = FTIRAnalysisService(db)
     try:
         ann = await service.add_annotation(analysis_run_id, payload)
@@ -133,9 +226,12 @@ async def add_ftir_annotation(
 )
 async def list_ftir_annotations(
     analysis_run_id: uuid.UUID,
+    current_project: Project = Depends(get_current_project),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> list[FTIRAnnotationResponse]:
     """List researcher peak annotations for an FTIR analysis run."""
+    await _verify_analysis_run_project(analysis_run_id, current_project.id, db, current_user)
     service = FTIRAnalysisService(db)
     try:
         anns = await service.list_annotations(analysis_run_id)
@@ -156,9 +252,12 @@ async def list_ftir_annotations(
 async def update_sem_metadata(
     file_id: uuid.UUID,
     payload: SEMMetadataUpdate,
+    current_project: Project = Depends(get_current_project),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> SEMMetadataResponse:
     """Update SEM image magnification, kV, working distance, detector, and scale bar calibration."""
+    await _verify_raw_file_project(file_id, current_project.id, db, current_user)
     service = SEMAnalysisService(db)
     try:
         meta = await service.update_metadata(file_id, payload)
@@ -174,9 +273,12 @@ async def update_sem_metadata(
 )
 async def get_sem_metadata(
     file_id: uuid.UUID,
+    current_project: Project = Depends(get_current_project),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> SEMMetadataResponse:
     """Get SEM image metadata."""
+    await _verify_raw_file_project(file_id, current_project.id, db, current_user)
     service = SEMAnalysisService(db)
     try:
         meta = await service.get_or_create_metadata(file_id)
@@ -194,9 +296,12 @@ async def get_sem_metadata(
 async def add_sem_annotation(
     file_id: uuid.UUID,
     payload: SEMAnnotationCreate,
+    current_project: Project = Depends(get_current_project),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> SEMAnnotationResponse:
     """Add visual annotation (point, line, rectangle) to SEM image."""
+    await _verify_raw_file_project(file_id, current_project.id, db, current_user)
     service = SEMAnalysisService(db)
     try:
         ann = await service.add_annotation(file_id, payload)
@@ -212,9 +317,12 @@ async def add_sem_annotation(
 )
 async def list_sem_annotations(
     file_id: uuid.UUID,
+    current_project: Project = Depends(get_current_project),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> list[SEMAnnotationResponse]:
     """List visual annotations for an SEM image."""
+    await _verify_raw_file_project(file_id, current_project.id, db, current_user)
     service = SEMAnalysisService(db)
     try:
         anns = await service.list_annotations(file_id)
@@ -232,9 +340,12 @@ async def list_sem_annotations(
 async def add_sem_measurement(
     file_id: uuid.UUID,
     payload: SEMMeasurementCreate,
+    current_project: Project = Depends(get_current_project),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> SEMMeasurementResponse:
     """Record manual length measurement using scale calibration."""
+    await _verify_raw_file_project(file_id, current_project.id, db, current_user)
     service = SEMAnalysisService(db)
     try:
         meas = await service.add_manual_measurement(file_id, payload)
@@ -250,9 +361,12 @@ async def add_sem_measurement(
 )
 async def list_sem_measurements(
     file_id: uuid.UUID,
+    current_project: Project = Depends(get_current_project),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> list[SEMMeasurementResponse]:
     """List manual physical length measurements for an SEM image."""
+    await _verify_raw_file_project(file_id, current_project.id, db, current_user)
     service = SEMAnalysisService(db)
     try:
         meass = await service.list_measurements(file_id)
@@ -260,6 +374,10 @@ async def list_sem_measurements(
     except RawFileNotFoundError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
 
+
+# ─────────────────────────────────────────────────────────────
+# ELECTRICAL ENDPOINTS
+# ─────────────────────────────────────────────────────────────
 
 @router.post(
     "/characterizations/{characterization_id}/electrical/analyze",
@@ -271,12 +389,18 @@ async def run_electrical_analysis(
     characterization_id: uuid.UUID,
     input_data: ElectricalAnalysisInput,
     raw_file_id: uuid.UUID | None = None,
+    current_project: Project = Depends(get_current_project),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> XRDAnalysisRunResponse:
     """
     Execute Electrical I-V scientific analysis (unit conversions, Ohm's law linear fit for resistance,
     sample geometry cross-sectional area, resistivity, and conductivity calculations).
     """
+    await _verify_characterization_project(characterization_id, current_project.id, db, current_user)
+    if raw_file_id:
+        await _verify_raw_file_project(raw_file_id, current_project.id, db, current_user)
+
     service = ElectricalAnalysisService(db)
     try:
         run = await service.run_analysis(
@@ -303,15 +427,22 @@ async def run_electrical_analysis(
 )
 async def get_analysis_electrical_data(
     analysis_run_id: uuid.UUID,
+    current_project: Project = Depends(get_current_project),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> ElectricalProcessedResponse:
     """Return Voltage V, Current A, linear fit line, resistance, resistivity, and conductivity for Plotly."""
+    await _verify_analysis_run_project(analysis_run_id, current_project.id, db, current_user)
     service = ElectricalAnalysisService(db)
     try:
         return await service.get_electrical_data(analysis_run_id)
     except (ValueError, FileNotFoundError) as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
 
+
+# ─────────────────────────────────────────────────────────────
+# UV-VIS TAUIC ENDPOINTS
+# ─────────────────────────────────────────────────────────────
 
 @router.post(
     "/characterizations/{characterization_id}/uvvis/analyze",
@@ -323,12 +454,18 @@ async def run_uvvis_analysis(
     characterization_id: uuid.UUID,
     input_data: UVVisAnalysisInput,
     raw_file_id: uuid.UUID | None = None,
+    current_project: Project = Depends(get_current_project),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> XRDAnalysisRunResponse:
     """
     Execute UV-Vis Tauc optical band gap scientific analysis (wavelength to photon energy conversion,
     Tauc plot transformation, linear regression fitting, and optical band gap Eg calculation).
     """
+    await _verify_characterization_project(characterization_id, current_project.id, db, current_user)
+    if raw_file_id:
+        await _verify_raw_file_project(raw_file_id, current_project.id, db, current_user)
+
     service = UVVisAnalysisService(db)
     try:
         run = await service.run_analysis(
@@ -355,15 +492,22 @@ async def run_uvvis_analysis(
 )
 async def get_analysis_tauc_data(
     analysis_run_id: uuid.UUID,
+    current_project: Project = Depends(get_current_project),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> TaucProcessedResponse:
     """Return Wavelength, Absorbance, Photon Energy E (eV), Tauc Y, and linear regression fit line for Plotly."""
+    await _verify_analysis_run_project(analysis_run_id, current_project.id, db, current_user)
     service = UVVisAnalysisService(db)
     try:
         return await service.get_tauc_data(analysis_run_id)
     except (ValueError, FileNotFoundError) as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
 
+
+# ─────────────────────────────────────────────────────────────
+# XRD ENDPOINTS
+# ─────────────────────────────────────────────────────────────
 
 @router.post(
     "/characterizations/{characterization_id}/xrd/analyze",
@@ -375,12 +519,18 @@ async def run_xrd_analysis(
     characterization_id: uuid.UUID,
     input_data: XRDAnalysisInput,
     raw_file_id: uuid.UUID | None = None,
+    current_project: Project = Depends(get_current_project),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> XRDAnalysisRunResponse:
     """
     Execute XRD scientific analysis (data parsing, baseline subtraction,
     Savitzky-Golay noise smoothing, peak detection, and Scherrer crystallite size calculation).
     """
+    await _verify_characterization_project(characterization_id, current_project.id, db, current_user)
+    if raw_file_id:
+        await _verify_raw_file_project(raw_file_id, current_project.id, db, current_user)
+
     service = XRDAnalysisService(db)
     try:
         run = await service.run_analysis(
@@ -407,9 +557,12 @@ async def run_xrd_analysis(
 )
 async def get_analysis_run(
     analysis_run_id: uuid.UUID,
+    current_project: Project = Depends(get_current_project),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> XRDAnalysisRunResponse:
     """Get metadata, parameters, assumptions, peaks, and calculated properties for an analysis run."""
+    await _verify_analysis_run_project(analysis_run_id, current_project.id, db, current_user)
     service = XRDAnalysisService(db)
     try:
         run = await service.get_analysis_run(analysis_run_id)
@@ -425,9 +578,12 @@ async def get_analysis_run(
 )
 async def get_analysis_peaks(
     analysis_run_id: uuid.UUID,
+    current_project: Project = Depends(get_current_project),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> list[XRDPeakResponse]:
     """Get detected diffraction peaks with 2θ positions, intensities, and FWHMs."""
+    await _verify_analysis_run_project(analysis_run_id, current_project.id, db, current_user)
     service = XRDAnalysisService(db)
     try:
         run = await service.get_analysis_run(analysis_run_id)
@@ -443,9 +599,12 @@ async def get_analysis_peaks(
 )
 async def get_analysis_properties(
     analysis_run_id: uuid.UUID,
+    current_project: Project = Depends(get_current_project),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> list[CalculatedPropertyResponse]:
     """Get derived material properties (e.g. Scherrer Crystallite Size in nm) with formula and assumptions."""
+    await _verify_analysis_run_project(analysis_run_id, current_project.id, db, current_user)
     service = XRDAnalysisService(db)
     try:
         run = await service.get_analysis_run(analysis_run_id)
@@ -461,9 +620,12 @@ async def get_analysis_properties(
 )
 async def get_analysis_processed_data(
     analysis_run_id: uuid.UUID,
+    current_project: Project = Depends(get_current_project),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> XRDProcessedDataResponse:
     """Return 2θ, raw intensity, and processed intensity data points for Plotly visualization."""
+    await _verify_analysis_run_project(analysis_run_id, current_project.id, db, current_user)
     service = XRDAnalysisService(db)
     try:
         return await service.get_processed_data_points(analysis_run_id)
@@ -478,9 +640,12 @@ async def get_analysis_processed_data(
 )
 async def list_characterization_analysis_runs(
     characterization_id: uuid.UUID,
+    current_project: Project = Depends(get_current_project),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> list[XRDAnalysisRunResponse]:
     """Return all historical analysis runs executed for a characterization."""
+    await _verify_characterization_project(characterization_id, current_project.id, db, current_user)
     service = XRDAnalysisService(db)
     runs = await service.get_characterization_runs(characterization_id)
     return [XRDAnalysisRunResponse.model_validate(r) for r in runs]

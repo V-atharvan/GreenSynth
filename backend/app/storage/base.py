@@ -2,14 +2,15 @@
 GreenSynth Analytics — File Storage Backend Abstraction
 
 Defines the interface that all file storage implementations must satisfy.
-The MVP uses LocalFileStorage; production will use S3FileStorage.
-Swapping implementations requires only changing the FastAPI dependency.
+Supports LocalFileStorage (local development) and S3FileStorage (production).
+Swapping implementations requires only changing the STORAGE_BACKEND configuration.
 """
 
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import Any
 
 
 @dataclass
@@ -22,6 +23,11 @@ class StoredFile:
     file_size_bytes: int
     checksum_sha256: str
     file_type: str
+    storage_backend: str = "local"
+    bucket: str | None = None
+    etag: str | None = None
+    content_type: str = "application/octet-stream"
+    extra_metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class FileStorageBackend(ABC):
@@ -30,11 +36,10 @@ class FileStorageBackend(ABC):
 
     All raw laboratory data files are stored through this interface.
     Implementations must:
-      - Never overwrite a finalised file
+      - Never overwrite an existing file (immutability)
       - Return SHA-256 checksum on store
       - Raise FileNotFoundError if a file does not exist
-
-    Implementations: LocalFileStorage (Phase 5), S3FileStorage (Phase 20).
+      - Isolate and safely validate destination paths/object keys
     """
 
     @abstractmethod
@@ -43,12 +48,13 @@ class FileStorageBackend(ABC):
         content: bytes,
         destination_path: str,
         original_filename: str,
+        content_type: str | None = None,
     ) -> StoredFile:
         """
         Persist file content to storage.
 
         Must raise FileExistsError if destination_path already contains
-        a finalised file.
+        an existing file.
         """
         ...
 
@@ -67,7 +73,27 @@ class FileStorageBackend(ABC):
         """
         Delete a file from storage.
 
-        CAUTION: Should only be called for non-finalised files.
-        Finalised raw data files must never be deleted.
+        CAUTION: Should only be called for non-finalised files or during transaction rollback.
         """
+        ...
+
+    @abstractmethod
+    async def get_metadata(self, stored_path: str) -> dict[str, Any]:
+        """Return object metadata (size, content_type, etag/checksum, last_modified)."""
+        ...
+
+    @abstractmethod
+    async def generate_download_url(
+        self, stored_path: str, expiry_seconds: int = 3600
+    ) -> str | None:
+        """
+        Generate a temporary pre-signed download URL if supported by the backend,
+        or None if direct backend streaming is required.
+        """
+        ...
+
+    @property
+    @abstractmethod
+    def backend_name(self) -> str:
+        """Return identifier name for this storage backend (e.g. 'local', 's3')."""
         ...

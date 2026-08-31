@@ -13,20 +13,21 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.database.session import get_db
+from app.api.deps import get_authorized_project_ids, get_current_user, get_db
 from app.models.experiment import Experiment
 from app.models.ml import MLModel
 from app.models.project import Project
 from app.models.project_config import (
-    MaterialCatalog,
     BiomassCatalog,
     ExtractCatalog,
+    MaterialCatalog,
+    ProjectConfigurationVersion,
+    ProjectDefinition,
     SolventCatalog,
     SynthesisMethodCatalog,
-    ProjectDefinition,
-    ProjectConfigurationVersion,
 )
 from app.models.sample import Sample
+from app.models.user import User
 from app.schemas.project_config import (
     CatalogItemResponse,
     ProjectConfigurationResponse,
@@ -43,10 +44,15 @@ router = APIRouter(prefix="", tags=["project-configuration"])
 
 @router.get("/projects/matrix", response_model=list[ProjectMatrixRow])
 async def get_project_matrix(
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> Any:
-    """Returns the multi-project research matrix for all 8 projects."""
+    """Returns the multi-project research matrix for authorized projects."""
     stmt = select(Project).order_by(Project.project_code.asc())
+    if not current_user.is_admin:
+        auth_ids = await get_authorized_project_ids(current_user, db)
+        stmt = stmt.where(Project.id.in_(auth_ids))
+
     res = await db.execute(stmt)
     projects = res.scalars().all()
 
@@ -107,14 +113,20 @@ async def get_project_matrix(
 @router.get("/projects/{project_id}/configuration", response_model=ProjectConfigurationResponse)
 async def get_project_configuration(
     project_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> Any:
-    """Get configuration definition and active capabilities for a project."""
+    """Get configuration definition and active capabilities for an authorized project."""
     p_stmt = select(Project).where(Project.id == project_id)
     p_res = await db.execute(p_stmt)
     proj = p_res.scalar_one_or_none()
     if not proj:
         raise HTTPException(status_code=404, detail="Project not found")
+
+    if not current_user.is_admin:
+        auth_ids = await get_authorized_project_ids(current_user, db)
+        if proj.id not in auth_ids:
+            raise HTTPException(status_code=404, detail="Project not found")
 
     pdef_stmt = select(ProjectDefinition).where(ProjectDefinition.project_id == project_id)
     pdef_res = await db.execute(pdef_stmt)
@@ -126,18 +138,19 @@ async def get_project_configuration(
     opt_caps = pdef.optimization_capabilities if pdef else {"GridSearch": True, "RandomSearch": True, "ModelGuided": True}
     from app.core.method_config import get_project_spec
     spec = get_project_spec(proj.project_code)
+    biomass_val = "Rice husk" if proj.project_code in ("P5", "P6") else "—"
 
     return ProjectConfigurationResponse(
         project_id=proj.id,
         project_code=proj.project_code,
         name=proj.name,
-        material_system=spec["material_system"],
+        material_system=spec.get("material_system", "Nanomaterials"),
         material=proj.material,
         biomass=biomass_val,
         extract=proj.extract,
         solvent=proj.solvent,
         synthesis_method=proj.synthesis_method,
-        method_code=spec["method"],
+        method_code=spec.get("method", "CHEMICAL"),
         current_version=curr_ver,
         characterization_capabilities=char_caps,
         analysis_capabilities=anal_caps,
@@ -150,22 +163,26 @@ async def get_project_configuration(
 @router.post("/projects/compare", response_model=PropertyComparabilityResponse)
 async def compare_project_properties(
     payload: PropertyComparabilityRequest,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> Any:
     """Evaluates cross-project scientific comparability before allowing comparison."""
-    # Load source project
     s_stmt = select(Project).where(Project.project_code == payload.source_project_code)
     s_res = await db.execute(s_stmt)
     source_proj = s_res.scalar_one_or_none()
     if not source_proj:
         raise HTTPException(status_code=404, detail=f"Source project '{payload.source_project_code}' not found")
 
-    # Load target project
     t_stmt = select(Project).where(Project.project_code == payload.target_project_code)
     t_res = await db.execute(t_stmt)
     target_proj = t_res.scalar_one_or_none()
     if not target_proj:
         raise HTTPException(status_code=404, detail=f"Target project '{payload.target_project_code}' not found")
+
+    if not current_user.is_admin:
+        auth_ids = await get_authorized_project_ids(current_user, db)
+        if source_proj.id not in auth_ids or target_proj.id not in auth_ids:
+            raise HTTPException(status_code=403, detail="Cross-project comparison requires authorization to both projects.")
 
     comp_result = PropertyComparabilityService.evaluate_comparability(
         source_project={"material": source_proj.material, "synthesis_method": source_proj.synthesis_method, "solvent": source_proj.solvent},

@@ -82,4 +82,14 @@ export const characterizationService = {
     const baseUrl = apiClient.defaults.baseURL || '/api/v1'
     return `${baseUrl}/files/${fileId}/download`
   },
+
+  /**
+   * Fetch pre-signed direct download URL (if available for object storage).
+   */
+  async getPresignedUrl(fileId: string): Promise<{ download_url: string | null; direct_download_endpoint: string }> {
+    const response = await apiClient.get<{ download_url: string | null; direct_download_endpoint: string }>(
+      `/files/${fileId}/url`
+    )
+    return response.data
+  },
 }

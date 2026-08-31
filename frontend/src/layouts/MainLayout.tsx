@@ -28,7 +28,13 @@ import {
   MoreHorizontal,
   Home,
   Grid,
+  LogOut,
+  User,
+  Users,
+  Settings as SettingsIcon,
 } from 'lucide-react'
+import { useAuth } from '@/context/AuthContext'
+import { useProjectContext } from '@/context/ProjectContext'
 import './MainLayout.css'
 
 interface NavItem {
@@ -51,12 +57,8 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/doe',             label: 'Design of Experiments', icon: Ruler },
   { to: '/statistics',      label: 'Statistical Evidence', icon: BarChart2 },
   { to: '/optimization',    label: 'Experimental Optimization', icon: Ruler },
-]
-
-const FUTURE_ITEMS = [
-  { label: 'Analysis',       icon: BarChart3, phase: 'Phase 6–9' },
-  { label: 'Statistics',     icon: TrendingUp, phase: 'Phase 11' },
-  { label: 'ML & Predict',   icon: Cpu, phase: 'Phase 14–16' },
+  { to: '/profile',         label: 'Profile',               icon: User },
+  { to: '/settings',        label: 'Settings',              icon: SettingsIcon },
 ]
 
 // Research menu groups for the 5th mobile bottom bar item
@@ -95,6 +97,8 @@ const RESEARCH_GROUPS = [
 export default function MainLayout() {
   const location = useLocation()
   const navigate = useNavigate()
+  const { user, activeProjectCode, isGroupLeader, isAdmin, logout } = useAuth()
+  const { project, projectCode, projectName, groupName, allProjects, selectAdminProject } = useProjectContext()
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false)
   const [researchSheetOpen, setResearchSheetOpen] = useState(false)
@@ -161,7 +165,16 @@ export default function MainLayout() {
             <span className="mobile-brand-name">GreenSynth</span>
           </div>
         </div>
-        <div className="mobile-header-right">
+        <div className="mobile-header-right" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {projectCode && (
+            <span
+              className="topbar-project-badge"
+              style={{ padding: '2px 8px', fontSize: '0.72rem', background: '#0f766e', color: '#ffffff', border: 'none' }}
+              title={`Project: ${projectName || projectCode}`}
+            >
+              {projectCode}
+            </span>
+          )}
           <span className="mobile-mode-badge" title="Research Mode Active">
             <FlaskConical className="w-3.5 h-3.5" />
             <span className="mobile-mode-text">Research</span>
@@ -244,34 +257,67 @@ export default function MainLayout() {
               </NavLink>
             )
           })}
-
-          {/* Future / Coming Soon items */}
-          {(sidebarOpen || mobileDrawerOpen) && (
-            <>
-              <div className="nav-section-label nav-section-label-future">
-                Coming Soon
-              </div>
-              {FUTURE_ITEMS.map((item) => {
-                const IconComp = item.icon
-                return (
-                  <div key={item.label} className="nav-item nav-item-disabled" title={`Available in ${item.phase}`}>
-                    <span className="nav-icon" aria-hidden="true">
-                      <IconComp className="w-4.5 h-4.5" />
-                    </span>
-                    <span className="nav-label">{item.label}</span>
-                    <span className="nav-badge">{item.phase}</span>
-                  </div>
-                )
-              })}
-            </>
-          )}
         </nav>
+
+        {/* Authenticated User Profile Card & Logout */}
+        {(sidebarOpen || mobileDrawerOpen) && user && (
+          <div className="sidebar-user">
+            <div className="sidebar-user-info">
+              <div className="sidebar-user-avatar" title={user.full_name}>
+                {user.full_name
+                  ? user.full_name
+                      .split(' ')
+                      .map((n) => n[0])
+                      .join('')
+                      .slice(0, 2)
+                      .toUpperCase()
+                  : 'GS'}
+              </div>
+              <div className="sidebar-user-details">
+                <div className="sidebar-user-name" title={user.full_name}>
+                  {user.full_name}
+                </div>
+                <div className="sidebar-user-dept" title={user.department}>
+                  {user.department}
+                </div>
+                <div className="sidebar-user-meta">
+                  {isAdmin ? (
+                    <span className="sidebar-user-role" style={{ backgroundColor: '#4338ca', color: '#ffffff', fontWeight: 600 }}>
+                      Administrator
+                    </span>
+                  ) : (
+                    <>
+                      <span className="sidebar-user-project" title={`Project ${activeProjectCode || 'Assigned'}`}>
+                        {activeProjectCode || 'P7'}
+                      </span>
+                      <span className="sidebar-user-role">
+                        {isGroupLeader ? 'Leader' : 'Member'}
+                      </span>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                logout()
+                navigate('/login')
+              }}
+              className="sidebar-logout-btn"
+              title="Sign out of research session"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Sign Out</span>
+            </button>
+          </div>
+        )}
 
         {/* Sidebar Footer */}
         {(sidebarOpen || mobileDrawerOpen) && (
           <div className="sidebar-footer">
-            <div className="sidebar-footer-text">v0.1.0 — Phase 1</div>
-            <div className="sidebar-footer-sub">MVP Foundation</div>
+            <div className="sidebar-footer-text">v0.6.0 &bull; Phase 6 Auth</div>
+            <div className="sidebar-footer-sub">Multi-Tenant Platform</div>
           </div>
         )}
       </aside>
@@ -331,6 +377,70 @@ export default function MainLayout() {
             {getPageTitle(location.pathname)}
           </div>
           <div className="topbar-right">
+            {isAdmin && (
+              <span
+                className="topbar-admin-badge"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '4px 10px',
+                  backgroundColor: '#ede9fe',
+                  color: '#5b21b6',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  border: '1px solid #c4b5fd',
+                }}
+                title="System Administrator (Full Multi-Project Access)"
+              >
+                <ShieldCheck className="w-3.5 h-3.5 text-indigo-600" />
+                <span>Administrator (System-Wide)</span>
+              </span>
+            )}
+
+            {isAdmin && allProjects.length > 0 ? (
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                <FolderKanban className="w-3.5 h-3.5 text-emerald-600" />
+                <select
+                  value={project?.id || ''}
+                  onChange={(e) => selectAdminProject(e.target.value)}
+                  style={{
+                    padding: '4px 8px',
+                    borderRadius: '6px',
+                    border: '1px solid #cbd5e1',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    backgroundColor: '#ffffff',
+                    color: '#0f172a',
+                    cursor: 'pointer',
+                  }}
+                  title="Switch Project Context"
+                  aria-label="Admin Project Switcher"
+                >
+                  {allProjects.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.project_code} — {p.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <>
+                {groupName && (
+                  <span className="topbar-group-badge" title={`Research Group: ${groupName}`}>
+                    <Users className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>{groupName}</span>
+                  </span>
+                )}
+                {projectCode && (
+                  <span className="topbar-project-badge" title={`Assigned Project: ${projectName || projectCode}`}>
+                    <FolderKanban className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>{projectCode} — {project?.name || projectCode}</span>
+                  </span>
+                )}
+              </>
+            )}
             <span className="topbar-badge">
               <FlaskConical className="w-3.5 h-3.5" /> Research Mode
             </span>
@@ -339,7 +449,9 @@ export default function MainLayout() {
 
         {/* Main Content Area */}
         <main className="main-content" id="main-content">
-          <Outlet />
+          <div className="main-content-inner">
+            <Outlet />
+          </div>
         </main>
       </div>
 
@@ -401,6 +513,7 @@ export default function MainLayout() {
 }
 
 function getPageTitle(pathname: string): string {
+  if (pathname.startsWith('/admin')) return 'Admin Portal'
   if (pathname === '/') return 'Dashboard'
   if (pathname.startsWith('/projects')) return 'Projects'
   if (pathname.startsWith('/experiments')) return 'Experiments'
@@ -413,5 +526,7 @@ function getPageTitle(pathname: string): string {
   if (pathname.startsWith('/doe')) return 'Design of Experiments'
   if (pathname.startsWith('/statistics')) return 'Statistical Evidence'
   if (pathname.startsWith('/optimization')) return 'Evidence-Based Optimization'
+  if (pathname.startsWith('/profile')) return 'Profile'
+  if (pathname.startsWith('/settings')) return 'Settings'
   return 'GreenSynth Analytics'
 }

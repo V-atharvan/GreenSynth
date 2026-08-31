@@ -23,6 +23,7 @@ dependencies = [
     # ── Validation & Configuration ─────────────────────────
     "pydantic>=2.7.0",
     "pydantic-settings>=2.3.0",
+    "jinja2>=3.1.4",
 
     # ── Authentication ─────────────────────────────────────
     "python-jose[cryptography]>=3.3.0",
@@ -30,6 +31,10 @@ dependencies = [
 
     # ── HTTP client (for tests) ────────────────────────────
     "httpx>=0.27.0",
+
+    # ── Object Storage (Phase 9) ───────────────────────────
+    "boto3>=1.34.0",
+    "botocore>=1.34.0",
 ]
 
 [project.optional-dependencies]

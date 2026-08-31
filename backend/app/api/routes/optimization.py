@@ -1,5 +1,8 @@
 """
 GreenSynth Analytics — Phase 18 Optimization API Endpoints
+
+Provides endpoints for researcher optimization objectives, constraints, search space validation,
+candidate generation runs, candidate selection/rejection, and experiment conversion with full authorization.
 """
 
 from __future__ import annotations
@@ -9,37 +12,44 @@ from datetime import datetime
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.database.session import get_db
+from app.api.deps import (
+    get_authorized_project_ids,
+    get_current_project,
+    get_current_user,
+    get_db,
+    verify_project_access,
+)
 from app.models.experiment import Experiment, ExperimentStatus
-from app.models.ml import MLModel, MLDataset
+from app.models.ml import MLDataset, MLModel
+from app.models.optimization import (
+    CandidateExperimentLink,
+    OptimizationCandidate,
+    OptimizationConstraint,
+    OptimizationObjective,
+    OptimizationReview,
+    OptimizationRun,
+    OptimizationSearchSpace,
+)
 from app.models.parameter import ParameterDefinition
 from app.models.project import Project
-from app.models.optimization import (
-    OptimizationObjective,
-    OptimizationConstraint,
-    OptimizationSearchSpace,
-    OptimizationRun,
-    OptimizationCandidate,
-    CandidateExperimentLink,
-    OptimizationReview,
-)
+from app.models.user import User
 from app.schemas.optimization import (
-    OptimizationObjectiveCreate,
-    OptimizationObjectiveResponse,
+    CandidateReviewRequest,
+    OptimizationCandidateResponse,
     OptimizationConstraintCreate,
     OptimizationConstraintResponse,
-    SearchSpaceValidationRequest,
-    SearchSpaceValidationResponse,
+    OptimizationObjectiveCreate,
+    OptimizationObjectiveResponse,
+    OptimizationReportResponse,
     OptimizationRunCreate,
     OptimizationRunResponse,
-    OptimizationCandidateResponse,
-    CandidateReviewRequest,
     ProposedExperimentFromCandidateResponse,
-    OptimizationReportResponse,
+    SearchSpaceValidationRequest,
+    SearchSpaceValidationResponse,
 )
 from app.scientific.optimization.candidate_generation import CandidateGenerationService
 
@@ -51,9 +61,14 @@ router = APIRouter(prefix="/optimization", tags=["optimization"])
 @router.post("/objectives", response_model=OptimizationObjectiveResponse, status_code=status.HTTP_201_CREATED)
 async def create_objective(
     payload: OptimizationObjectiveCreate,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> Any:
-    """Create a new researcher optimization objective."""
+    """Create a new researcher optimization objective for the authorized project."""
+    if not current_user.is_admin:
+        current_project = await get_current_project(current_user=current_user, db=db)
+        verify_project_access(payload.project_id, current_project, current_user)
+
     obj = OptimizationObjective(**payload.model_dump())
     db.add(obj)
     await db.commit()
@@ -64,13 +79,20 @@ async def create_objective(
 @router.get("/objectives", response_model=list[OptimizationObjectiveResponse])
 async def list_objectives(
     project_id: uuid.UUID | None = Query(None),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> Any:
-    """List optimization objectives."""
-    stmt = select(OptimizationObjective)
-    if project_id:
+    """List optimization objectives for authorized project scope."""
+    stmt = select(OptimizationObjective).order_by(OptimizationObjective.created_at.desc())
+
+    if not current_user.is_admin:
+        current_project = await get_current_project(current_user=current_user, db=db)
+        if project_id is not None:
+            verify_project_access(project_id, current_project, current_user)
+        stmt = stmt.where(OptimizationObjective.project_id == current_project.id)
+    elif project_id is not None:
         stmt = stmt.where(OptimizationObjective.project_id == project_id)
-    stmt = stmt.order_by(OptimizationObjective.created_at.desc())
+
     res = await db.execute(stmt)
     return res.scalars().all()
 
@@ -79,14 +101,20 @@ async def list_objectives(
 async def update_objective(
     objective_id: uuid.UUID,
     payload: OptimizationObjectiveCreate,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> Any:
-    """Update an optimization objective."""
+    """Update an optimization objective with IDOR protection."""
     stmt = select(OptimizationObjective).where(OptimizationObjective.id == objective_id)
     res = await db.execute(stmt)
     obj = res.scalar_one_or_none()
     if not obj:
         raise HTTPException(status_code=404, detail="Objective not found")
+
+    if not current_user.is_admin:
+        auth_ids = await get_authorized_project_ids(current_user, db)
+        if obj.project_id not in auth_ids:
+            raise HTTPException(status_code=404, detail="Objective not found")
 
     for field, val in payload.model_dump(exclude_unset=True).items():
         setattr(obj, field, val)
@@ -101,9 +129,14 @@ async def update_objective(
 @router.post("/constraints", response_model=OptimizationConstraintResponse, status_code=status.HTTP_201_CREATED)
 async def create_constraint(
     payload: OptimizationConstraintCreate,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> Any:
-    """Create a new search-space constraint."""
+    """Create a new search-space constraint for the authorized project."""
+    if not current_user.is_admin:
+        current_project = await get_current_project(current_user=current_user, db=db)
+        verify_project_access(payload.project_id, current_project, current_user)
+
     constraint = OptimizationConstraint(**payload.model_dump())
     db.add(constraint)
     await db.commit()
@@ -114,13 +147,20 @@ async def create_constraint(
 @router.get("/constraints", response_model=list[OptimizationConstraintResponse])
 async def list_constraints(
     project_id: uuid.UUID | None = Query(None),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> Any:
-    """List search-space constraints."""
-    stmt = select(OptimizationConstraint)
-    if project_id:
+    """List search-space constraints for authorized project scope."""
+    stmt = select(OptimizationConstraint).order_by(OptimizationConstraint.created_at.desc())
+
+    if not current_user.is_admin:
+        current_project = await get_current_project(current_user=current_user, db=db)
+        if project_id is not None:
+            verify_project_access(project_id, current_project, current_user)
+        stmt = stmt.where(OptimizationConstraint.project_id == current_project.id)
+    elif project_id is not None:
         stmt = stmt.where(OptimizationConstraint.project_id == project_id)
-    stmt = stmt.order_by(OptimizationConstraint.created_at.desc())
+
     res = await db.execute(stmt)
     return res.scalars().all()
 
@@ -130,9 +170,14 @@ async def list_constraints(
 @router.post("/search-space/validate", response_model=SearchSpaceValidationResponse)
 async def validate_search_space(
     payload: SearchSpaceValidationRequest,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> Any:
-    """Validate search space definition and parameter ranges."""
+    """Validate search space definition and parameter ranges for authorized project."""
+    if not current_user.is_admin:
+        current_project = await get_current_project(current_user=current_user, db=db)
+        verify_project_access(payload.project_id, current_project, current_user)
+
     stmt = select(ParameterDefinition).where(ParameterDefinition.project_id == payload.project_id)
     res = await db.execute(stmt)
     param_defs = res.scalars().all()
@@ -172,9 +217,14 @@ async def validate_search_space(
 @router.post("/runs", response_model=OptimizationRunResponse, status_code=status.HTTP_201_CREATED)
 async def create_optimization_run(
     payload: OptimizationRunCreate,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> Any:
-    """Create and execute an evidence-based candidate generation run."""
+    """Create and execute an evidence-based candidate generation run for authorized project."""
+    if not current_user.is_admin:
+        current_project = await get_current_project(current_user=current_user, db=db)
+        verify_project_access(payload.project_id, current_project, current_user)
+
     # 1. Load project
     p_stmt = select(Project).where(Project.id == payload.project_id)
     p_res = await db.execute(p_stmt)
@@ -183,20 +233,26 @@ async def create_optimization_run(
         raise HTTPException(status_code=404, detail="Project not found")
 
     # 2. Load objective
-    o_stmt = select(OptimizationObjective).where(OptimizationObjective.id == payload.objective_id)
+    o_stmt = select(OptimizationObjective).where(
+        OptimizationObjective.id == payload.objective_id,
+        OptimizationObjective.project_id == payload.project_id,
+    )
     o_res = await db.execute(o_stmt)
     objective = o_res.scalar_one_or_none()
     if not objective:
         raise HTTPException(status_code=404, detail="Objective not found")
 
     # 3. Load model
-    m_stmt = select(MLModel).where(MLModel.id == payload.model_id)
+    m_stmt = (
+        select(MLModel)
+        .join(MLDataset, MLModel.dataset_id == MLDataset.id)
+        .where(MLModel.id == payload.model_id, MLDataset.project_id == payload.project_id)
+    )
     m_res = await db.execute(m_stmt)
     model = m_res.scalar_one_or_none()
     if not model:
         raise HTTPException(status_code=404, detail="Model not found")
 
-    # Check model health status (CRITICAL blocks)
     if model.status == "RETIRED":
         raise HTTPException(status_code=400, detail="Optimization blocked: Selected model is RETIRED.")
 
@@ -304,7 +360,6 @@ async def create_optimization_run(
             allow_out_of_domain=payload.allow_out_of_domain,
         )
 
-        # Save candidate records
         feasible_count = 0
         for cand_dict in generated_candidates:
             if cand_dict.get("feasibility_status") == "FEASIBLE":
@@ -343,7 +398,6 @@ async def create_optimization_run(
 
     await db.commit()
 
-    # Reload run with candidates
     run_stmt = (
         select(OptimizationRun)
         .where(OptimizationRun.id == opt_run.id)
@@ -356,13 +410,24 @@ async def create_optimization_run(
 @router.get("/runs", response_model=list[OptimizationRunResponse])
 async def list_optimization_runs(
     project_id: uuid.UUID | None = Query(None),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> Any:
-    """List optimization runs."""
-    stmt = select(OptimizationRun).options(selectinload(OptimizationRun.candidates))
-    if project_id:
+    """List optimization runs for authorized project scope."""
+    stmt = (
+        select(OptimizationRun)
+        .options(selectinload(OptimizationRun.candidates))
+        .order_by(OptimizationRun.started_at.desc())
+    )
+
+    if not current_user.is_admin:
+        current_project = await get_current_project(current_user=current_user, db=db)
+        if project_id is not None:
+            verify_project_access(project_id, current_project, current_user)
+        stmt = stmt.where(OptimizationRun.project_id == current_project.id)
+    elif project_id is not None:
         stmt = stmt.where(OptimizationRun.project_id == project_id)
-    stmt = stmt.order_by(OptimizationRun.started_at.desc())
+
     res = await db.execute(stmt)
     return res.scalars().all()
 
@@ -370,9 +435,10 @@ async def list_optimization_runs(
 @router.get("/runs/{run_id}", response_model=OptimizationRunResponse)
 async def get_optimization_run(
     run_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> Any:
-    """Get optimization run details with ranked candidates."""
+    """Get optimization run details with ranked candidates and IDOR protection."""
     stmt = (
         select(OptimizationRun)
         .where(OptimizationRun.id == run_id)
@@ -382,6 +448,12 @@ async def get_optimization_run(
     run = res.scalar_one_or_none()
     if not run:
         raise HTTPException(status_code=404, detail="Optimization run not found")
+
+    if not current_user.is_admin:
+        auth_ids = await get_authorized_project_ids(current_user, db)
+        if run.project_id not in auth_ids:
+            raise HTTPException(status_code=404, detail="Optimization run not found")
+
     return run
 
 
@@ -391,18 +463,28 @@ async def get_optimization_run(
 async def select_candidate(
     candidate_id: uuid.UUID,
     review: CandidateReviewRequest,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> Any:
-    """Researcher selects an optimization candidate."""
-    stmt = select(OptimizationCandidate).where(OptimizationCandidate.id == candidate_id)
+    """Researcher selects an optimization candidate with IDOR protection."""
+    stmt = (
+        select(OptimizationCandidate, OptimizationRun.project_id)
+        .join(OptimizationRun, OptimizationCandidate.optimization_run_id == OptimizationRun.id)
+        .where(OptimizationCandidate.id == candidate_id)
+    )
     res = await db.execute(stmt)
-    cand = res.scalar_one_or_none()
-    if not cand:
+    row = res.first()
+    if not row:
         raise HTTPException(status_code=404, detail="Candidate not found")
+
+    cand, p_id = row
+    if not current_user.is_admin:
+        auth_ids = await get_authorized_project_ids(current_user, db)
+        if p_id not in auth_ids:
+            raise HTTPException(status_code=404, detail="Candidate not found")
 
     cand.status = "SELECTED"
 
-    # Audit review
     rev = OptimizationReview(
         optimization_run_id=cand.optimization_run_id,
         candidate_id=cand.id,
@@ -422,14 +504,25 @@ async def select_candidate(
 async def reject_candidate(
     candidate_id: uuid.UUID,
     review: CandidateReviewRequest,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> Any:
-    """Researcher rejects an optimization candidate."""
-    stmt = select(OptimizationCandidate).where(OptimizationCandidate.id == candidate_id)
+    """Researcher rejects an optimization candidate with IDOR protection."""
+    stmt = (
+        select(OptimizationCandidate, OptimizationRun.project_id)
+        .join(OptimizationRun, OptimizationCandidate.optimization_run_id == OptimizationRun.id)
+        .where(OptimizationCandidate.id == candidate_id)
+    )
     res = await db.execute(stmt)
-    cand = res.scalar_one_or_none()
-    if not cand:
+    row = res.first()
+    if not row:
         raise HTTPException(status_code=404, detail="Candidate not found")
+
+    cand, p_id = row
+    if not current_user.is_admin:
+        auth_ids = await get_authorized_project_ids(current_user, db)
+        if p_id not in auth_ids:
+            raise HTTPException(status_code=404, detail="Candidate not found")
 
     cand.status = "REJECTED"
 
@@ -451,6 +544,7 @@ async def reject_candidate(
 @router.post("/candidates/{candidate_id}/create-experiment", response_model=ProposedExperimentFromCandidateResponse)
 async def create_proposed_experiment_from_candidate(
     candidate_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> Any:
     """
@@ -459,6 +553,7 @@ async def create_proposed_experiment_from_candidate(
     """
     stmt = (
         select(OptimizationCandidate)
+        .join(OptimizationRun, OptimizationCandidate.optimization_run_id == OptimizationRun.id)
         .where(OptimizationCandidate.id == candidate_id)
         .options(selectinload(OptimizationCandidate.optimization_run))
     )
@@ -468,14 +563,16 @@ async def create_proposed_experiment_from_candidate(
         raise HTTPException(status_code=404, detail="Candidate not found")
 
     opt_run = cand.optimization_run
+    if not current_user.is_admin:
+        auth_ids = await get_authorized_project_ids(current_user, db)
+        if opt_run.project_id not in auth_ids:
+            raise HTTPException(status_code=404, detail="Candidate not found")
 
-    # Generate experiment code
     count_stmt = select(func.count(Experiment.id)).where(Experiment.project_id == opt_run.project_id)
     count_res = await db.execute(count_stmt)
     exp_count = (count_res.scalar() or 0) + 1
-    exp_code = f"EXP-OPT-P7-{exp_count:03d}"
+    exp_code = f"EXP-OPT-{exp_count:03d}"
 
-    # Create Experiment with PROPOSED conditions
     exp = Experiment(
         project_id=opt_run.project_id,
         experiment_code=exp_code,
@@ -486,7 +583,6 @@ async def create_proposed_experiment_from_candidate(
     db.add(exp)
     await db.flush()
 
-    # Link candidate to experiment
     link = CandidateExperimentLink(
         candidate_id=cand.id,
         experiment_id=exp.id,
@@ -512,9 +608,10 @@ async def create_proposed_experiment_from_candidate(
 @router.get("/runs/{run_id}/report", response_model=OptimizationReportResponse)
 async def generate_optimization_report(
     run_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> Any:
-    """Generate optimization run report with disclaimers."""
+    """Generate optimization run report with disclaimers and IDOR protection."""
     stmt = (
         select(OptimizationRun)
         .where(OptimizationRun.id == run_id)
@@ -524,6 +621,11 @@ async def generate_optimization_report(
     run = res.scalar_one_or_none()
     if not run:
         raise HTTPException(status_code=404, detail="Optimization run not found")
+
+    if not current_user.is_admin:
+        auth_ids = await get_authorized_project_ids(current_user, db)
+        if run.project_id not in auth_ids:
+            raise HTTPException(status_code=404, detail="Optimization run not found")
 
     p_stmt = select(Project).where(Project.id == run.project_id)
     p_res = await db.execute(p_stmt)

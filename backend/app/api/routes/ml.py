@@ -2,18 +2,26 @@
 GreenSynth Analytics — Machine Learning REST API Router
 
 Provides endpoints for ML dataset management, dataset validation, model training & cross-validation,
-model registry lifecycle (approval/rejection), and prediction generation.
+model registry lifecycle (approval/rejection), and prediction generation with full authorization.
 """
 
 from __future__ import annotations
 
+import json
 import uuid
 from typing import Sequence
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_db
+from app.api.deps import (
+    get_authorized_project_ids,
+    get_current_project,
+    get_current_user,
+    get_db,
+    verify_project_access,
+)
 from app.ml.schemas import (
     MLDatasetCreateInput,
     MLDatasetRecordResponse,
@@ -29,6 +37,9 @@ from app.ml.services.dataset_service import MLDatasetService
 from app.ml.services.prediction_service import MLPredictionService
 from app.ml.services.registry_service import MLRegistryService
 from app.ml.services.training_service import MLTrainingService
+from app.models.ml import MLDataset, MLModel, MLPrediction
+from app.models.project import Project
+from app.models.user import User
 
 router = APIRouter(prefix="/ml", tags=["Machine Learning"])
 
@@ -43,9 +54,14 @@ router = APIRouter(prefix="/ml", tags=["Machine Learning"])
 )
 async def create_dataset(
     payload: MLDatasetCreateInput,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> MLDatasetResponse:
     """Creates a versioned ML dataset definition, validates target leakage, and extracts eligible observations."""
+    if not current_user.is_admin:
+        current_project = await get_current_project(current_user=current_user, db=db)
+        verify_project_access(payload.project_id, current_project, current_user)
+
     service = MLDatasetService(db)
     try:
         dataset, _quality = await service.create_dataset(payload)
@@ -61,9 +77,14 @@ async def create_dataset(
 )
 async def list_datasets(
     project_id: uuid.UUID = Query(..., description="Project ID filter"),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> list[MLDatasetResponse]:
-    """List versioned ML datasets created for a project."""
+    """List versioned ML datasets created for the authorized project."""
+    if not current_user.is_admin:
+        current_project = await get_current_project(current_user=current_user, db=db)
+        verify_project_access(project_id, current_project, current_user)
+
     service = MLDatasetService(db)
     datasets = await service.list_datasets(project_id)
     return [MLDatasetResponse.model_validate(d) for d in datasets]
@@ -76,12 +97,17 @@ async def list_datasets(
 )
 async def get_dataset(
     dataset_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> MLDatasetResponse:
-    """Fetch dataset metadata by ID."""
+    """Fetch dataset metadata by ID with IDOR protection."""
     service = MLDatasetService(db)
     try:
         ds = await service.get_dataset(dataset_id)
+        if not current_user.is_admin:
+            auth_ids = await get_authorized_project_ids(current_user, db)
+            if ds.project_id not in auth_ids:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Dataset not found.")
         return MLDatasetResponse.model_validate(ds)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
@@ -94,10 +120,20 @@ async def get_dataset(
 )
 async def list_dataset_records(
     dataset_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> list[MLDatasetRecordResponse]:
     """List observation rows in a dataset showing eligibility status and exclusion reasons."""
     service = MLDatasetService(db)
+    try:
+        ds = await service.get_dataset(dataset_id)
+        if not current_user.is_admin:
+            auth_ids = await get_authorized_project_ids(current_user, db)
+            if ds.project_id not in auth_ids:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Dataset not found.")
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+
     recs = await service.list_dataset_records(dataset_id)
     return [MLDatasetRecordResponse.model_validate(r) for r in recs]
 
@@ -112,9 +148,16 @@ async def list_dataset_records(
 )
 async def train_models(
     payload: MLTrainingRunCreateInput,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> list[MLModelResponse]:
-    """Executes preprocessing, cross-validation, and model training for candidate algorithms on an ML dataset."""
+    """Executes preprocessing, cross-validation, and model training for candidate algorithms on an authorized ML dataset."""
+    dataset = await MLDatasetService(db).get_dataset(payload.dataset_id)
+    if not current_user.is_admin:
+        auth_ids = await get_authorized_project_ids(current_user, db)
+        if dataset.project_id not in auth_ids:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Dataset not found.")
+
     service = MLTrainingService(db)
     try:
         models = await service.run_training(payload)
@@ -130,12 +173,18 @@ async def train_models(
 )
 async def get_training_run(
     run_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> MLTrainingRunResponse:
     """Fetch training run execution metrics and parameters by ID."""
     service = MLTrainingService(db)
     try:
         tr = await service.get_training_run(run_id)
+        ds = await MLDatasetService(db).get_dataset(tr.dataset_id)
+        if not current_user.is_admin:
+            auth_ids = await get_authorized_project_ids(current_user, db)
+            if ds.project_id not in auth_ids:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Training run not found.")
         return MLTrainingRunResponse.model_validate(tr)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
@@ -148,9 +197,16 @@ async def get_training_run(
 )
 async def list_training_runs(
     dataset_id: uuid.UUID = Query(..., description="Dataset ID filter"),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> list[MLTrainingRunResponse]:
-    """List training execution runs for a dataset."""
+    """List training execution runs for an authorized dataset."""
+    ds = await MLDatasetService(db).get_dataset(dataset_id)
+    if not current_user.is_admin:
+        auth_ids = await get_authorized_project_ids(current_user, db)
+        if ds.project_id not in auth_ids:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Dataset not found.")
+
     service = MLTrainingService(db)
     runs = await service.list_training_runs(dataset_id)
     return [MLTrainingRunResponse.model_validate(r) for r in runs]
@@ -166,11 +222,26 @@ async def list_training_runs(
 async def list_models(
     dataset_id: uuid.UUID | None = Query(default=None, description="Optional dataset filter"),
     status_filter: str | None = Query(default=None, alias="status", description="Optional status filter"),
+    project_id: uuid.UUID | None = Query(default=None, description="Optional project filter"),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> list[MLModelResponse]:
-    """List registered machine learning models."""
-    service = MLRegistryService(db)
-    models = await service.list_models(dataset_id=dataset_id, status=status_filter)
+    """List registered machine learning models for authorized project scope."""
+    q = select(MLModel).join(MLDataset, MLModel.dataset_id == MLDataset.id).order_by(MLModel.created_at.desc())
+
+    if not current_user.is_admin:
+        current_project = await get_current_project(current_user=current_user, db=db)
+        q = q.where(MLDataset.project_id == current_project.id)
+    elif project_id is not None:
+        q = q.where(MLDataset.project_id == project_id)
+
+    if dataset_id is not None:
+        q = q.where(MLModel.dataset_id == dataset_id)
+    if status_filter is not None:
+        q = q.where(MLModel.status == status_filter)
+
+    res = await db.execute(q)
+    models = res.scalars().all()
     return [MLModelResponse.model_validate(m) for m in models]
 
 
@@ -181,12 +252,18 @@ async def list_models(
 )
 async def get_model(
     model_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> MLModelResponse:
-    """Fetch registered model details, metrics, and feature importances."""
+    """Fetch registered model details, metrics, and feature importances with IDOR protection."""
     service = MLRegistryService(db)
     try:
         model = await service.get_model(model_id)
+        ds = await MLDatasetService(db).get_dataset(model.dataset_id)
+        if not current_user.is_admin:
+            auth_ids = await get_authorized_project_ids(current_user, db)
+            if ds.project_id not in auth_ids:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Model not found.")
         return MLModelResponse.model_validate(model)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
@@ -200,14 +277,21 @@ async def get_model(
 async def approve_model(
     model_id: uuid.UUID,
     payload: MLModelApprovalInput | None = None,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> MLModelResponse:
     """Transitions model status to PRODUCTION_CANDIDATE after explicit researcher review."""
     service = MLRegistryService(db)
     try:
+        model = await service.get_model(model_id)
+        ds = await MLDatasetService(db).get_dataset(model.dataset_id)
+        if not current_user.is_admin:
+            auth_ids = await get_authorized_project_ids(current_user, db)
+            if ds.project_id not in auth_ids:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Model not found.")
         notes = payload.notes if payload else None
-        model = await service.approve_model(model_id, notes=notes)
-        return MLModelResponse.model_validate(model)
+        approved = await service.approve_model(model_id, notes=notes)
+        return MLModelResponse.model_validate(approved)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
 
@@ -220,14 +304,21 @@ async def approve_model(
 async def reject_model(
     model_id: uuid.UUID,
     payload: MLModelApprovalInput | None = None,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> MLModelResponse:
     """Transitions model status to REJECTED."""
     service = MLRegistryService(db)
     try:
+        model = await service.get_model(model_id)
+        ds = await MLDatasetService(db).get_dataset(model.dataset_id)
+        if not current_user.is_admin:
+            auth_ids = await get_authorized_project_ids(current_user, db)
+            if ds.project_id not in auth_ids:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Model not found.")
         notes = payload.notes if payload else None
-        model = await service.reject_model(model_id, notes=notes)
-        return MLModelResponse.model_validate(model)
+        rejected = await service.reject_model(model_id, notes=notes)
+        return MLModelResponse.model_validate(rejected)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
 
@@ -243,12 +334,24 @@ async def reject_model(
 async def generate_prediction(
     model_id: uuid.UUID,
     payload: MLPredictInput,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> MLPredictionResponse:
     """Generates continuous property prediction with uncertainty bounds and applicability domain check."""
-    service = MLPredictionService(db)
+    service = MLRegistryService(db)
     try:
-        pred = await service.predict(model_id, payload)
+        model = await service.get_model(model_id)
+        ds = await MLDatasetService(db).get_dataset(model.dataset_id)
+        if not current_user.is_admin:
+            auth_ids = await get_authorized_project_ids(current_user, db)
+            if ds.project_id not in auth_ids:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Model not found.")
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+
+    pred_service = MLPredictionService(db)
+    try:
+        pred = await pred_service.predict(model_id, payload)
         return MLPredictionResponse.model_validate(pred)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
@@ -261,11 +364,29 @@ async def generate_prediction(
 )
 async def list_predictions(
     model_id: uuid.UUID | None = Query(default=None, description="Optional model ID filter"),
+    project_id: uuid.UUID | None = Query(default=None, description="Optional project ID filter"),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> list[MLPredictionResponse]:
-    """List historical prediction records with applicability status and uncertainty bounds."""
-    service = MLPredictionService(db)
-    preds = await service.list_predictions(model_id)
+    """List historical prediction records for the authorized project."""
+    q = (
+        select(MLPrediction)
+        .join(MLModel, MLPrediction.model_id == MLModel.id)
+        .join(MLDataset, MLModel.dataset_id == MLDataset.id)
+        .order_by(MLPrediction.created_at.desc())
+    )
+
+    if not current_user.is_admin:
+        current_project = await get_current_project(current_user=current_user, db=db)
+        q = q.where(MLDataset.project_id == current_project.id)
+    elif project_id is not None:
+        q = q.where(MLDataset.project_id == project_id)
+
+    if model_id:
+        q = q.where(MLPrediction.model_id == model_id)
+
+    res = await db.execute(q)
+    preds = res.scalars().all()
     return [MLPredictionResponse.model_validate(p) for p in preds]
 
 
@@ -283,11 +404,28 @@ async def validate_prediction(
     validated_by: str = Query(default="Dr. Chief Researcher"),
     source_type: str = Query(default="MEASURED_PROPERTY"),
     actual_synthesis_params: str | None = Query(default=None, description="JSON string of actual synthesis params"),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Link prediction to actual experiment result, enforce target and unit gates, compute errors and condition deviations."""
-    import json
+    """Link prediction to actual experiment result with IDOR protection."""
     from app.ml.validation.validation_service import ValidationService
+
+    pred_res = await db.execute(
+        select(MLPrediction, MLDataset.project_id)
+        .join(MLModel, MLPrediction.model_id == MLModel.id)
+        .join(MLDataset, MLModel.dataset_id == MLDataset.id)
+        .where(MLPrediction.id == prediction_id)
+    )
+    row = pred_res.first()
+    if row is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Prediction not found.")
+
+    _pred, p_id = row
+    if not current_user.is_admin:
+        auth_ids = await get_authorized_project_ids(current_user, db)
+        if p_id not in auth_ids:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Prediction not found.")
+
     val_service = ValidationService(db)
     syn_params = None
     if actual_synthesis_params:
@@ -331,10 +469,22 @@ async def validate_prediction(
 )
 async def get_model_performance(
     model_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Evaluate and return current model performance snapshot."""
+    """Evaluate and return current model performance snapshot with IDOR protection."""
     from app.ml.validation.model_monitoring_service import ModelMonitoringService
+    service = MLRegistryService(db)
+    try:
+        model = await service.get_model(model_id)
+        ds = await MLDatasetService(db).get_dataset(model.dataset_id)
+        if not current_user.is_admin:
+            auth_ids = await get_authorized_project_ids(current_user, db)
+            if ds.project_id not in auth_ids:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Model not found.")
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+
     mon_service = ModelMonitoringService(db)
     try:
         snapshot = await mon_service.evaluate_model_performance(model_id)
@@ -362,10 +512,22 @@ async def get_model_performance(
 )
 async def get_model_health(
     model_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Fetch model health summary including validation count, MAE drift, and review recommendations."""
+    """Fetch model health summary with IDOR protection."""
     from app.ml.validation.model_monitoring_service import ModelMonitoringService
+    service = MLRegistryService(db)
+    try:
+        model = await service.get_model(model_id)
+        ds = await MLDatasetService(db).get_dataset(model.dataset_id)
+        if not current_user.is_admin:
+            auth_ids = await get_authorized_project_ids(current_user, db)
+            if ds.project_id not in auth_ids:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Model not found.")
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+
     mon_service = ModelMonitoringService(db)
     try:
         snapshot = await mon_service.evaluate_model_performance(model_id)
@@ -395,10 +557,22 @@ async def submit_model_review(
     review_status: str = Query(..., description="REVIEWED, REQUIRES_INVESTIGATION, ACCEPTED, REJECTED, RETIRED"),
     reviewer: str = Query(default="Dr. Chief Researcher"),
     notes: str | None = Query(default=None),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Log researcher review or status change for a model."""
+    """Log researcher review or status change for a model with IDOR protection."""
     from app.models.ml_validation import ModelReview
+    service = MLRegistryService(db)
+    try:
+        model = await service.get_model(model_id)
+        ds = await MLDatasetService(db).get_dataset(model.dataset_id)
+        if not current_user.is_admin:
+            auth_ids = await get_authorized_project_ids(current_user, db)
+            if ds.project_id not in auth_ids:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Model not found.")
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+
     rev = ModelReview(
         id=uuid.uuid4(),
         model_id=model_id,
@@ -419,12 +593,20 @@ async def retire_model(
     model_id: uuid.UUID,
     reviewer: str = Query(default="Dr. Chief Researcher"),
     notes: str | None = Query(default=None),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Transitions model status to RETIRED."""
+    """Transitions model status to RETIRED with IDOR protection."""
     from app.ml.services.registry_service import MLRegistryService
     reg_service = MLRegistryService(db)
     try:
+        model = await reg_service.get_model(model_id)
+        ds = await MLDatasetService(db).get_dataset(model.dataset_id)
+        if not current_user.is_admin:
+            auth_ids = await get_authorized_project_ids(current_user, db)
+            if ds.project_id not in auth_ids:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Model not found.")
+
         model = await reg_service.reject_model(model_id, notes=f"RETIRED by {reviewer}: {notes or ''}")
         model.status = "RETIRED"
         await db.commit()
@@ -439,14 +621,20 @@ async def retire_model(
 )
 async def generate_model_report(
     model_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Export comprehensive Markdown ML Model Report."""
+    """Export comprehensive Markdown ML Model Report with IDOR protection."""
     from app.ml.services.registry_service import MLRegistryService
-    from fastapi.responses import Response
     reg_service = MLRegistryService(db)
     try:
         model = await reg_service.get_model(model_id)
+        ds = await MLDatasetService(db).get_dataset(model.dataset_id)
+        if not current_user.is_admin:
+            auth_ids = await get_authorized_project_ids(current_user, db)
+            if ds.project_id not in auth_ids:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Model not found.")
+
         md_content = f"""# Machine Learning Model Report
 
 ## 1. Model Identification

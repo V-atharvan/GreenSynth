@@ -32,14 +32,14 @@ export function AddCharacterizationModal({
   onClose,
   onSuccess,
 }: AddCharacterizationModalProps) {
-  if (!isOpen) return null
-
   const [technique, setTechnique] = useState<TechniqueType>('XRD')
   const [instrumentName, setInstrumentName] = useState('')
   const [operator, setOperator] = useState('')
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  if (!isOpen) return null
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

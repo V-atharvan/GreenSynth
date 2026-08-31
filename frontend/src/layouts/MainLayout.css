@@ -167,6 +167,25 @@
   padding: var(--space-3) 0;
   overflow-y: auto;
   overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.sidebar-nav::-webkit-scrollbar {
+  width: 5px;
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 4px;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.35);
 }
 
 .nav-section-label {
@@ -246,9 +265,111 @@
   white-space: nowrap;
 }
 
+/* Sidebar user profile & logout */
+.sidebar-user {
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--sidebar-border);
+  background: rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.sidebar-user-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.sidebar-user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(15, 118, 110, 0.3);
+  border: 1px solid #0f766e;
+  color: #34d399;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+.sidebar-user-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.sidebar-user-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-user-dept {
+  font-size: 0.7rem;
+  color: var(--sidebar-text);
+  opacity: 0.8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-user-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.sidebar-user-project {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: #0f766e;
+  color: #ffffff;
+  text-transform: uppercase;
+}
+
+.sidebar-user-role {
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--sidebar-text);
+}
+
+.sidebar-logout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: 6px 10px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.sidebar-logout-btn:hover {
+  background: rgba(239, 68, 68, 0.25);
+  color: #ffffff;
+}
+
 /* Sidebar footer */
 .sidebar-footer {
-  padding: var(--space-4);
+  padding: var(--space-3) var(--space-4);
   border-top: 1px solid var(--sidebar-border);
 }
 
@@ -302,6 +423,32 @@
   gap: var(--space-4);
 }
 
+.topbar-group-badge {
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #334155;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.topbar-project-badge {
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  background: rgba(15, 118, 110, 0.1);
+  border: 1px solid rgba(15, 118, 110, 0.3);
+  color: #0f766e;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .topbar-badge {
   font-size: 0.75rem;
   padding: var(--space-1) var(--space-3);
@@ -318,10 +465,30 @@
 .main-content {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: var(--space-6) var(--space-8);
+  width: 100%;
+}
+
+.main-content-inner {
   max-width: 1400px;
   margin: 0 auto;
   width: 100%;
+}
+
+/* Subtle scrollbar pinned to the right edge of viewport */
+.main-content::-webkit-scrollbar {
+  width: 8px;
+}
+.main-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+.main-content::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.4);
+  border-radius: 4px;
+}
+.main-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.6);
 }
 
 /* ── Fixed Mobile Bottom Navigation Bar (Hidden on Desktop) ── */

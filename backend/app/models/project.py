@@ -88,6 +88,9 @@ class Project(Base):
     experiments: Mapped[list["Experiment"]] = relationship(  # type: ignore[name-defined]
         "Experiment", back_populates="project", cascade="all, delete-orphan"
     )
+    research_groups: Mapped[list["ResearchGroup"]] = relationship(  # type: ignore[name-defined]
+        "ResearchGroup", back_populates="project"
+    )
 
     def __repr__(self) -> str:
         return f"<Project id={self.id!s} code={self.project_code!r} name={self.name!r}>"

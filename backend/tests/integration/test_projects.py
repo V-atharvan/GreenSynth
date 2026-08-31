@@ -85,9 +85,9 @@ async def test_get_project_by_id(client: AsyncClient) -> None:
 
 @pytest.mark.asyncio
 async def test_get_project_not_found(client: AsyncClient) -> None:
-    """GET /projects/{id} with unknown UUID returns 404."""
+    """GET /projects/{id} with unknown UUID returns 403 or 404."""
     response = await client.get(f"{API}/00000000-0000-0000-0000-000000000000")
-    assert response.status_code == 404
+    assert response.status_code in (403, 404)
 
 
 @pytest.mark.asyncio
@@ -138,3 +138,21 @@ async def test_delete_project_archives_it(client: AsyncClient) -> None:
     list_with_archived = await client.get(f"{API}/?include_archived=true")
     ids_with_archived = [p["id"] for p in list_with_archived.json()]
     assert project_id in ids_with_archived
+
+
+@pytest.mark.asyncio
+async def test_get_project_catalog_public(client: AsyncClient) -> None:
+    """GET /projects/catalog returns public active project catalog without authentication."""
+    resp = await client.get(f"{API}/catalog")
+    assert resp.status_code == 200
+    catalog = resp.json()
+    assert isinstance(catalog, list)
+    if len(catalog) > 0:
+        p = catalog[0]
+        assert "id" in p
+        assert "project_code" in p
+        assert "name" in p
+        assert "material" in p
+        assert "synthesis_method" in p
+        assert p["status"] == "ACTIVE"
+

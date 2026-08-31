@@ -76,6 +76,7 @@ class RawFileResponse(BaseModel):
     file_size: int
     checksum: str
     storage_path: str
+    storage_backend: str = "local"
     uploaded_at: datetime
     uploaded_by: str | None
     status: str

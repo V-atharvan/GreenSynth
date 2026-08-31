@@ -1,6 +1,9 @@
 """GreenSynth Analytics — Models package."""
 
 from app.models.user import User
+from app.models.research_group import ResearchGroup, GroupStatus
+from app.models.group_membership import GroupMembership, MembershipStatus
+from app.models.invitation import Invitation, InvitationStatus
 from app.models.project import Project, ProjectStatus
 from app.models.experiment import Experiment, ExperimentStatus
 from app.models.sample import Sample, SampleStatus
@@ -90,6 +93,12 @@ from app.models.project_config import (
 
 __all__ = [
     "User",
+    "ResearchGroup",
+    "GroupStatus",
+    "GroupMembership",
+    "MembershipStatus",
+    "Invitation",
+    "InvitationStatus",
     "Project",
     "ProjectStatus",
     "Experiment",

@@ -4,44 +4,42 @@
  * Evidence-based ML pipeline: Dataset → Training → Prediction → Validation
  */
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { Cpu, Database, ShieldCheck, TrendingUp, BarChart3 } from 'lucide-react'
-import { projectService } from '@/services/projectService'
+import { Cpu, Database, ShieldCheck, TrendingUp, BarChart3, FolderKanban } from 'lucide-react'
 import { mlService, MLDataset, MLModel, MLPrediction } from '@/services/mlService'
-import type { ProjectSummary } from '@/types'
+import { useProjectContext } from '@/context/ProjectContext'
 
 export default function MLDashboard() {
-  const [projects, setProjects] = useState<ProjectSummary[]>([])
-  const [selectedProject, setSelectedProject] = useState<string>('')
+  const { projectId, projectCode, projectName } = useProjectContext()
   const [datasets, setDatasets] = useState<MLDataset[]>([])
   const [models, setModels] = useState<MLModel[]>([])
   const [predictions, setPredictions] = useState<MLPrediction[]>([])
   const [loading, setLoading] = useState<boolean>(true)
 
-  useEffect(() => {
-    projectService.getProjects().then((pList) => {
-      setProjects(pList)
-      if (pList.length > 0) {
-        setSelectedProject(pList[0].id)
-      }
-    }).catch(console.error)
-  }, [])
-
-  useEffect(() => {
-    if (!selectedProject) return
+  const fetchData = useCallback(async () => {
+    if (!projectId) return
     setLoading(true)
 
-    Promise.all([
-      mlService.getDatasets(selectedProject),
-      mlService.getModels(),
-      mlService.getPredictions(),
-    ]).then(([dList, mList, pList]) => {
+    try {
+      const [dList, mList, pList] = await Promise.all([
+        mlService.getDatasets(projectId),
+        mlService.getModels(),
+        mlService.getPredictions(),
+      ])
       setDatasets(dList)
       setModels(mList)
       setPredictions(pList)
-    }).catch(console.error).finally(() => setLoading(false))
-  }, [selectedProject])
+    } catch (err) {
+      console.error('Failed to load ML dashboard data:', err)
+    } finally {
+      setLoading(false)
+    }
+  }, [projectId])
+
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
 
   const approvedModels = models.filter((m) => m.status === 'PRODUCTION_CANDIDATE')
 
@@ -61,20 +59,26 @@ export default function MLDashboard() {
             Evidence-based dataset preparation, model training, validation &amp; uncertainty-quantified predictions.
           </p>
         </div>
-        <div className="gs-header-actions">
-          <select
-            value={selectedProject}
-            onChange={(e) => setSelectedProject(e.target.value)}
-            className="gs-select"
-            aria-label="Select project"
+        <div className="gs-header-actions" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '8px 14px',
+              background: '#f8fafc',
+              border: '1px solid #cbd5e1',
+              borderRadius: '6px',
+              fontSize: '13px',
+              fontWeight: 600,
+              color: '#0f766e',
+              whiteSpace: 'nowrap',
+            }}
           >
-            {projects.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.project_code} — {p.name}
-              </option>
-            ))}
-          </select>
-          <Link to="/ml/datasets/new" className="gs-btn gs-btn-teal">
+            <FolderKanban size={15} />
+            <span>{projectCode ? `${projectCode} — ${projectName || projectCode}` : 'Loading project...'}</span>
+          </div>
+          <Link to="/ml/datasets/new" className="gs-btn gs-btn-teal" style={{ fontWeight: 600 }}>
             + New Dataset
           </Link>
         </div>
@@ -103,155 +107,151 @@ export default function MLDashboard() {
           <div className="gs-metric-value">{approvedModels.length}</div>
           <div className="gs-metric-label">Approved Candidates</div>
         </div>
-        <div className="gs-metric-card purple">
-          <div className="gs-metric-icon purple" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="gs-metric-card amber">
+          <div className="gs-metric-icon amber" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <TrendingUp size={18} />
           </div>
           <div className="gs-metric-value">{predictions.length}</div>
-          <div className="gs-metric-label">Predictions Generated</div>
+          <div className="gs-metric-label">Predictions Made</div>
         </div>
       </div>
 
-      {/* Pipeline action tiles */}
-      <div className="gs-action-grid">
-        <Link to="/ml/datasets/new" className="gs-action-card teal">
-          <div className="gs-action-card-icon teal" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Database size={20} />
+      {/* Pipeline steps navigation */}
+      <div className="gs-pipeline-nav">
+        <Link to="/ml/datasets/new" className="gs-pipeline-step">
+          <div className="gs-pipeline-step-num">1</div>
+          <div>
+            <div className="gs-pipeline-step-title">Dataset Builder</div>
+            <div className="gs-pipeline-step-desc">Prepare multi-modal training sets</div>
           </div>
-          <div className="gs-action-card-title">1. Build Dataset</div>
-          <div className="gs-action-card-desc">
-            Extract completed experiments, select features &amp; targets, validate eligibility &amp; eliminate target leakage.
-          </div>
-          <div className="gs-action-card-link">Build Dataset Wizard →</div>
         </Link>
-
-        <Link to="/ml/training" className="gs-action-card indigo">
-          <div className="gs-action-card-icon indigo" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Cpu size={20} />
+        <Link to="/ml/training" className="gs-pipeline-step">
+          <div className="gs-pipeline-step-num">2</div>
+          <div>
+            <div className="gs-pipeline-step-title">Model Training</div>
+            <div className="gs-pipeline-step-desc">Train ensemble regressors</div>
           </div>
-          <div className="gs-action-card-title">2. Model Training &amp; CV</div>
-          <div className="gs-action-card-desc">
-            Train baseline, linear, Ridge, Random Forest &amp; Gradient Boosting models with cross-validation &amp; diagnostic charts.
-          </div>
-          <div className="gs-action-card-link">Train Models →</div>
         </Link>
-
-        <Link to="/ml/predict" className="gs-action-card purple">
-          <div className="gs-action-card-icon purple" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <BarChart3 size={20} />
+        <Link to="/ml/predict" className="gs-pipeline-step">
+          <div className="gs-pipeline-step-num">3</div>
+          <div>
+            <div className="gs-pipeline-step-title">Predict &amp; Uncertainty</div>
+            <div className="gs-pipeline-step-desc">Evaluate forward synthesis targets</div>
           </div>
-          <div className="gs-action-card-title">3. Prediction &amp; Bounds</div>
-          <div className="gs-action-card-desc">
-            Generate property predictions with uncertainty intervals &amp; applicability domain boundary checks.
-          </div>
-          <div className="gs-action-card-link">Generate Prediction →</div>
         </Link>
-
-        <Link to="/ml/validation" className="gs-action-card emerald">
-          <div className="gs-action-card-icon emerald" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <ShieldCheck size={20} />
+        <Link to="/ml/validation" className="gs-pipeline-step">
+          <div className="gs-pipeline-step-num">4</div>
+          <div>
+            <div className="gs-pipeline-step-title">Validation Studio</div>
+            <div className="gs-pipeline-step-desc">Health checks &amp; drift monitoring</div>
           </div>
-          <div className="gs-action-card-title">4. Validation Studio</div>
-          <div className="gs-action-card-desc">
-            Compare predictions against actual laboratory measurements. Track model health, bias, and drift over time.
-          </div>
-          <div className="gs-action-card-link">Open Validation Studio →</div>
         </Link>
       </div>
 
-      {/* Datasets table */}
-      <div className="gs-panel">
-        <div className="gs-panel-header">
-          <span className="gs-panel-title">Project Datasets</span>
-          <Link to="/ml/datasets/new" className="gs-btn gs-btn-outline gs-btn-sm">
-            + Add
-          </Link>
-        </div>
-
-        {loading ? (
-          <div className="gs-loading">
-            <div className="gs-spinner" />
-            Loading datasets…
+      {/* Main content grid */}
+      <div className="gs-grid-2">
+        {/* Datasets section */}
+        <div className="gs-card">
+          <div className="gs-card-header">
+            <h3 className="gs-card-title">
+              <Database size={16} /> Datasets ({datasets.length})
+            </h3>
+            <Link to="/ml/datasets/new" className="gs-link">
+              + New Dataset
+            </Link>
           </div>
-        ) : datasets.length === 0 ? (
-          <div className="gs-empty">
-            <div className="gs-empty-icon" style={{ display: 'flex', justifyContent: 'center' }}>
-              <Database size={32} />
+          {loading ? (
+            <div className="gs-loading-placeholder">Loading datasets...</div>
+          ) : datasets.length === 0 ? (
+            <div className="gs-empty-placeholder">
+              No datasets built for this project yet. Use the Dataset Builder to construct feature matrices.
             </div>
-            <div className="gs-empty-title">No Datasets Yet</div>
-            <div className="gs-empty-text">
-              Build your first dataset from completed experiments to begin the ML pipeline.
+          ) : (
+            <div className="gs-table-wrap">
+              <table className="gs-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Target</th>
+                    <th>Records</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {datasets.map((ds) => (
+                    <tr key={ds.id}>
+                      <td>
+                        <strong>{ds.name}</strong>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>
+                          v{ds.version}
+                        </div>
+                      </td>
+                      <td>{ds.target_property} ({ds.target_unit})</td>
+                      <td>{ds.eligible_count}</td>
+                      <td>
+                        <span className="gs-badge green">{ds.status}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          </div>
-        ) : (
-          <div className="gs-table-wrapper">
-            <table className="gs-table">
-              <thead>
-                <tr>
-                  <th>Dataset Name</th>
-                  <th>Target Property</th>
-                  <th>Observations</th>
-                  <th>Status</th>
-                  <th>Created</th>
-                </tr>
-              </thead>
-              <tbody>
-                {datasets.map((d) => (
-                  <tr key={d.id}>
-                    <td style={{ fontWeight: 600 }}>{d.name}</td>
-                    <td>{d.target_property}</td>
-                    <td>{d.eligible_count}</td>
-                    <td><span className="gs-chip info">READY</span></td>
-                    <td>{new Date(d.created_at).toLocaleDateString()}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      {/* Models table */}
-      {models.length > 0 && (
-        <div className="gs-panel">
-          <div className="gs-panel-header">
-            <span className="gs-panel-title">Trained Models</span>
-          </div>
-          <div className="gs-table-wrapper">
-            <table className="gs-table">
-              <thead>
-                <tr>
-                  <th>Model Name</th>
-                  <th>Type</th>
-                  <th>Version</th>
-                  <th>Target</th>
-                  <th>CV MAE</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {models.map((m) => (
-                  <tr key={m.id}>
-                    <td style={{ fontWeight: 600 }}>{m.name}</td>
-                    <td><span className="gs-badge indigo">{m.model_type}</span></td>
-                    <td>{m.version}</td>
-                    <td style={{ color: '#0d9488' }}>{m.target_property}</td>
-                    <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.875rem' }}>
-                      {m.metrics?.cv_mae != null ? m.metrics.cv_mae.toFixed(4) : '—'}
-                    </td>
-                    <td>
-                      <span className={`gs-chip ${m.status === 'PRODUCTION_CANDIDATE' ? 'production' : m.status === 'RETIRED' ? 'retired' : 'info'}`}>
-                        {m.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          )}
         </div>
-      )}
 
+        {/* Models section */}
+        <div className="gs-card">
+          <div className="gs-card-header">
+            <h3 className="gs-card-title">
+              <Cpu size={16} /> Trained Models ({models.length})
+            </h3>
+            <Link to="/ml/training" className="gs-link">
+              + Train Model
+            </Link>
+          </div>
+          {loading ? (
+            <div className="gs-loading-placeholder">Loading models...</div>
+          ) : models.length === 0 ? (
+            <div className="gs-empty-placeholder">
+              No models trained yet. Go to Model Training to run training jobs.
+            </div>
+          ) : (
+            <div className="gs-table-wrap">
+              <table className="gs-table">
+                <thead>
+                  <tr>
+                    <th>Algorithm</th>
+                    <th>Target</th>
+                    <th>R² Score</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {models.map((mod) => (
+                    <tr key={mod.id}>
+                      <td>
+                        <strong>{mod.model_type}</strong>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>
+                          {mod.id.slice(0, 8)}...
+                        </div>
+                      </td>
+                      <td>{mod.target_property}</td>
+                      <td>
+                        {mod.metrics?.cv_r2 != null ? mod.metrics.cv_r2.toFixed(4) : '—'}
+                      </td>
+                      <td>
+                        <span className={`gs-badge ${mod.status === 'PRODUCTION_CANDIDATE' ? 'green' : 'amber'}`}>
+                          {mod.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   )
 }

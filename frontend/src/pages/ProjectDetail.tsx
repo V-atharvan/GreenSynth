@@ -13,16 +13,19 @@ import type {
 import { projectService } from '@/services/projectService'
 import { experimentService } from '@/services/experimentService'
 import { parameterService } from '@/services/parameterService'
+import { useProjectContext } from '@/context/ProjectContext'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { ErrorMessage } from '@/components/ErrorMessage'
 import { StatusBadge } from '@/components/StatusBadge'
 import { PageHeader } from '@/components/PageHeader'
 import { ParameterManagementModal } from '@/components/ParameterManagementModal'
+import { ShieldCheck, Lock, FolderKanban } from 'lucide-react'
 import type { ApiError } from '@/types'
 
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { projectId: userProjectId, isGroupLeader } = useProjectContext()
 
   const [project, setProject] = useState<Project | null>(null)
   const [experiments, setExperiments] = useState<ExperimentSummary[]>([])
@@ -36,19 +39,30 @@ export default function ProjectDetail() {
   const [activeTab, setActiveTab] = useState<'overview' | 'experiments' | 'parameters'>('overview')
   const [showParamModal, setShowParamModal] = useState(false)
 
+  const isAssignedProject = id === userProjectId
+
   const fetchAll = async () => {
     if (!id) return
     setLoading(true)
     setError(null)
     try {
-      const [p, exps, pdefs] = await Promise.all([
+      const [p, pdefs] = await Promise.all([
         projectService.getById(id),
-        experimentService.getAll({ project_id: id }),
         parameterService.getProjectParameters(id, true),
       ])
       setProject(p)
-      setExperiments(exps)
       setParameterDefs(pdefs)
+
+      if (isAssignedProject) {
+        try {
+          const exps = await experimentService.getAll({ project_id: id })
+          setExperiments(exps)
+        } catch {
+          setExperiments([])
+        }
+      } else {
+        setExperiments([])
+      }
     } catch (e: unknown) {
       setError((e as ApiError)?.message ?? 'Failed to load project details.')
     } finally {
@@ -273,59 +287,73 @@ export default function ProjectDetail() {
         <div className="card">
           <div className="card-header">
             <h2>Experiments ({experiments.length})</h2>
-            <Link
-              to={`/experiments?project_id=${project.id}`}
-              className="btn btn-primary btn-sm"
-            >
-              + New Experiment
-            </Link>
-          </div>
-          <div className="table-container">
-            {experiments.length === 0 ? (
-              <div style={{ padding: 'var(--space-8)', textAlign: 'center', color: 'var(--color-text-secondary)' }}>
-                No experiments yet for this project.
-              </div>
-            ) : (
-              <table>
-                <thead>
-                  <tr>
-                    <th>Code</th>
-                    <th>Title</th>
-                    <th>Status</th>
-                    <th>Date</th>
-                    <th>Researcher</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {experiments.map((exp) => (
-                    <tr key={exp.id}>
-                      <td>
-                        <Link to={`/experiments/${exp.id}`} className="table-link text-mono">
-                          {exp.experiment_code}
-                        </Link>
-                      </td>
-                      <td>{exp.title}</td>
-                      <td><StatusBadge status={exp.status} /></td>
-                      <td style={{ color: 'var(--color-text-secondary)' }}>
-                        {exp.experiment_date
-                          ? new Date(exp.experiment_date).toLocaleDateString()
-                          : '—'}
-                      </td>
-                      <td style={{ color: 'var(--color-text-secondary)' }}>
-                        {exp.researcher ?? '—'}
-                      </td>
-                      <td>
-                        <Link to={`/experiments/${exp.id}`} className="btn btn-secondary btn-sm">
-                          View
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            {isAssignedProject && (
+              <Link
+                to="/experiments"
+                className="btn btn-primary btn-sm"
+              >
+                + New Experiment
+              </Link>
             )}
           </div>
+          {!isAssignedProject ? (
+            <div style={{ padding: 'var(--space-8)', textAlign: 'center', color: '#64748b' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 44, height: 44, borderRadius: '50%', background: '#fef3c7', color: '#d97706', marginBottom: 12 }}>
+                <Lock size={20} />
+              </div>
+              <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#1e3a5f', marginBottom: 4 }}>Research Data Isolated</h3>
+              <p style={{ fontSize: '0.875rem', maxWidth: 460, margin: '0 auto' }}>
+                Experiments for {project.project_code} belong to another assigned research group and are protected under multi-tenant isolation policies.
+              </p>
+            </div>
+          ) : (
+            <div className="table-container">
+              {experiments.length === 0 ? (
+                <div style={{ padding: 'var(--space-8)', textAlign: 'center', color: 'var(--color-text-secondary)' }}>
+                  No experiments yet for this project.
+                </div>
+              ) : (
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Code</th>
+                      <th>Title</th>
+                      <th>Status</th>
+                      <th>Date</th>
+                      <th>Researcher</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {experiments.map((exp) => (
+                      <tr key={exp.id}>
+                        <td>
+                          <Link to={`/experiments/${exp.id}`} className="table-link text-mono">
+                            {exp.experiment_code}
+                          </Link>
+                        </td>
+                        <td>{exp.title}</td>
+                        <td><StatusBadge status={exp.status} /></td>
+                        <td style={{ color: 'var(--color-text-secondary)' }}>
+                          {exp.experiment_date
+                            ? new Date(exp.experiment_date).toLocaleDateString()
+                            : '—'}
+                        </td>
+                        <td style={{ color: 'var(--color-text-secondary)' }}>
+                          {exp.researcher ?? '—'}
+                        </td>
+                        <td>
+                          <Link to={`/experiments/${exp.id}`} className="btn btn-secondary btn-sm">
+                            View
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          )}
         </div>
       )}
 

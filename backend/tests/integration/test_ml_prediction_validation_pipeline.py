@@ -14,7 +14,9 @@ from app.models.sample import Sample
 
 
 @pytest.mark.asyncio
-async def test_ml_prediction_validation_pipeline(client: AsyncClient, db_session: AsyncSession):
+async def test_ml_prediction_validation_pipeline(
+    client: AsyncClient, db_session: AsyncSession, default_auth_context
+):
     """End-to-end integration test for Phase 16 ML Prediction & Model Validation Workflow."""
 
     # 1. Create Project 7, Experiment, and Sample Data
@@ -30,6 +32,7 @@ async def test_ml_prediction_validation_pipeline(client: AsyncClient, db_session
         status=ProjectStatus.ACTIVE,
     )
     db_session.add(proj)
+    default_auth_context["group"].project_id = proj.id
     await db_session.commit()
 
     exp = Experiment(

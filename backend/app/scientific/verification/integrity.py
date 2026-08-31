@@ -45,8 +45,11 @@ class DataIntegrityService:
     async def verify_storage(cls, db: AsyncSession) -> dict[str, Any]:
         """
         Scans all RawFile records in the database, recalculates SHA-256 hashes,
-        and verifies physical file integrity.
+        and verifies physical/object file integrity across configured storage backend.
         """
+        from app.storage import get_storage_backend
+        storage = get_storage_backend()
+
         stmt = select(RawFile).where(RawFile.status == "ACTIVE")
         res = await db.execute(stmt)
         raw_files = res.scalars().all()
@@ -56,26 +59,37 @@ class DataIntegrityService:
         checksum_mismatches: list[dict[str, Any]] = []
 
         for rf in raw_files:
-            file_path = Path(rf.storage_path)
-            if not file_path.exists():
+            exists = await storage.exists(rf.storage_path)
+            if not exists:
                 missing_files.append({
                     "file_id": str(rf.id),
                     "filename": rf.original_filename,
                     "storage_path": rf.storage_path,
+                    "storage_backend": getattr(rf, "storage_backend", storage.backend_name),
                     "expected_checksum": rf.checksum,
                 })
                 continue
 
-            current_checksum = cls.calculate_sha256(file_path)
-            if current_checksum != rf.checksum:
-                checksum_mismatches.append({
+            try:
+                content = await storage.retrieve(rf.storage_path)
+                import hashlib
+                current_checksum = hashlib.sha256(content).hexdigest()
+                if current_checksum != rf.checksum:
+                    checksum_mismatches.append({
+                        "file_id": str(rf.id),
+                        "filename": rf.original_filename,
+                        "stored_checksum": rf.checksum,
+                        "recalculated_checksum": current_checksum,
+                    })
+                else:
+                    verified_count += 1
+            except Exception as exc:
+                missing_files.append({
                     "file_id": str(rf.id),
                     "filename": rf.original_filename,
-                    "stored_checksum": rf.checksum,
-                    "recalculated_checksum": current_checksum,
+                    "storage_path": rf.storage_path,
+                    "error": str(exc),
                 })
-            else:
-                verified_count += 1
 
         is_clean = len(missing_files) == 0 and len(checksum_mismatches) == 0
 

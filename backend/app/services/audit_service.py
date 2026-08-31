@@ -30,12 +30,14 @@ class AuditService:
         entity_id: uuid.UUID,
         action: str,
         user_id: uuid.UUID | None = None,
+        project_id: uuid.UUID | None = None,
         changes: dict | None = None,
         notes: str | None = None,
     ) -> AuditLog:
         """Create an audit log entry."""
         audit_entry = AuditLog(
             user_id=user_id,
+            project_id=project_id,
             entity_type=entity_type,
             entity_id=entity_id,
             action=action,

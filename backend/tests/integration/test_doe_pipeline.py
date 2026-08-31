@@ -11,13 +11,15 @@ from app.models.project import Project, ProjectStatus
 
 
 @pytest.mark.asyncio
-async def test_doe_project7_cuo_pipeline(client: AsyncClient, db_session: AsyncSession):
+async def test_doe_project7_cuo_pipeline(
+    client: AsyncClient, db_session: AsyncSession, default_auth_context
+):
     """End-to-end integration test for Project 7 CuO Spray Pyrolysis DOE workflow."""
 
     # 1. Create Demonstration Project 7
     proj = Project(
         id=uuid.uuid4(),
-        project_code="PROJ-007",
+        project_code=f"PROJ-007-{uuid.uuid4().hex[:4].upper()}",
         name="Project 7 - Phytochemical CuO Thin Film DOE Synthesis",
         description="Spray pyrolysis synthesis of CuO using Mulberry leaf extract",
         material="CuO",
@@ -27,6 +29,7 @@ async def test_doe_project7_cuo_pipeline(client: AsyncClient, db_session: AsyncS
         status=ProjectStatus.ACTIVE,
     )
     db_session.add(proj)
+    default_auth_context["group"].project_id = proj.id
     await db_session.commit()
 
     # 2. Preview DOE Workload via API

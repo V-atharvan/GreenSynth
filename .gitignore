@@ -51,9 +51,15 @@ Thumbs.db
 data/raw/*
 data/processed/*
 data/exports/*
+backend/data/raw/*
+backend/data/processed/*
+backend/data/exports/*
 !data/raw/.gitkeep
 !data/processed/.gitkeep
 !data/exports/.gitkeep
+!backend/data/raw/.gitkeep
+!backend/data/processed/.gitkeep
+!backend/data/exports/.gitkeep
 
 # ── Database ──────────────────────────────────────────────
 *.db

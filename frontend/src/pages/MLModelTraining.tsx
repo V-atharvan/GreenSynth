@@ -2,20 +2,18 @@
  * GreenSynth Analytics — ML Model Training & Cross-Validation Page
  */
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Cpu, AlertTriangle, Check, X } from 'lucide-react'
-import { projectService } from '@/services/projectService'
-import type { ProjectSummary } from '@/types'
+import { Cpu, AlertTriangle, Check, X, FolderKanban } from 'lucide-react'
 import { mlService, MLDataset, MLModel } from '@/services/mlService'
+import { useProjectContext } from '@/context/ProjectContext'
 
 export default function MLModelTraining() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const preselectedDatasetId = searchParams.get('dataset')
 
-  const [projects, setProjects] = useState<ProjectSummary[]>([])
-  const [selectedProjectId, setSelectedProjectId] = useState<string>('')
+  const { projectId, projectCode, projectName } = useProjectContext()
   const [datasets, setDatasets] = useState<MLDataset[]>([])
   const [selectedDatasetId, setSelectedDatasetId] = useState<string>(preselectedDatasetId || '')
 
@@ -30,20 +28,22 @@ export default function MLModelTraining() {
   const [training, setTraining] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    projectService.getProjects().then((data) => {
-      setProjects(data)
-      if (data.length > 0) setSelectedProjectId(data[0].id)
-    }).catch(() => {})
-  }, [])
+  const loadDatasets = useCallback(async () => {
+    if (!projectId) return
+    try {
+      const ds = await mlService.getDatasets(projectId)
+      setDatasets(ds)
+      if (ds.length > 0 && !selectedDatasetId) {
+        setSelectedDatasetId(ds[0].id)
+      }
+    } catch (err) {
+      console.error('Failed to load datasets for training:', err)
+    }
+  }, [projectId, selectedDatasetId])
 
   useEffect(() => {
-    if (!selectedProjectId) return
-    mlService.getDatasets(selectedProjectId).then((ds) => {
-      setDatasets(ds)
-      if (ds.length > 0 && !selectedDatasetId) setSelectedDatasetId(ds[0].id)
-    }).catch(() => {})
-  }, [selectedProjectId])
+    loadDatasets()
+  }, [loadDatasets])
 
   const handleRunTraining = async () => {
     if (!selectedDatasetId) return
@@ -59,51 +59,64 @@ export default function MLModelTraining() {
       setModels(res)
       if (res.length > 0) setSelectedModel(res[0])
     } catch (err: any) {
-      setError(err?.response?.data?.detail || err?.message || 'Training failed.')
+      setError(err?.message || 'Model training failed. Please verify dataset feature values.')
     } finally {
       setTraining(false)
     }
   }
 
-  const handleApproveModel = async (modelId: string) => {
+  const handleApprove = async (modelId: string) => {
     try {
       const updated = await mlService.approveModel(modelId)
-      setModels((prev) => prev.map((m) => (m.id === modelId ? updated : m)))
+      setModels(models.map((m) => (m.id === modelId ? updated : m)))
       if (selectedModel?.id === modelId) setSelectedModel(updated)
     } catch (err: any) {
-      setError(err?.response?.data?.detail || 'Failed to approve model.')
+      setError(err?.message || 'Failed to approve model.')
     }
   }
 
-  const handleRejectModel = async (modelId: string) => {
+  const handleReject = async (modelId: string) => {
     try {
       const updated = await mlService.rejectModel(modelId)
-      setModels((prev) => prev.map((m) => (m.id === modelId ? updated : m)))
+      setModels(models.map((m) => (m.id === modelId ? updated : m)))
       if (selectedModel?.id === modelId) setSelectedModel(updated)
     } catch (err: any) {
-      setError(err?.response?.data?.detail || 'Failed to reject model.')
+      setError(err?.message || 'Failed to reject model.')
     }
   }
 
   return (
-    <div className="gs-ml-container">
+    <div className="gs-page">
       {/* Header */}
       <div className="gs-page-header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button onClick={() => navigate('/ml')} className="gs-btn gs-btn-outline" style={{ padding: '8px 12px' }}>← Back</button>
-          <div>
-            <div className="gs-page-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div className="gs-page-title-icon indigo" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Cpu size={20} />
-              </div>
-              Model Training &amp; Cross-Validation
+        <div>
+          <div className="gs-page-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div className="gs-page-title-icon teal" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Cpu size={20} />
             </div>
-            <p className="gs-page-subtitle">Train baseline, linear, Ridge, Random Forest, &amp; Gradient Boosting models with K-fold cross validation.</p>
+            Model Training &amp; Cross-Validation Studio
           </div>
+          <p className="gs-page-subtitle">
+            Train baseline, linear ridge, and tree-based ensemble regressors with k-fold cross validation.
+          </p>
+        </div>
+        <div className="gs-header-actions">
+          <button
+            onClick={handleRunTraining}
+            disabled={training || !selectedDatasetId}
+            className="gs-btn gs-btn-teal"
+            style={{ fontWeight: 600 }}
+          >
+            {training ? 'Training Ensembles...' : '▶ Train Models'}
+          </button>
         </div>
       </div>
 
-      {error && <div className="gs-alert error" style={{ display: 'flex', alignItems: 'center', gap: 8 }}><AlertTriangle size={16} /> {error}</div>}
+      {error && (
+        <div className="gs-alert error" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <AlertTriangle size={16} /> {error}
+        </div>
+      )}
 
       {/* Config Panel */}
       <div className="gs-panel">
@@ -111,21 +124,37 @@ export default function MLModelTraining() {
           <span className="gs-panel-title">1. Select Dataset &amp; Training Parameters</span>
         </div>
         <div className="gs-panel-body" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          <div className="gs-form-row">
+          <div className="gs-form-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
             <div className="gs-field">
-              <label className="gs-label">Project</label>
-              <select value={selectedProjectId} onChange={(e) => setSelectedProjectId(e.target.value)} className="gs-select">
-                {projects.map((p) => (
-                  <option key={p.id} value={p.id}>{p.project_code} — {p.name}</option>
-                ))}
-              </select>
+              <label className="gs-label">Assigned Project</label>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '9px 12px',
+                  background: '#f8fafc',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  color: '#0f766e',
+                }}
+              >
+                <FolderKanban size={15} />
+                <span>{projectCode ? `${projectCode} — ${projectName || projectCode}` : 'Loading...'}</span>
+              </div>
             </div>
             <div className="gs-field">
               <label className="gs-label">Dataset</label>
               <select value={selectedDatasetId} onChange={(e) => setSelectedDatasetId(e.target.value)} className="gs-select">
-                {datasets.map((d) => (
-                  <option key={d.id} value={d.id}>{d.name} ({d.eligible_count} samples)</option>
-                ))}
+                {datasets.length === 0 ? (
+                  <option value="">No datasets available for project</option>
+                ) : (
+                  datasets.map((d) => (
+                    <option key={d.id} value={d.id}>{d.name} ({d.eligible_count} samples)</option>
+                  ))
+                )}
               </select>
             </div>
             <div className="gs-field">
@@ -138,145 +167,88 @@ export default function MLModelTraining() {
             </div>
           </div>
 
-          <div className="gs-form-row">
+          <div className="gs-form-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
             <div className="gs-field">
-              <label className="gs-label">CV Folds (K)</label>
-              <input type="number" min={2} max={10} value={cvFolds} onChange={(e) => setCvFolds(parseInt(e.target.value) || 5)} className="gs-input" />
+              <label className="gs-label">K-Fold CV Folds</label>
+              <input
+                type="number"
+                min="2"
+                max="10"
+                value={cvFolds}
+                onChange={(e) => setCvFolds(parseInt(e.target.value) || 5)}
+                className="gs-input"
+              />
             </div>
             <div className="gs-field">
               <label className="gs-label">Random Seed</label>
-              <input type="number" value={randomSeed} onChange={(e) => setRandomSeed(parseInt(e.target.value) || 42)} className="gs-input" />
-            </div>
-            <div className="gs-field" style={{ display: 'flex', alignItems: 'flex-end' }}>
-              <button onClick={handleRunTraining} disabled={training || !selectedDatasetId} className="gs-btn gs-btn-indigo" style={{ width: '100%', justifyContent: 'center' }}>
-                {training ? 'Training Models…' : 'Run Training & Cross Validation'}
-              </button>
+              <input
+                type="number"
+                value={randomSeed}
+                onChange={(e) => setRandomSeed(parseInt(e.target.value) || 42)}
+                className="gs-input"
+              />
             </div>
           </div>
         </div>
       </div>
 
-      {/* Model Comparison Table */}
+      {/* Models Result Section */}
       {models.length > 0 && (
-        <div className="gs-panel">
-          <div className="gs-panel-header">
-            <span className="gs-panel-title">2. Model Performance &amp; Comparison</span>
-            <span className="gs-chip info">{models.length} models trained</span>
-          </div>
-          <div className="gs-table-wrapper">
+        <div style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0, color: '#1e3a5f' }}>
+            2. Trained Model Leaderboard &amp; Cross-Validation
+          </h2>
+
+          <div className="gs-table-wrap">
             <table className="gs-table">
               <thead>
                 <tr>
-                  <th>Model Name</th>
                   <th>Algorithm</th>
-                  <th>CV MAE</th>
+                  <th>CV R² Mean ± Std</th>
                   <th>CV RMSE</th>
-                  <th>CV R²</th>
-                  <th>Train R²</th>
+                  <th>CV MAE</th>
                   <th>Status</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {models.map((m) => {
-                  const isSelected = selectedModel?.id === m.id
-                  const cvR2 = m.metrics.cv_r2
-                  return (
-                    <tr key={m.id} onClick={() => setSelectedModel(m)} style={{ cursor: 'pointer', background: isSelected ? '#eff6ff' : undefined }}>
-                      <td style={{ fontWeight: 600 }}>{m.name}</td>
-                      <td><span className="gs-badge indigo">{m.model_type}</span></td>
-                      <td style={{ fontFamily: 'var(--font-mono)' }}>{m.metrics.cv_mae}</td>
-                      <td style={{ fontFamily: 'var(--font-mono)' }}>{m.metrics.cv_rmse}</td>
-                      <td style={{ fontWeight: 700, color: cvR2 >= 0.7 ? '#059669' : 'var(--color-text)' }}>{m.metrics.cv_r2}</td>
-                      <td style={{ fontFamily: 'var(--font-mono)' }}>{m.metrics.train_r2}</td>
-                      <td>
-                        <span className={`gs-chip ${m.status === 'PRODUCTION_CANDIDATE' ? 'production' : m.status === 'REJECTED' ? 'critical' : 'info'}`}>
-                          {m.status}
-                        </span>
-                      </td>
-                      <td>
-                        <span style={{ display: 'inline-flex', gap: 6 }} onClick={(e) => e.stopPropagation()}>
-                          {m.status !== 'PRODUCTION_CANDIDATE' && (
-                            <button onClick={() => handleApproveModel(m.id)} className="gs-btn gs-btn-emerald gs-btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                              <Check size={14} /> Approve
-                            </button>
-                          )}
-                          {m.status !== 'REJECTED' && (
-                            <button onClick={() => handleRejectModel(m.id)} className="gs-btn gs-btn-danger gs-btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                              <X size={14} /> Reject
-                            </button>
-                          )}
-                        </span>
-                      </td>
-                    </tr>
-                  )
-                })}
+                {models.map((m) => (
+                  <tr key={m.id} style={{ background: selectedModel?.id === m.id ? '#f0fdf4' : undefined }}>
+                    <td>
+                      <strong>{m.model_type}</strong>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>ID: {m.id.slice(0, 8)}...</div>
+                    </td>
+                    <td>
+                      {m.metrics?.cv_r2 != null ? m.metrics.cv_r2.toFixed(4) : '—'}
+                    </td>
+                    <td>{m.metrics?.cv_rmse != null ? m.metrics.cv_rmse.toFixed(4) : '—'}</td>
+                    <td>{m.metrics?.cv_mae != null ? m.metrics.cv_mae.toFixed(4) : '—'}</td>
+                    <td>
+                      <span className={`gs-badge ${m.status === 'PRODUCTION_CANDIDATE' ? 'green' : m.status === 'REJECTED' ? 'red' : 'amber'}`}>
+                        {m.status}
+                      </span>
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button onClick={() => setSelectedModel(m)} className="gs-btn gs-btn-secondary" style={{ padding: '4px 8px', fontSize: '0.75rem' }}>
+                          Inspect
+                        </button>
+                        {m.status !== 'PRODUCTION_CANDIDATE' && (
+                          <button onClick={() => handleApprove(m.id)} className="gs-btn gs-btn-emerald" style={{ padding: '4px 8px', fontSize: '0.75rem' }} title="Approve for prediction">
+                            <Check size={14} />
+                          </button>
+                        )}
+                        {m.status !== 'REJECTED' && (
+                          <button onClick={() => handleReject(m.id)} className="gs-btn gs-btn-secondary" style={{ padding: '4px 8px', fontSize: '0.75rem', color: '#ef4444' }} title="Reject candidate">
+                            <X size={14} />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
-          </div>
-        </div>
-      )}
-
-      {/* Selected Model Diagnostics */}
-      {selectedModel && (
-        <div className="gs-panel">
-          <div className="gs-panel-header">
-            <span className="gs-panel-title">Diagnostics: {selectedModel.name}</span>
-            <span style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', fontFamily: 'var(--font-mono)' }}>
-              scikit-learn {selectedModel.library_versions?.['scikit-learn']}
-            </span>
-          </div>
-          <div className="gs-panel-body" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            {selectedModel.metrics.overfitting_warning && (
-              <div className="gs-alert warning" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <AlertTriangle size={16} /> Potential Overfitting: Train R² ({selectedModel.metrics.train_r2}) significantly exceeds CV R² ({selectedModel.metrics.cv_r2}).
-              </div>
-            )}
-
-            {selectedModel.feature_importance && (
-              <div>
-                <div className="gs-label" style={{ marginBottom: 10 }}>Feature Importance / Coefficients</div>
-                <div className="gs-param-grid">
-                  {Object.entries(selectedModel.feature_importance).map(([fname, val]) => (
-                    <div key={fname} className="gs-param-item">
-                      <div className="gs-param-name">{fname}</div>
-                      <div className="gs-param-value" style={{ color: '#0d9488' }}>{(val as number).toFixed(4)}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {selectedModel.metrics.diagnostics?.actual_vs_predicted && (
-              <div>
-                <div className="gs-label" style={{ marginBottom: 10 }}>Actual vs. Predicted Observations</div>
-                <div className="gs-table-wrapper" style={{ maxHeight: 240, overflowY: 'auto' }}>
-                  <table className="gs-table">
-                    <thead>
-                      <tr>
-                        <th>Sample ID</th>
-                        <th>Actual ({selectedModel.target_unit})</th>
-                        <th>Predicted ({selectedModel.target_unit})</th>
-                        <th>Residual</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {selectedModel.metrics.diagnostics.actual_vs_predicted.map((pt: any, i: number) => {
-                        const res = pt.actual - pt.predicted
-                        return (
-                          <tr key={i}>
-                            <td style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-text-secondary)' }}>{pt.sample_id}</td>
-                            <td style={{ fontWeight: 600, color: '#059669', fontFamily: 'var(--font-mono)' }}>{pt.actual}</td>
-                            <td style={{ fontWeight: 600, color: '#0d9488', fontFamily: 'var(--font-mono)' }}>{pt.predicted}</td>
-                            <td style={{ fontFamily: 'var(--font-mono)' }}>{res.toFixed(4)}</td>
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       )}

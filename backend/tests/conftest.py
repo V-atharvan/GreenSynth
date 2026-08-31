@@ -69,12 +69,110 @@ async def db_session(test_engine) -> AsyncGenerator[AsyncSession, None]:
         await session.rollback()
 
 
-@pytest_asyncio.fixture
-async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
-    """
-    Provide an async HTTP test client with the test DB injected.
+# ── Sample & Auth fixtures ─────────────────────────────────
 
-    Overrides the get_db dependency so tests use the test session.
+@pytest_asyncio.fixture
+async def demo_project(db_session: AsyncSession):
+    """Create a demo project for tests."""
+    import uuid
+    from app.models.project import Project
+
+    project = Project(
+        project_code=f"TEST-P7-{uuid.uuid4().hex[:6].upper()}",
+        name="Test Project 7",
+        material="CuO",
+        extract="Mulberry",
+        solvent="Ethanol",
+        synthesis_method="Spray Pyrolysis",
+        status="ACTIVE",
+    )
+    db_session.add(project)
+    await db_session.flush()
+    await db_session.refresh(project)
+    return project
+
+
+@pytest_asyncio.fixture
+async def default_auth_context(db_session: AsyncSession, demo_project):
+    """Creates a default authenticated user, group, and membership bound to demo_project."""
+    import uuid
+    from app.core.security import create_access_token
+    from app.models.group_membership import GroupMembership, MembershipStatus
+    from app.models.research_group import GroupStatus, ResearchGroup
+    from app.models.user import User
+
+    unique_id = uuid.uuid4().hex[:6]
+    user = User(
+        username=f"test_default_user_{unique_id}",
+        email=f"default_user_{unique_id}@greensynth.edu",
+        full_name="Default Test Leader",
+        department="Chemical Engineering",
+        phone="9876543210",
+        roll_number=f"ROLL-{unique_id}",
+        role="RESEARCHER",
+        password_hash="testhash",
+        is_active=True,
+    )
+    db_session.add(user)
+    await db_session.flush()
+
+    group = ResearchGroup(
+        name=f"Default Test Group {unique_id}",
+        project_id=demo_project.id,
+        leader_user_id=user.id,
+        status=GroupStatus.ACTIVE.value,
+    )
+    db_session.add(group)
+    await db_session.flush()
+
+    membership = GroupMembership(
+        group_id=group.id,
+        user_id=user.id,
+        is_leader=True,
+        status=MembershipStatus.ACTIVE.value,
+    )
+    db_session.add(membership)
+    await db_session.flush()
+
+    token = create_access_token(user.id)
+    return {
+        "user": user,
+        "group": group,
+        "membership": membership,
+        "project": demo_project,
+        "token": token,
+        "headers": {"Authorization": f"Bearer {token}"},
+    }
+
+
+@pytest_asyncio.fixture
+async def client(
+    db_session: AsyncSession, default_auth_context
+) -> AsyncGenerator[AsyncClient, None]:
+    """
+    Provide an async HTTP test client with the test DB and default auth token injected.
+    """
+    async def override_get_db() -> AsyncGenerator[AsyncSession, None]:
+        yield db_session
+
+    app.dependency_overrides[get_db] = override_get_db
+
+    async with AsyncClient(
+        transport=ASGITransport(app=app),
+        base_url="http://test",
+        headers=default_auth_context["headers"],
+    ) as ac:
+        yield ac
+
+    app.dependency_overrides.clear()
+
+
+@pytest_asyncio.fixture
+async def unauthenticated_client(
+    db_session: AsyncSession,
+) -> AsyncGenerator[AsyncClient, None]:
+    """
+    Provide an unauthenticated async HTTP test client.
     """
     async def override_get_db() -> AsyncGenerator[AsyncSession, None]:
         yield db_session
@@ -88,28 +186,6 @@ async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
         yield ac
 
     app.dependency_overrides.clear()
-
-
-# ── Sample fixtures ────────────────────────────────────────
-
-@pytest_asyncio.fixture
-async def demo_project(db_session: AsyncSession):
-    """Create a demo project for tests."""
-    from app.models.project import Project
-
-    project = Project(
-        project_code="TEST-P7",
-        name="Test Project 7",
-        material="CuO",
-        extract="Mulberry",
-        solvent="Ethanol",
-        synthesis_method="Spray Pyrolysis",
-        status="ACTIVE",
-    )
-    db_session.add(project)
-    await db_session.flush()
-    await db_session.refresh(project)
-    return project
 
 
 @pytest_asyncio.fixture

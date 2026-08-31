@@ -1,8 +1,11 @@
+import React from 'react'
 import { render, screen, waitFor } from '@testing-library/react'
 import { BrowserRouter } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
 import Dashboard from '../pages/Dashboard'
 import { dashboardService } from '../services/dashboardService'
+import { AuthProvider } from '../context/AuthContext'
+import { ProjectProvider } from '../context/ProjectContext'
 
 vi.mock('../services/dashboardService', () => ({
   dashboardService: {
@@ -34,7 +37,11 @@ describe('Dashboard Page', () => {
 
     render(
       <BrowserRouter>
-        <Dashboard />
+        <AuthProvider>
+          <ProjectProvider>
+            <Dashboard />
+          </ProjectProvider>
+        </AuthProvider>
       </BrowserRouter>
     )
 

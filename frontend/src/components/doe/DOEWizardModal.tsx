@@ -15,8 +15,6 @@ interface DOEWizardModalProps {
 }
 
 export const DOEWizardModal: React.FC<DOEWizardModalProps> = ({ projectId, isOpen, onClose, onSuccess }) => {
-  if (isOpen === false) return null;
-
   const [step, setStep] = useState<number>(1);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -71,6 +69,8 @@ export const DOEWizardModal: React.FC<DOEWizardModalProps> = ({ projectId, isOpe
 
   // Workload Preview
   const [preview, setPreview] = useState<DOEWorkloadPreview | null>(null);
+
+  if (isOpen === false) return null;
 
   const handleAddFactor = () => {
     const idx = factors.length + 1;

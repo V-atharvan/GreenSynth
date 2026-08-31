@@ -6,6 +6,8 @@
 
 export * from './characterization'
 export * from './analysis'
+export * from './group'
+export * from './auth'
 
 // ── Status Enums ──────────────────────────────────────────
 
@@ -34,11 +36,14 @@ export interface ProjectSummary {
   id: string
   project_code: string
   name: string
+  description?: string | null
   material: string
   synthesis_method: string
+  extract?: string
   solvent?: string
   status: ProjectStatus
   created_at: string
+  updated_at?: string
 }
 
 export interface Project extends ProjectSummary {

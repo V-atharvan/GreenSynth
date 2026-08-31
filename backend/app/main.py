@@ -42,29 +42,30 @@ async def lifespan(app: FastAPI):
     from app.database.session import async_engine, AsyncSessionLocal
     from app.database.seed import seed_demo_project
 
-    # Drop empty legacy 'does' & 'proposed_experiments' tables if missing columns so create_all builds clean schema
-    async with AsyncSessionLocal() as session:
-        try:
-            from sqlalchemy import text
-            res = await session.execute(text("PRAGMA table_info(does)"))
-            cols = {row[1] for row in res.fetchall()}
-            if cols and ("research_question" not in cols or "version" not in cols):
-                cnt_res = await session.execute(text("SELECT COUNT(*) FROM does"))
-                if cnt_res.scalar() == 0:
-                    await session.execute(text("DROP TABLE does"))
-                    await session.commit()
-                    logger.info("Dropped empty legacy 'does' table for clean schema creation.")
+    # Drop empty legacy 'does' & 'proposed_experiments' tables if missing columns on SQLite so create_all builds clean schema
+    if settings.database_url.startswith("sqlite"):
+        async with AsyncSessionLocal() as session:
+            try:
+                from sqlalchemy import text
+                res = await session.execute(text("PRAGMA table_info(does)"))
+                cols = {row[1] for row in res.fetchall()}
+                if cols and ("research_question" not in cols or "version" not in cols):
+                    cnt_res = await session.execute(text("SELECT COUNT(*) FROM does"))
+                    if cnt_res.scalar() == 0:
+                        await session.execute(text("DROP TABLE does"))
+                        await session.commit()
+                        logger.info("Dropped empty legacy 'does' table for clean schema creation.")
 
-            res_pe = await session.execute(text("PRAGMA table_info(proposed_experiments)"))
-            cols_pe = {row[1] for row in res_pe.fetchall()}
-            if cols_pe and "is_center_point" not in cols_pe:
-                cnt_pe = await session.execute(text("SELECT COUNT(*) FROM proposed_experiments"))
-                if cnt_pe.scalar() == 0:
-                    await session.execute(text("DROP TABLE proposed_experiments"))
-                    await session.commit()
-                    logger.info("Dropped empty legacy 'proposed_experiments' table for clean schema creation.")
-        except Exception as exc:
-            logger.warning("Schema check warning: %s", exc)
+                res_pe = await session.execute(text("PRAGMA table_info(proposed_experiments)"))
+                cols_pe = {row[1] for row in res_pe.fetchall()}
+                if cols_pe and "is_center_point" not in cols_pe:
+                    cnt_pe = await session.execute(text("SELECT COUNT(*) FROM proposed_experiments"))
+                    if cnt_pe.scalar() == 0:
+                        await session.execute(text("DROP TABLE proposed_experiments"))
+                        await session.commit()
+                        logger.info("Dropped empty legacy 'proposed_experiments' table for clean schema creation.")
+            except Exception as exc:
+                logger.warning("SQLite schema check warning: %s", exc)
 
     # Ensure tables exist
     async with async_engine.begin() as conn:
@@ -103,12 +104,16 @@ app = FastAPI(
 
 
 # ── CORS Middleware ────────────────────────────────────────
-# Uses allow_origin_regex to match all Vercel deployments (*.vercel.app) and localhost ports
+# Uses explicit origins from config, plus allow_origin_regex to match all Vercel deployments and localhost ports
+_allowed_origins = [o for o in settings.cors_origins_list if o != "*"]
+if not _allowed_origins:
+    _allowed_origins = ["http://localhost:5173", "http://localhost:3000", "https://green-synth.vercel.app"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_allowed_origins,
     allow_origin_regex=r"https://.*\.vercel\.app|http://localhost:\d+",
-    allow_credentials=False,
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -144,16 +149,20 @@ async def generic_exception_handler(request: Request, exc: Exception) -> JSONRes
 
 # ── Include Routers ────────────────────────────────────────
 from app.api.routes import (  # noqa: E402
+    admin,
     analysis,
     analytics,
+    auth,
     characterizations,
     dashboard,
     doe,
     evidence,
     experiments,
     files,
+    groups,
     health,
     integrity,
+    invitations,
     ml,
     optimization,
     parameters,
@@ -162,12 +171,18 @@ from app.api.routes import (  # noqa: E402
     recommendations,
     reports,
     samples,
+    student,
     validation,
 )
 
 API_PREFIX = "/api/v1"
 
 app.include_router(health.router)               # /health, /health/db
+app.include_router(auth.router, prefix=API_PREFIX)
+app.include_router(admin.router, prefix=API_PREFIX)
+app.include_router(student.router, prefix=API_PREFIX)
+app.include_router(groups.router, prefix=API_PREFIX)
+app.include_router(invitations.router, prefix=API_PREFIX)
 app.include_router(project_config.router, prefix=API_PREFIX)
 app.include_router(projects.router, prefix=API_PREFIX)
 app.include_router(experiments.router, prefix=API_PREFIX)

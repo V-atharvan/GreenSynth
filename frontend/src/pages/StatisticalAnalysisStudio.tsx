@@ -21,11 +21,10 @@ import {
   Download,
   CheckCircle2,
 } from 'lucide-react';
-import axios from 'axios';
+import { useProjectContext } from '../context/ProjectContext';
 
 export const StatisticalAnalysisStudio: React.FC = () => {
-  const [projects, setProjects] = useState<any[]>([]);
-  const [selectedProjectId, setSelectedProjectId] = useState<string>('');
+  const { projectId, projectCode, projectName } = useProjectContext();
   const [activeTab, setActiveTab] = useState<'descriptive' | 'correlation' | 'regression' | 'quality' | 'evidence'>('descriptive');
 
   // Simulated Dataset Version & Data
@@ -201,19 +200,6 @@ export const StatisticalAnalysisStudio: React.FC = () => {
     },
   ]);
 
-  useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const res = await apiClient.get('/projects');
-        setProjects(res.data);
-        if (res.data.length > 0) setSelectedProjectId(res.data[0].id);
-      } catch (err) {
-        console.log('Failed to fetch projects:', err);
-      }
-    };
-    fetchProjects();
-  }, []);
-
   return (
     <div className="gs-page">
 
@@ -244,16 +230,24 @@ export const StatisticalAnalysisStudio: React.FC = () => {
           </div>
 
           <div className="gs-field">
-            <label className="gs-label">Active Project</label>
-            <select
-              className="gs-select"
-              value={selectedProjectId}
-              onChange={(e) => setSelectedProjectId(e.target.value)}
+            <label className="gs-label">Assigned Project</label>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '9px 12px',
+                background: '#f8fafc',
+                border: '1px solid #cbd5e1',
+                borderRadius: '6px',
+                fontSize: '13px',
+                fontWeight: 600,
+                color: '#0f766e',
+              }}
             >
-              {projects.map((p) => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </select>
+              <FolderKanban size={15} />
+              <span>{projectCode ? `${projectCode} — ${projectName || projectCode}` : 'Loading...'}</span>
+            </div>
           </div>
         </div>
       </div>

@@ -13,8 +13,7 @@ import {
 } from '@/services/recommendationService'
 import { mlService, MLModel } from '@/services/mlService'
 import { doeService, Objective } from '@/services/doeService'
-import { projectService } from '@/services/projectService'
-import type { ProjectSummary } from '@/types'
+import { useProjectContext } from '@/context/ProjectContext'
 import {
   Lightbulb,
   Info,
@@ -26,11 +25,11 @@ import {
   FlaskConical,
   X,
   Check,
+  FolderKanban,
 } from 'lucide-react'
 
 export default function RecommendationStudio() {
-  const [projects, setProjects] = useState<ProjectSummary[]>([])
-  const [selectedProjectId, setSelectedProjectId] = useState<string>('')
+  const { projectId, projectCode, projectName } = useProjectContext()
   const [objectives, setObjectives] = useState<Objective[]>([])
   const [selectedObjectiveId, setSelectedObjectiveId] = useState<string>('')
   const [models, setModels] = useState<MLModel[]>([])
@@ -46,20 +45,9 @@ export default function RecommendationStudio() {
   const [error, setError] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
 
-  useEffect(() => { fetchInitialData() }, [])
   useEffect(() => {
-    if (selectedProjectId) fetchProjectDependents(selectedProjectId)
-  }, [selectedProjectId])
-
-  const fetchInitialData = async () => {
-    try {
-      const projs = await projectService.getAll()
-      setProjects(projs)
-      if (projs.length > 0) setSelectedProjectId(projs[0].id)
-    } catch (err: any) {
-      setError(err.message || 'Failed to load projects.')
-    }
-  }
+    if (projectId) fetchProjectDependents(projectId)
+  }, [projectId])
 
   const fetchProjectDependents = async (projectId: string) => {
     try {
@@ -67,22 +55,22 @@ export default function RecommendationStudio() {
       setError(null)
       const [objs, mdls] = await Promise.all([
         doeService.listObjectives(projectId),
-        mlService.listModels(),
+        mlService.getModels(),
       ])
       setObjectives(objs)
       if (objs.length > 0) setSelectedObjectiveId(objs[0].id)
       setModels(mdls)
       if (mdls.length > 0) setSelectedModelId(mdls[0].id)
     } catch (err: any) {
-      setError(err.message || 'Failed to fetch objectives and models.')
+      setError(err?.message || 'Failed to fetch objectives and models.')
     } finally {
       setLoading(false)
     }
   }
 
   const handleGenerate = async () => {
-    if (!selectedProjectId || !selectedObjectiveId || !selectedModelId) {
-      setError('Please select a project, objective, and model.')
+    if (!projectId || !selectedObjectiveId || !selectedModelId) {
+      setError('Please select an objective and model.')
       return
     }
     try {
@@ -90,7 +78,7 @@ export default function RecommendationStudio() {
       setError(null)
       setSuccessMsg(null)
       const payload: RecommendationGeneratePayload = {
-        project_id: selectedProjectId,
+        project_id: projectId,
         objective_id: selectedObjectiveId,
         model_id: selectedModelId,
         candidate_count: candidateCount,
@@ -223,16 +211,24 @@ export default function RecommendationStudio() {
         <div className="gs-panel-body">
           <div className="gs-form-row">
             <div className="gs-field">
-              <label className="gs-label">Project</label>
-              <select
-                value={selectedProjectId}
-                onChange={(e) => setSelectedProjectId(e.target.value)}
-                className="gs-input"
+              <label className="gs-label">Assigned Project</label>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '9px 12px',
+                  background: '#f8fafc',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  color: '#0f766e',
+                }}
               >
-                {projects.map((p) => (
-                  <option key={p.id} value={p.id}>{p.project_code} — {p.name}</option>
-                ))}
-              </select>
+                <FolderKanban size={15} />
+                <span>{projectCode ? `${projectCode} — ${projectName || projectCode}` : 'Loading...'}</span>
+              </div>
             </div>
 
             <div className="gs-field">

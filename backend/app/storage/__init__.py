@@ -1,26 +1,25 @@
 """
-GreenSynth Analytics — Storage Module
+GreenSynth Analytics — File Storage Subsystem (Phase 9)
 
-STATUS: Partial implementation — FileStorageBackend interface defined
-
-This module provides the file storage abstraction layer for raw laboratory
-data files (XRD spectra, UV-Vis data, SEM images, etc.).
-
-Architecture:
-  FileStorageBackend (ABC)
-    ├── LocalFileStorage  ← MVP implementation
-    └── S3FileStorage     ← Future cloud implementation (Phase 20)
-
-All implementations must:
-  1. Never overwrite a file that has is_finalised=True
-  2. Compute and return SHA-256 checksums on storage
-  3. Store files under a deterministic path:
-     <storage_root>/<project_id>/<experiment_id>/<sample_id>/
-  4. Be injectable via FastAPI dependency injection
-
-Development phase: 5
+Provides provider-independent storage abstractions for raw laboratory data files:
+  - FileStorageBackend (ABC)
+  - LocalFileStorage (Local filesystem, dev & tests)
+  - S3FileStorage (S3-compatible cloud object storage, production)
+  - get_storage_backend / create_storage_backend (Factory)
 """
 
 from app.storage.base import FileStorageBackend, StoredFile
+from app.storage.factory import create_storage_backend, get_storage_backend
+from app.storage.local import LocalFileStorage, PathTraversalError
+from app.storage.s3 import S3FileStorage, S3StorageError
 
-__all__ = ["FileStorageBackend", "StoredFile"]
+__all__ = [
+    "FileStorageBackend",
+    "StoredFile",
+    "LocalFileStorage",
+    "S3FileStorage",
+    "S3StorageError",
+    "PathTraversalError",
+    "get_storage_backend",
+    "create_storage_backend",
+]

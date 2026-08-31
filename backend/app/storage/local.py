@@ -10,9 +10,11 @@ from __future__ import annotations
 
 import hashlib
 import logging
+import mimetypes
 import os
-
+from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any
 
 from app.core.config import get_settings
 from app.storage.base import FileStorageBackend, StoredFile
@@ -40,16 +42,20 @@ class LocalFileStorage(FileStorageBackend):
         self.base_dir = Path(raw_root).resolve()
         self.base_dir.mkdir(parents=True, exist_ok=True)
 
+    @property
+    def backend_name(self) -> str:
+        return "local"
+
     def _resolve_safe_path(self, relative_or_abs_path: str) -> Path:
         """
         Sanitize and resolve target file path.
 
         Raises PathTraversalError if target path resolves outside self.base_dir.
         """
-        # Remove any path traversal tokens like '..'
+        # Remove leading slashes and normalize path
         clean_relative = os.path.normpath(relative_or_abs_path).lstrip("/\\")
-        
-        # Prevent any remaining '..' sequences
+
+        # Prevent any path traversal sequences
         if ".." in clean_relative.split(os.sep):
             raise PathTraversalError(f"Path traversal detected: {relative_or_abs_path}")
 
@@ -69,6 +75,7 @@ class LocalFileStorage(FileStorageBackend):
         content: bytes,
         destination_path: str,
         original_filename: str,
+        content_type: str | None = None,
     ) -> StoredFile:
         """
         Persist content to disk under destination_path.
@@ -95,19 +102,24 @@ class LocalFileStorage(FileStorageBackend):
 
         file_size = len(content)
         ext = target_path.suffix.lstrip(".").lower()
+        mime = content_type or mimetypes.guess_type(original_filename)[0] or "application/octet-stream"
 
         logger.info(
-            "Stored raw file: %s (size=%d B, sha256=%s)",
-            target_path, file_size, sha256_hash[:8]
+            "Stored local raw file: %s (size=%d B, sha256=%s)",
+            target_path,
+            file_size,
+            sha256_hash[:8],
         )
 
         return StoredFile(
             file_id=str(target_path.name),
             original_filename=original_filename,
-            stored_path=str(target_path.relative_to(self.base_dir)),
+            stored_path=str(target_path.relative_to(self.base_dir)).replace("\\", "/"),
             file_size_bytes=file_size,
             checksum_sha256=sha256_hash,
             file_type=ext,
+            storage_backend="local",
+            content_type=mime,
         )
 
     async def retrieve(self, stored_path: str) -> bytes:
@@ -130,9 +142,32 @@ class LocalFileStorage(FileStorageBackend):
         """
         Delete a file from storage.
 
-        CAUTION: Should only be used for non-finalised files.
+        CAUTION: Should only be used for non-finalised files or during transaction rollback.
         """
+        try:
+            target_path = self._resolve_safe_path(stored_path)
+            if target_path.exists() and target_path.is_file():
+                target_path.unlink()
+                logger.info("Deleted local file: %s", target_path)
+        except Exception as exc:
+            logger.warning("Failed to delete local file %s: %s", stored_path, exc)
+
+    async def get_metadata(self, stored_path: str) -> dict[str, Any]:
+        """Return metadata for local file."""
         target_path = self._resolve_safe_path(stored_path)
-        if target_path.exists():
-            target_path.unlink()
-            logger.info("Deleted file: %s", target_path)
+        if not target_path.exists() or not target_path.is_file():
+            raise FileNotFoundError(f"Raw file not found at {stored_path}")
+
+        stat = target_path.stat()
+        return {
+            "size_bytes": stat.st_size,
+            "modified_at": datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc).isoformat(),
+            "content_type": mimetypes.guess_type(target_path.name)[0] or "application/octet-stream",
+            "backend": "local",
+        }
+
+    async def generate_download_url(
+        self, stored_path: str, expiry_seconds: int = 3600
+    ) -> str | None:
+        """Local filesystem files are streamed directly via backend router."""
+        return None

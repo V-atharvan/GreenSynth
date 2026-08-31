@@ -30,14 +30,17 @@ RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
     scikit-learn \
     matplotlib \
     reportlab \
-    httpx
+    httpx \
+    boto3 \
+    botocore
 
 # ── Copy application code ──────────────────────────────────
 COPY backend/app ./backend/app
+COPY backend/alembic ./backend/alembic
+COPY backend/alembic.ini ./backend/alembic.ini
 
 # ── Environment variables ──────────────────────────────────
 ENV PYTHONPATH=/app/backend
-ENV DATABASE_URL="sqlite+aiosqlite:////app/greensynth.db"
 
 # ── Expose port ────────────────────────────────────────────
 EXPOSE 8000

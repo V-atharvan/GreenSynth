@@ -44,7 +44,7 @@ from app.scientific.xrd.parser import parse_xrd_file
 from app.scientific.xrd.schemas import XRDAnalysisInput, XRDDataPoint, XRDProcessedDataResponse
 from app.services.audit_service import AuditService
 from app.services.characterization_service import CharacterizationNotFoundError, RawFileNotFoundError
-from app.storage.local import LocalFileStorage
+from app.storage import FileStorageBackend, get_storage_backend
 
 logger = logging.getLogger(__name__)
 
@@ -52,9 +52,9 @@ logger = logging.getLogger(__name__)
 class XRDAnalysisService:
     """Service layer for XRD analysis execution and result queries."""
 
-    def __init__(self, db: AsyncSession, storage: LocalFileStorage | None = None) -> None:
+    def __init__(self, db: AsyncSession, storage: FileStorageBackend | None = None) -> None:
         self.db = db
-        self.storage = storage or LocalFileStorage()
+        self.storage = storage or get_storage_backend()
         self.audit = AuditService(db)
 
     async def run_analysis(
@@ -86,7 +86,8 @@ class XRDAnalysisService:
         # Locate raw file
         raw_file: RawFile | None = None
         if raw_file_id:
-            raw_file = next((f for f in ch.raw_files if f.id == raw_file_id), None)
+            raw_res = await self.db.execute(select(RawFile).where(RawFile.id == raw_file_id))
+            raw_file = raw_res.scalar_one_or_none()
         elif ch.raw_files:
             raw_file = ch.raw_files[-1]
 

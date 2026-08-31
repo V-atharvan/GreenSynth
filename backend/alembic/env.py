@@ -9,7 +9,14 @@ from __future__ import annotations
 
 import asyncio
 import os
+import sys
+from pathlib import Path
 from logging.config import fileConfig
+
+# Ensure backend root directory is in sys.path
+backend_dir = Path(__file__).resolve().parent.parent
+if str(backend_dir) not in sys.path:
+    sys.path.insert(0, str(backend_dir))
 
 from alembic import context
 from sqlalchemy import pool
@@ -25,6 +32,7 @@ if config.config_file_name is not None:
 # Importing base.py also imports all models via its __init__ block,
 # so Alembic's autogenerate can see all table definitions.
 from app.database.base import Base  # noqa: E402
+from app.core.config import get_settings  # noqa: E402
 
 target_metadata = Base.metadata
 
@@ -36,24 +44,47 @@ def get_database_url() -> str:
     Priority:
     1. DATABASE_URL_SYNC env var (psycopg2 sync driver)
     2. DATABASE_URL env var (asyncpg — used as-is for async migration)
-    3. Alembic ini sqlalchemy.url (fallback)
+    3. Application Settings (loads .env automatically)
+    4. Alembic ini sqlalchemy.url (fallback)
     """
     # Try sync URL first (preferred for Alembic)
     sync_url = os.environ.get("DATABASE_URL_SYNC")
     if sync_url:
-        return sync_url
+        val = sync_url.strip()
+        if val.startswith("postgres://"):
+            val = "postgresql+psycopg2://" + val[len("postgres://"):]
+        elif val.startswith("postgresql://") and not val.startswith("postgresql+psycopg2://"):
+            val = "postgresql+psycopg2://" + val[len("postgresql://"):]
+        return val
 
     # Fall back to async URL
     async_url = os.environ.get("DATABASE_URL")
     if async_url:
-        return async_url
+        val = async_url.strip()
+        if val.startswith("postgres://"):
+            val = "postgresql+asyncpg://" + val[len("postgres://"):]
+        elif val.startswith("postgresql://") and not val.startswith("postgresql+asyncpg://"):
+            val = "postgresql+asyncpg://" + val[len("postgresql://"):]
+        elif val.startswith("sqlite://") and not val.startswith("sqlite+aiosqlite://"):
+            val = "sqlite+aiosqlite://" + val[len("sqlite://"):]
+        return val
+
+    # Try application settings loaded from .env
+    try:
+        app_settings = get_settings()
+        if app_settings.database_url_sync:
+            return app_settings.database_url_sync
+        if app_settings.database_url:
+            return app_settings.database_url
+    except Exception:
+        pass
 
     # Fall back to alembic.ini
     url = config.get_main_option("sqlalchemy.url", "")
     if not url:
         raise ValueError(
             "No database URL found. Set DATABASE_URL_SYNC or DATABASE_URL "
-            "environment variable."
+            "environment variable or configure .env file."
         )
     return url
 
@@ -87,11 +118,11 @@ def do_run_migrations(connection) -> None:  # type: ignore[no-untyped-def]
 
 
 async def run_async_migrations() -> None:
-    """Run migrations using an async engine (asyncpg driver)."""
+    """Run migrations using an appropriate sync or async engine."""
     url = get_database_url()
 
-    # If we have a sync URL (psycopg2), use synchronous migration path
-    if "psycopg2" in url:
+    # If we have a sync URL (psycopg2, pysqlite, etc.), use synchronous migration path
+    if "asyncpg" not in url and "aiosqlite" not in url:
         from sqlalchemy import create_engine
 
         connectable = create_engine(url, poolclass=pool.NullPool)
@@ -99,7 +130,7 @@ async def run_async_migrations() -> None:
             do_run_migrations(connection)
         return
 
-    # Async path (asyncpg)
+    # Async path (asyncpg or aiosqlite)
     connectable = create_async_engine(url, poolclass=pool.NullPool)
     async with connectable.connect() as connection:
         await connection.run_sync(do_run_migrations)

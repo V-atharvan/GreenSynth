@@ -1,0 +1,20 @@
+Hello {{ recipient_name }},
+
+You have been invited to join the research group "{{ group_name }}" on GreenSynth Analytics.
+
+Invited by: {{ inviter_name }}
+Research Project: {{ project_code }} — {{ project_name }}
+{% if expiration_time %}
+Invitation Valid Until: {{ expiration_time }}
+{% endif %}
+
+GreenSynth is a data-driven research platform for managing and analyzing green synthesis experiments and semiconductor material research.
+
+To accept this invitation and create your account, open the link below in your browser:
+{{ invitation_link }}
+
+This invitation is intended only for the recipient of this email. If you were not expecting this invitation, you may safely ignore this message.
+
+Regards,
+GreenSynth Analytics
+Research Data & Analytics Platform

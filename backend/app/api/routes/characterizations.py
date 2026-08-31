@@ -1,7 +1,7 @@
 """
 GreenSynth Analytics — Characterizations API Router
 
-REST API endpoints for laboratory characterizations and raw file uploads.
+REST API endpoints for laboratory characterizations and raw file uploads with authorization & project isolation.
 """
 
 from __future__ import annotations
@@ -18,7 +18,9 @@ from fastapi import (
 )
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_db
+from app.api.deps import get_current_project, get_current_user, get_db
+from app.models.project import Project
+from app.models.user import User
 from app.schemas.characterization import (
     CharacterizationCreate,
     CharacterizationResponse,
@@ -31,7 +33,7 @@ from app.services.characterization_service import (
     FileSizeExceededValidationError,
     InvalidFileTypeValidationError,
 )
-from app.services.sample_service import SampleNotFoundError
+from app.services.sample_service import SampleNotFoundError, SampleService
 
 router = APIRouter(tags=["characterizations"])
 
@@ -44,9 +46,21 @@ router = APIRouter(tags=["characterizations"])
 )
 async def create_characterization(
     data: CharacterizationCreate,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> CharacterizationResponse:
-    """Create a new laboratory characterization run for a sample."""
+    """Create a new laboratory characterization run for an authorized sample."""
+    sample_service = SampleService(db)
+    target_project_id = None
+    if not current_user.is_admin:
+        current_project = await get_current_project(current_user=current_user, db=db)
+        target_project_id = current_project.id
+
+    try:
+        await sample_service.get_by_id(data.sample_id, project_id=target_project_id)
+    except SampleNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+
     service = CharacterizationService(db)
     try:
         ch = await service.create_characterization(data)
@@ -62,12 +76,18 @@ async def create_characterization(
 )
 async def get_characterization(
     characterization_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> CharacterizationResponse:
-    """Get single characterization record with associated raw files."""
+    """Get single characterization record with IDOR verification."""
     service = CharacterizationService(db)
+    target_project_id = None
+    if not current_user.is_admin:
+        current_project = await get_current_project(current_user=current_user, db=db)
+        target_project_id = current_project.id
+
     try:
-        ch = await service.get_by_id(characterization_id)
+        ch = await service.get_by_id(characterization_id, project_id=target_project_id)
     except CharacterizationNotFoundError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
     return CharacterizationResponse.model_validate(ch)
@@ -80,11 +100,17 @@ async def get_characterization(
 )
 async def list_sample_characterizations(
     sample_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> list[CharacterizationResponse]:
-    """Return all characterization runs linked to a physical sample."""
+    """Return all characterization runs linked to an authorized physical sample."""
     service = CharacterizationService(db)
-    chs = await service.list_sample_characterizations(sample_id)
+    target_project_id = None
+    if not current_user.is_admin:
+        current_project = await get_current_project(current_user=current_user, db=db)
+        target_project_id = current_project.id
+
+    chs = await service.list_sample_characterizations(sample_id, project_id=target_project_id)
     return [CharacterizationResponse.model_validate(c) for c in chs]
 
 
@@ -97,15 +123,23 @@ async def list_sample_characterizations(
 async def upload_raw_file(
     characterization_id: uuid.UUID,
     file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> RawFileResponse:
     """
-    Upload an immutable raw laboratory data file for a characterization run.
-
-    Calculates SHA-256 checksum, verifies format compatibility with the technique,
-    and detects duplicate uploads.
+    Upload an immutable raw laboratory data file for an authorized characterization run.
     """
     service = CharacterizationService(db)
+    target_project_id = None
+    if not current_user.is_admin:
+        current_project = await get_current_project(current_user=current_user, db=db)
+        target_project_id = current_project.id
+
+    try:
+        await service.get_by_id(characterization_id, project_id=target_project_id)
+    except CharacterizationNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+
     file_bytes = await file.read()
     original_filename = file.filename or "uploaded_file"
 
@@ -135,12 +169,18 @@ async def upload_raw_file(
 )
 async def list_characterization_files(
     characterization_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> list[RawFileResponse]:
-    """Return all raw files uploaded for a characterization run."""
+    """Return all raw files uploaded for an authorized characterization run."""
     service = CharacterizationService(db)
+    target_project_id = None
+    if not current_user.is_admin:
+        current_project = await get_current_project(current_user=current_user, db=db)
+        target_project_id = current_project.id
+
     try:
-        ch = await service.get_by_id(characterization_id)
+        ch = await service.get_by_id(characterization_id, project_id=target_project_id)
     except CharacterizationNotFoundError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
     return [RawFileResponse.model_validate(f) for f in ch.raw_files]

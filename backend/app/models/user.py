@@ -12,13 +12,14 @@ from datetime import datetime, timezone
 
 from sqlalchemy import Boolean, DateTime, String, func
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
 
 
 class UserRole(str):
     ADMIN = "ADMIN"
+    STUDENT = "STUDENT"
     RESEARCHER = "RESEARCHER"
     VIEWER = "VIEWER"
 
@@ -28,7 +29,6 @@ class User(Base):
     System user account.
 
     Roles:
-      ADMIN      — manage users, configure projects
       RESEARCHER — create experiments, upload data, analyse
       VIEWER     — read-only access to results and reports
     """
@@ -40,6 +40,10 @@ class User(Base):
     )
     username: Mapped[str] = mapped_column(String(64), unique=True, nullable=False, index=True)
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
+    full_name: Mapped[str] = mapped_column(String(255), nullable=False, default="")
+    department: Mapped[str] = mapped_column(String(128), nullable=False, default="")
+    phone: Mapped[str] = mapped_column(String(32), nullable=False, default="")
+    roll_number: Mapped[str] = mapped_column(String(64), nullable=False, default="", index=True)
     role: Mapped[str] = mapped_column(
         String(16), nullable=False, default="RESEARCHER"
     )
@@ -58,5 +62,23 @@ class User(Base):
         onupdate=func.now(),
     )
 
+    # ── Relationships ──────────────────────────────────────
+    group_memberships: Mapped[list["GroupMembership"]] = relationship(  # type: ignore[name-defined]
+        "GroupMembership", back_populates="user", cascade="all, delete-orphan"
+    )
+    led_research_groups: Mapped[list["ResearchGroup"]] = relationship(  # type: ignore[name-defined]
+        "ResearchGroup", back_populates="leader", foreign_keys="ResearchGroup.leader_user_id"
+    )
+
+    @property
+    def account_type(self) -> str:
+        """Returns the authoritative account type: ADMIN or STUDENT."""
+        return "ADMIN" if self.role == UserRole.ADMIN else "STUDENT"
+
+    @property
+    def is_admin(self) -> bool:
+        """Returns True if user has administrative privileges."""
+        return self.role == UserRole.ADMIN
+
     def __repr__(self) -> str:
-        return f"<User id={self.id!s} username={self.username!r} role={self.role!r}>"
+        return f"<User id={self.id!s} email={self.email!r} role={self.role!r} account_type={self.account_type!r}>"

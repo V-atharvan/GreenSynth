@@ -53,7 +53,7 @@ from app.services.characterization_service import (
     CharacterizationNotFoundError,
     RawFileNotFoundError,
 )
-from app.storage.local import LocalFileStorage
+from app.storage import FileStorageBackend, get_storage_backend
 
 logger = logging.getLogger(__name__)
 
@@ -61,9 +61,9 @@ logger = logging.getLogger(__name__)
 class ElectricalAnalysisService:
     """Service layer for electrical measurement analysis execution."""
 
-    def __init__(self, db: AsyncSession, storage: LocalFileStorage | None = None) -> None:
+    def __init__(self, db: AsyncSession, storage: FileStorageBackend | None = None) -> None:
         self.db = db
-        self.storage = storage or LocalFileStorage()
+        self.storage = storage or get_storage_backend()
         self.audit = AuditService(db)
 
     async def run_analysis(
@@ -93,7 +93,8 @@ class ElectricalAnalysisService:
 
         raw_file: RawFile | None = None
         if raw_file_id:
-            raw_file = next((f for f in ch.raw_files if f.id == raw_file_id), None)
+            raw_res = await self.db.execute(select(RawFile).where(RawFile.id == raw_file_id))
+            raw_file = raw_res.scalar_one_or_none()
         elif ch.raw_files:
             raw_file = ch.raw_files[-1]
 

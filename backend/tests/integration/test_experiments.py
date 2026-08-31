@@ -52,7 +52,7 @@ async def test_create_experiment(client: AsyncClient) -> None:
 
 @pytest.mark.asyncio
 async def test_create_experiment_invalid_project(client: AsyncClient) -> None:
-    """POST /experiments with unknown project_id returns 404."""
+    """POST /experiments with unknown/unauthorized project_id returns 403 or 404."""
     resp = await client.post(
         f"{EXPERIMENTS_API}/",
         json={
@@ -61,7 +61,7 @@ async def test_create_experiment_invalid_project(client: AsyncClient) -> None:
             "title": "Orphan Experiment",
         },
     )
-    assert resp.status_code == 404
+    assert resp.status_code in (403, 404)
 
 
 @pytest.mark.asyncio

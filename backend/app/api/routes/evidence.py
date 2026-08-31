@@ -29,12 +29,20 @@ from app.analytics.statistics.schemas import (
     ReadinessGatesResponse,
     RegressionResponse,
 )
-from app.api.deps import get_db
+from app.api.deps import (
+    get_authorized_project_ids,
+    get_current_project,
+    get_current_user,
+    get_db,
+    verify_project_access,
+)
 from app.evidence.data_quality_engine import DataQualityEngine
 from app.evidence.dataset_version_service import DatasetVersionService
 from app.evidence.evidence_engine import EvidenceEngine
 from app.evidence.readiness_gates import ReadinessGatesEngine
 from app.models.evidence import DatasetVersion, EvidenceRecord
+from app.models.project import Project
+from app.models.user import User
 from app.services.audit_service import AuditService
 
 router = APIRouter()
@@ -51,12 +59,17 @@ router = APIRouter()
 async def create_dataset_version(
     dataset_id: uuid.UUID = Query(..., description="Parent Dataset ID"),
     version_label: str = Query(default="v1.0", description="Version label e.g. v1.0, v2.0"),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> DatasetVersionResponse:
-    """Create an immutable snapshot version of a dataset with inclusion/exclusion tracking."""
+    """Create an immutable snapshot version of a dataset for authorized project."""
     service = DatasetVersionService(db)
     try:
         dv = await service.create_dataset_version(dataset_id=dataset_id, version_label=version_label)
+        if not current_user.is_admin:
+            auth_ids = await get_authorized_project_ids(current_user, db)
+            if dv.project_id not in auth_ids:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Dataset not found.")
         return DatasetVersionResponse.model_validate(dv)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
@@ -69,14 +82,21 @@ async def create_dataset_version(
 )
 async def get_dataset_version(
     version_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> DatasetVersionResponse:
-    """Fetch dataset snapshot details by version ID."""
+    """Fetch dataset snapshot details by version ID for authorized project with IDOR protection."""
     stmt = select(DatasetVersion).where(DatasetVersion.id == version_id)
     res = await db.execute(stmt)
     dv = res.scalar_one_or_none()
     if not dv:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"DatasetVersion {version_id} not found.")
+
+    if not current_user.is_admin:
+        auth_ids = await get_authorized_project_ids(current_user, db)
+        if dv.project_id not in auth_ids:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"DatasetVersion {version_id} not found.")
+
     return DatasetVersionResponse.model_validate(dv)
 
 
@@ -201,15 +221,21 @@ async def evaluate_readiness_gates(
 async def create_evidence_record(
     payload: EvidenceCreateInput,
     created_by: str | None = None,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> EvidenceResponse:
-    """Formulate cautious evidence statement and compute transparent evidence score."""
+    """Formulate cautious evidence statement and compute transparent evidence score for authorized project."""
     dv_uuid = payload.dataset_version_id if isinstance(payload.dataset_version_id, uuid.UUID) else uuid.UUID(str(payload.dataset_version_id))
     stmt = select(DatasetVersion).where(DatasetVersion.id == dv_uuid)
     res = await db.execute(stmt)
     dv = res.scalar_one_or_none()
     if not dv:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"DatasetVersion {payload.dataset_version_id} not found.")
+
+    if not current_user.is_admin:
+        auth_ids = await get_authorized_project_ids(current_user, db)
+        if dv.project_id not in auth_ids:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"DatasetVersion {payload.dataset_version_id} not found.")
 
     score, criteria = EvidenceEngine.compute_evidence_score(
         sample_size=payload.sample_size,
@@ -234,7 +260,7 @@ async def create_evidence_record(
         scoring_criteria=criteria,
         limitations=payload.limitations or [],
         status="DRAFT",
-        created_by=created_by,
+        created_by=created_by or current_user.full_name,
     )
     db.add(ev)
 
@@ -257,13 +283,26 @@ async def create_evidence_record(
 )
 async def list_evidence_records(
     dataset_version_id: uuid.UUID | None = Query(default=None, description="Filter by DatasetVersion ID"),
+    project_id: uuid.UUID | None = Query(default=None, description="Filter by Project ID"),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> list[EvidenceResponse]:
-    """List generated evidence records."""
-    stmt = select(EvidenceRecord)
+    """List generated evidence records for authorized project scope."""
+    stmt = (
+        select(EvidenceRecord)
+        .join(DatasetVersion, EvidenceRecord.dataset_version_id == DatasetVersion.id)
+        .order_by(EvidenceRecord.created_at.desc())
+    )
+
+    if not current_user.is_admin:
+        current_project = await get_current_project(current_user=current_user, db=db)
+        stmt = stmt.where(DatasetVersion.project_id == current_project.id)
+    elif project_id is not None:
+        stmt = stmt.where(DatasetVersion.project_id == project_id)
+
     if dataset_version_id:
         stmt = stmt.where(EvidenceRecord.dataset_version_id == dataset_version_id)
-    stmt = stmt.order_by(EvidenceRecord.created_at.desc())
+
     res = await db.execute(stmt)
     evs = res.scalars().all()
     return [EvidenceResponse.model_validate(e) for e in evs]
@@ -277,36 +316,30 @@ async def list_evidence_records(
 async def approve_evidence_record(
     evidence_id: str,
     approved_by: str = Query(default="Dr. Chief Researcher"),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> EvidenceResponse:
-    """Approve scientific evidence record following researcher review."""
+    """Approve scientific evidence record with IDOR protection."""
     try:
         ev_uuid = uuid.UUID(evidence_id)
-        stmt = select(EvidenceRecord).where(EvidenceRecord.id == ev_uuid)
-        res = await db.execute(stmt)
-        ev = res.scalar_one_or_none()
-    except ValueError:
-        ev = None
-
-    if not ev:
-        # Return fallback mock object for string IDs like ev-001
-        return EvidenceResponse(
-            id=evidence_id,
-            dataset_version_id="dv-proj7-v1",
-            statement="Within the analyzed Project 7 dataset (N=8), electrical conductivity showed a statistically detectable positive association with substrate temperature using Pearson Correlation (r = 0.89, p = 0.003).",
-            evidence_type="ASSOCIATION",
-            variables=["substrate_temperature", "conductivity_s_cm"],
-            sample_size=8,
-            statistical_method="Pearson Correlation",
-            effect_estimate=0.89,
-            uncertainty=0.05,
-            confidence_interval={"lower": 0.55, "upper": 0.97},
-            evidence_score=82.5,
-            scoring_criteria={"total_score": 82.5, "quality_category": "HIGH"},
-            limitations=["Limited temperature range (300°C - 400°C)", "Small sample size N=8"],
-            status="APPROVED",
-            created_at=datetime.now(),
+        stmt = (
+            select(EvidenceRecord, DatasetVersion.project_id)
+            .join(DatasetVersion, EvidenceRecord.dataset_version_id == DatasetVersion.id)
+            .where(EvidenceRecord.id == ev_uuid)
         )
+        res = await db.execute(stmt)
+        row = res.first()
+    except ValueError:
+        row = None
+
+    if not row:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Evidence record not found.")
+
+    ev, p_id = row
+    if not current_user.is_admin:
+        auth_ids = await get_authorized_project_ids(current_user, db)
+        if p_id not in auth_ids:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Evidence record not found.")
 
     ev.status = "APPROVED"
 
@@ -328,46 +361,30 @@ async def approve_evidence_record(
 )
 async def generate_evidence_report(
     evidence_id: str,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> Response:
-    """Generate Markdown Statistical Evidence Report."""
+    """Generate Markdown Statistical Evidence Report with IDOR protection."""
     try:
         ev_uuid = uuid.UUID(evidence_id)
-        stmt = select(EvidenceRecord).where(EvidenceRecord.id == ev_uuid)
-        res = await db.execute(stmt)
-        ev = res.scalar_one_or_none()
-    except ValueError:
-        ev = None
-
-    if not ev:
-        md_content = f"""# Statistical Evidence Report
-
-## 1. Evidence Record Summary
-- **Record ID:** {evidence_id}
-- **Evidence Type:** ASSOCIATION
-- **Status:** APPROVED
-- **Created At:** 2026-08-15 02:10:00
-
-## 2. Scientific Statement
-> Within the analyzed Project 7 dataset (N=8), electrical conductivity showed a statistically detectable positive association with substrate temperature using Pearson Correlation (r = 0.89, p = 0.003).
-
-## 3. Statistical Details & Quality
-- **Variables Evaluated:** substrate_temperature, conductivity_s_cm
-- **Sample Size (N):** 8
-- **Statistical Method:** Pearson Correlation
-- **Effect Estimate:** 0.89
-- **Internal Evidence Score:** 82.5 / 100.0
-
-## 4. Limitations & Disclaimers
-- Limited temperature range (300°C - 400°C)
-- Small sample size N=8
-- Software validation pass does not replace peer-reviewed scientific proof.
-"""
-        return Response(
-            content=md_content,
-            media_type="text/markdown",
-            headers={"Content-Disposition": f"attachment; filename=evidence_{evidence_id}_report.md"},
+        stmt = (
+            select(EvidenceRecord, DatasetVersion.project_id)
+            .join(DatasetVersion, EvidenceRecord.dataset_version_id == DatasetVersion.id)
+            .where(EvidenceRecord.id == ev_uuid)
         )
+        res = await db.execute(stmt)
+        row = res.first()
+    except ValueError:
+        row = None
+
+    if not row:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Evidence record not found.")
+
+    ev, p_id = row
+    if not current_user.is_admin:
+        auth_ids = await get_authorized_project_ids(current_user, db)
+        if p_id not in auth_ids:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Evidence record not found.")
 
     md_content = f"""# Statistical Evidence Report
 

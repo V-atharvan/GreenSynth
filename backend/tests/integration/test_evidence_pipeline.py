@@ -12,7 +12,9 @@ from app.models.project import Project, ProjectStatus
 
 
 @pytest.mark.asyncio
-async def test_evidence_project7_pipeline(client: AsyncClient, db_session: AsyncSession):
+async def test_evidence_project7_pipeline(
+    client: AsyncClient, db_session: AsyncSession, default_auth_context
+):
     """End-to-end integration test for Project 7 Advanced Evidence Workflow."""
 
     # 1. Create Demonstration Project 7 & Dataset
@@ -28,6 +30,7 @@ async def test_evidence_project7_pipeline(client: AsyncClient, db_session: Async
         status=ProjectStatus.ACTIVE,
     )
     db_session.add(proj)
+    default_auth_context["group"].project_id = proj.id
     await db_session.commit()
 
     ds = Dataset(

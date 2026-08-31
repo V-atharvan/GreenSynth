@@ -14,6 +14,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.models.experiment import Experiment
 from app.models.sample import Sample
 from app.schemas.sample import SampleCreate, SampleUpdate
 from app.services.experiment_service import ExperimentNotFoundError, ExperimentService
@@ -40,13 +41,16 @@ class SampleService:
         experiment_id: uuid.UUID | None = None,
         status: str | None = None,
         include_archived: bool = False,
+        project_id: uuid.UUID | None = None,
     ) -> Sequence[Sample]:
-        """Return samples with optional experiment/status filters."""
+        """Return samples with optional experiment/status/project filters."""
         q = (
             select(Sample)
             .options(selectinload(Sample.experiment))
             .order_by(Sample.created_at.desc())
         )
+        if project_id is not None:
+            q = q.join(Sample.experiment).where(Experiment.project_id == project_id)
         if experiment_id:
             q = q.where(Sample.experiment_id == experiment_id)
         if status:
@@ -56,13 +60,19 @@ class SampleService:
         result = await self.db.execute(q)
         return result.scalars().all()
 
-    async def get_by_id(self, sample_id: uuid.UUID) -> Sample:
-        """Return sample by UUID, raising SampleNotFoundError if missing."""
-        result = await self.db.execute(
+    async def get_by_id(
+        self, sample_id: uuid.UUID, project_id: uuid.UUID | None = None
+    ) -> Sample:
+        """Return sample by UUID, raising SampleNotFoundError if missing or unauthorized."""
+        q = (
             select(Sample)
             .options(selectinload(Sample.experiment))
             .where(Sample.id == sample_id)
         )
+        if project_id is not None:
+            q = q.join(Sample.experiment).where(Experiment.project_id == project_id)
+
+        result = await self.db.execute(q)
         sample = result.scalar_one_or_none()
         if sample is None:
             raise SampleNotFoundError(f"Sample {sample_id} not found.")

@@ -23,13 +23,22 @@ settings = get_settings()
 
 # ── Engine ─────────────────────────────────────────────────
 # echo=False in production; set echo=True only for debugging SQL
+_engine_kwargs: dict = {
+    "echo": settings.debug,
+    "future": True,
+}
+
+if settings.database_url.startswith("sqlite"):
+    _engine_kwargs["connect_args"] = {"check_same_thread": False}
+else:
+    # PostgreSQL (QueuePool)
+    _engine_kwargs["pool_pre_ping"] = True
+    _engine_kwargs["pool_size"] = 10
+    _engine_kwargs["max_overflow"] = 20
+
 async_engine = create_async_engine(
     settings.database_url,
-    echo=settings.debug,
-    future=True,
-    pool_pre_ping=True,   # Detect stale connections
-    pool_size=10,
-    max_overflow=20,
+    **_engine_kwargs,
 )
 
 # ── Session factory ────────────────────────────────────────

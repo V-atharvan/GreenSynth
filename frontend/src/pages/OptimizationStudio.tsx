@@ -13,6 +13,7 @@ import {
   OptimizationCandidate,
   OptimizationReport,
 } from '@/services/optimizationService'
+import { useProjectContext } from '@/context/ProjectContext'
 import type { ProjectSummary } from '@/types'
 import {
   Ruler,
@@ -30,11 +31,11 @@ import {
   Info,
   Check,
   X,
+  FolderKanban,
 } from 'lucide-react'
 
 export default function OptimizationStudio() {
-  const [projects, setProjects] = useState<ProjectSummary[]>([])
-  const [selectedProjectId, setSelectedProjectId] = useState<string>('')
+  const { projectId, projectCode, projectName } = useProjectContext()
 
   const [objectives, setObjectives] = useState<OptimizationObjective[]>([])
   const [selectedObjectiveId, setSelectedObjectiveId] = useState<string>('')
@@ -61,52 +62,39 @@ export default function OptimizationStudio() {
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
 
   useEffect(() => {
-    async function loadProjects() {
-      try {
-        const projs = await projectService.getAll()
-        setProjects(projs)
-        if (projs.length > 0) setSelectedProjectId(projs[0].id)
-      } catch (err) {
-        console.error('Failed to load projects:', err)
-      }
-    }
-    loadProjects()
-  }, [])
-
-  useEffect(() => {
-    if (!selectedProjectId) return
+    if (!projectId) return
     async function loadProjectData() {
       setLoading(true)
       try {
-        const [objs, constrs, mdls, runList] = await Promise.all([
-          optimizationService.listObjectives(selectedProjectId),
-          optimizationService.listConstraints(selectedProjectId),
+        const [objs, cons, rList, mList] = await Promise.all([
+          optimizationService.listObjectives(projectId!),
+          optimizationService.listConstraints(projectId!),
+          optimizationService.listRuns(projectId!),
           mlService.getModels(),
-          optimizationService.listRuns(selectedProjectId),
         ])
         setObjectives(objs)
+        setConstraints(cons)
+        setRuns(rList)
+        setModels(mList)
         if (objs.length > 0 && objs[0].id) setSelectedObjectiveId(objs[0].id)
-        setConstraints(constrs)
-        setModels(mdls)
-        if (mdls.length > 0) setSelectedModelId(mdls[0].id)
-        setRuns(runList)
-        if (runList.length > 0) setActiveRun(runList[0])
-      } catch (err) {
-        console.error('Failed to load optimization data:', err)
+        if (mList.length > 0 && mList[0].id) setSelectedModelId(mList[0].id)
+        if (rList.length > 0) setActiveRun(rList[0])
+      } catch (err: any) {
+        setError(err?.message || 'Failed to load optimization project data.')
       } finally {
         setLoading(false)
       }
     }
     loadProjectData()
-  }, [selectedProjectId])
+  }, [projectId])
 
   const handleCreateObjective = async () => {
-    if (!selectedProjectId) return
+    if (!projectId) return
     setError(null)
     setSuccessMsg(null)
     try {
       const created = await optimizationService.createObjective({
-        project_id: selectedProjectId,
+        project_id: projectId,
         name: `${newObjDirection} ${newObjProperty}`,
         target_property: newObjProperty,
         direction: newObjDirection,
@@ -122,8 +110,8 @@ export default function OptimizationStudio() {
   }
 
   const handleRunCandidateGeneration = async () => {
-    if (!selectedProjectId || !selectedObjectiveId || !selectedModelId) {
-      setError('Please select a project, objective, and model.')
+    if (!projectId || !selectedObjectiveId || !selectedModelId) {
+      setError('Please select an objective and model.')
       return
     }
     setLoading(true)
@@ -132,7 +120,7 @@ export default function OptimizationStudio() {
 
     try {
       const run = await optimizationService.createRun({
-        project_id: selectedProjectId,
+        project_id: projectId,
         objective_id: selectedObjectiveId,
         model_id: selectedModelId,
         generation_method: generationMethod,
@@ -218,16 +206,24 @@ export default function OptimizationStudio() {
 
         <div className="gs-header-actions">
           <div className="gs-field">
-            <label className="gs-label">Active Project</label>
-            <select
-              className="gs-select"
-              value={selectedProjectId}
-              onChange={(e) => setSelectedProjectId(e.target.value)}
+            <label className="gs-label">Assigned Project</label>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '9px 12px',
+                background: '#f8fafc',
+                border: '1px solid #cbd5e1',
+                borderRadius: '6px',
+                fontSize: '13px',
+                fontWeight: 600,
+                color: '#0f766e',
+              }}
             >
-              {projects.map((p) => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </select>
+              <FolderKanban size={15} />
+              <span>{projectCode ? `${projectCode} — ${projectName || projectCode}` : 'Loading...'}</span>
+            </div>
           </div>
         </div>
       </div>

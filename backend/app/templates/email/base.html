@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ subject | default("GreenSynth Analytics Notification") }}</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f8fafc;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            color: #1e293b;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 600px;
+            margin: 32px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+        .header {
+            background-color: #064e3b;
+            color: #ffffff;
+            padding: 28px 32px;
+            text-align: left;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+        .header p {
+            margin: 6px 0 0 0;
+            font-size: 12px;
+            color: #a7f3d0;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .content {
+            padding: 32px;
+        }
+        .footer {
+            background-color: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            padding: 20px 32px;
+            font-size: 12px;
+            color: #64748b;
+            line-height: 1.5;
+        }
+        .button {
+            display: inline-block;
+            background-color: #059669;
+            color: #ffffff !important;
+            padding: 12px 28px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            margin: 20px 0;
+        }
+        .info-box {
+            background-color: #f0fdf4;
+            border-left: 4px solid #059669;
+            padding: 16px 20px;
+            margin: 20px 0;
+            border-radius: 0 6px 6px 0;
+        }
+        .info-box p {
+            margin: 4px 0;
+            font-size: 13px;
+        }
+        .url-fallback {
+            word-break: break-all;
+            color: #059669;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>GreenSynth Analytics</h1>
+            <p>Data-Driven Research Platform for Green Synthesis of Semiconductor Materials</p>
+        </div>
+        <div class="content">
+            {% block content %}{% endblock %}
+        </div>
+        <div class="footer">
+            <p>This automated message was sent by the GreenSynth Analytics Research Platform. If you were not expecting this communication, you may safely disregard it.</p>
+            <p style="margin-top: 8px; color: #94a3b8;">&copy; GreenSynth Analytics. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

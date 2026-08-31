@@ -22,6 +22,7 @@ export interface RawFile {
   file_size: number
   checksum: string
   storage_path: string
+  storage_backend?: string
   uploaded_at: string
   uploaded_by: string | null
   status: string

@@ -19,6 +19,14 @@ export const projectService = {
     return response.data
   },
 
+  /**
+   * Fetch public project catalog (active projects for unauthenticated registration).
+   */
+  async getCatalog(): Promise<ProjectSummary[]> {
+    const response = await apiClient.get<ProjectSummary[]>('/projects/catalog')
+    return response.data
+  },
+
   async getProjects(includeArchived = false): Promise<ProjectSummary[]> {
     return projectService.getAll(includeArchived)
   },

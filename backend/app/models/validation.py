@@ -30,6 +30,13 @@ class ValidationCriterion(Base):
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
+    project_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("projects.id", ondelete="CASCADE"),
+        nullable=True,
+        index=True,
+        comment="Null indicates global/default criterion; UUID scopes to a specific project",
+    )
     property_name: Mapped[str] = mapped_column(String(128), nullable=False)
     metric: Mapped[str] = mapped_column(
         String(64), nullable=False, comment="ABSOLUTE_ERROR, RELATIVE_ERROR, WITHIN_INTERVAL"

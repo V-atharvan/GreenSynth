@@ -1,7 +1,8 @@
 import { render, screen, waitFor } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi, beforeEach } from 'vitest'
 import App from '../App'
 import { dashboardService } from '../services/dashboardService'
+import { authService } from '../services/authService'
 
 vi.mock('../services/dashboardService', () => ({
   dashboardService: {
@@ -16,11 +17,24 @@ vi.mock('../services/dashboardService', () => ({
   },
 }))
 
+vi.mock('../services/authService', () => ({
+  authService: {
+    login: vi.fn(),
+    getCurrentUser: vi.fn(),
+    logout: vi.fn(),
+  },
+}))
+
 describe('App Startup & Navigation', () => {
-  it('renders without crashing and displays layout brand header', async () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    localStorage.clear()
+  })
+
+  it('renders without crashing and displays brand header', async () => {
     render(<App />)
     await waitFor(() => {
-      expect(screen.getByText('GreenSynth')).toBeDefined()
+      expect(screen.getAllByText(/GreenSynth/i).length).toBeGreaterThan(0)
     })
   })
 })

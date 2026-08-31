@@ -6,7 +6,7 @@
  */
 
 import React, { useState } from 'react'
-import { X } from 'lucide-react'
+import { X, Download } from 'lucide-react'
 import type { RawFile } from '@/types'
 import { characterizationService } from '@/services/characterizationService'
 
@@ -17,9 +17,9 @@ interface FileMetadataModalProps {
 }
 
 export function FileMetadataModal({ file, isOpen = true, onClose }: FileMetadataModalProps) {
-  if (!isOpen) return null
-
   const [copied, setCopied] = useState(false)
+
+  if (!isOpen) return null
 
   const downloadUrl = characterizationService.getDownloadUrl(file.id)
 
@@ -31,7 +31,7 @@ export function FileMetadataModal({ file, isOpen = true, onClose }: FileMetadata
 
   const formatBytes = (bytes: number): string => {
     if (bytes < 1024) return `${bytes} B`
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`
     return `${(bytes / (1024 * 1024)).toFixed(2)} MB`
   }
 
@@ -112,12 +112,13 @@ export function FileMetadataModal({ file, isOpen = true, onClose }: FileMetadata
           </button>
           <a
             href={downloadUrl}
-            className="btn btn-primary"
+            className="btn btn-primary inline-flex items-center gap-1.5"
             download={file.original_filename}
             target="_blank"
             rel="noopener noreferrer"
           >
-            ⬇ Download Original File
+            <Download size={15} />
+            <span>Download Original File</span>
           </a>
         </div>
       </div>

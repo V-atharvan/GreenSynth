@@ -22,6 +22,7 @@ RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
     alembic \
     pydantic \
     pydantic-settings \
+    jinja2 \
     "python-jose[cryptography]" \
     "passlib[bcrypt]" \
     numpy \
@@ -29,6 +30,7 @@ RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
     scipy \
     scikit-learn \
     matplotlib \
+    plotly \
     reportlab \
     httpx \
     boto3 \

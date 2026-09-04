@@ -166,7 +166,15 @@ export default function MainLayout() {
           </div>
         </div>
         <div className="mobile-header-right" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          {projectCode && (
+          {isAdmin ? (
+            <span
+              className="topbar-project-badge"
+              style={{ padding: '2px 8px', fontSize: '0.72rem', background: '#4338ca', color: '#ffffff', border: 'none' }}
+              title="System-Wide Access — All Projects"
+            >
+              {projectCode || 'All Projects'}
+            </span>
+          ) : projectCode ? (
             <span
               className="topbar-project-badge"
               style={{ padding: '2px 8px', fontSize: '0.72rem', background: '#0f766e', color: '#ffffff', border: 'none' }}
@@ -174,7 +182,7 @@ export default function MainLayout() {
             >
               {projectCode}
             </span>
-          )}
+          ) : null}
           <span className="mobile-mode-badge" title="Research Mode Active">
             <FlaskConical className="w-3.5 h-3.5" />
             <span className="mobile-mode-text">Research</span>
@@ -403,7 +411,7 @@ export default function MainLayout() {
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                 <FolderKanban className="w-3.5 h-3.5 text-emerald-600" />
                 <select
-                  value={project?.id || ''}
+                  value={project?.id || 'all'}
                   onChange={(e) => selectAdminProject(e.target.value)}
                   style={{
                     padding: '4px 8px',
@@ -418,6 +426,7 @@ export default function MainLayout() {
                   title="Switch Project Context"
                   aria-label="Admin Project Switcher"
                 >
+                  <option value="all">🌐 All Projects (System-Wide)</option>
                   {allProjects.map((p) => (
                     <option key={p.id} value={p.id}>
                       {p.project_code} — {p.name}

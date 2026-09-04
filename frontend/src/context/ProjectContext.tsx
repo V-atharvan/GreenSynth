@@ -77,14 +77,13 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (isAdmin) {
         const projects = await projectService.getAll()
         setAllProjects(projects)
-        if (projects.length > 0) {
-          const selected = adminSelectedProjectId
-            ? projects.find((p: ProjectSummary) => p.id === adminSelectedProjectId) || projects[0]
-            : projects.find((p: ProjectSummary) => p.project_code === 'P7') || projects[0]
+        if (adminSelectedProjectId) {
+          // Admin has explicitly selected a specific project
+          const selected = projects.find((p: ProjectSummary) => p.id === adminSelectedProjectId) || null
           setProject(selected)
-          if (!adminSelectedProjectId) {
-            setAdminSelectedProjectId(selected.id)
-          }
+        } else {
+          // Default: "All Projects" — no specific project selected
+          setProject(null)
         }
       } else if (studentProjectId) {
         const proj = await projectService.getById(studentProjectId)
@@ -120,10 +119,16 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const selectAdminProject = useCallback(
     (newProjectId: string) => {
       if (!isAdmin) return
-      setAdminSelectedProjectId(newProjectId)
-      const found = allProjects.find((p: ProjectSummary) => p.id === newProjectId)
-      if (found) {
-        setProject(found)
+      if (!newProjectId || newProjectId === 'all') {
+        // "All Projects" — system-wide view
+        setAdminSelectedProjectId(null)
+        setProject(null)
+      } else {
+        setAdminSelectedProjectId(newProjectId)
+        const found = allProjects.find((p: ProjectSummary) => p.id === newProjectId)
+        if (found) {
+          setProject(found)
+        }
       }
     },
     [isAdmin, allProjects]

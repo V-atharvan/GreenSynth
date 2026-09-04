@@ -208,16 +208,22 @@ class GroupService:
 
             # 11. Dispatch invitation emails (safe / non-blocking to DB)
             for inv_rec, raw_tok in invitation_tokens:
-                await self.email_service.send_group_invitation(
-                    to_email=inv_rec.email,
-                    recipient_name=inv_rec.full_name,
-                    group_name=group.name,
-                    project_name=project.name,
-                    project_code=project.project_code,
-                    leader_name=leader.full_name,
-                    raw_token=raw_tok,
-                    expires_at=inv_rec.expires_at,
-                )
+                try:
+                    await self.email_service.send_group_invitation(
+                        to_email=inv_rec.email,
+                        recipient_name=inv_rec.full_name,
+                        group_name=group.name,
+                        project_name=project.name,
+                        project_code=project.project_code,
+                        leader_name=leader.full_name,
+                        raw_token=raw_tok,
+                        expires_at=inv_rec.expires_at,
+                    )
+                except Exception as email_exc:
+                    logger.error(
+                        "Email dispatch failed for invitation %s to %s: %s",
+                        inv_rec.id, inv_rec.email, email_exc,
+                    )
 
             # 12. Record Audit Trail
             await self.audit.log(

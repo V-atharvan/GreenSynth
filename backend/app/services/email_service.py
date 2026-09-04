@@ -247,6 +247,7 @@ class EmailService:
     ) -> bool:
         """
         Renders the GreenSynth invitation templates and dispatches the email.
+        Uses asyncio.to_thread to prevent blocking SMTP calls from freezing the event loop.
         """
         invitation_url = (
             f"{self.settings.frontend_base_url.rstrip('/')}/accept-invitation?token={raw_token}"
@@ -269,9 +270,12 @@ class EmailService:
         html_body = self.render_template("invitation.html", context)
         text_body = self.render_template("invitation.txt", context)
 
-        return self.send_email(
+        import asyncio
+        return await asyncio.to_thread(
+            self.send_email,
             to_email=to_email,
             subject=subject,
             html_body=html_body,
             text_body=text_body,
         )
+

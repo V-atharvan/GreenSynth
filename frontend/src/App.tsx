@@ -11,6 +11,7 @@ import { ProjectProvider } from '@/context/ProjectContext'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import AdminRoute from '@/components/AdminRoute'
 import MainLayout from '@/layouts/MainLayout'
+import LandingPage from '@/pages/landing/LandingPage'
 import Login from '@/pages/Login'
 import Register from '@/pages/Register'
 import AcceptInvitation from '@/pages/AcceptInvitation'
@@ -50,6 +51,9 @@ export default function App() {
       <AuthProvider>
         <ProjectProvider>
           <Routes>
+            {/* ── Public Landing Page ────────────────────────────────── */}
+            <Route path="/" element={<LandingPage />} />
+
             {/* ── Public Authentication Routes ───────────────────────── */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
@@ -60,7 +64,7 @@ export default function App() {
 
             {/* ── Protected Research Platform Routes ─────────────────── */}
             <Route element={<ProtectedRoute />}>
-              <Route path="/" element={<MainLayout />}>
+              <Route path="/app" element={<MainLayout />}>
                 <Route index element={<RootIndexRoute />} />
                 <Route path="dashboard" element={<Dashboard />} />
                 <Route path="student" element={<Dashboard />} />

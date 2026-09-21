@@ -1,11 +1,20 @@
 /**
  * GreenSynth Analytics — Landing Navbar
  * Sticky navigation bar with hamburger menu for mobile.
+ * Updated: added "Research Projects" nav link.
  */
 
 import React, { useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { Menu, X } from 'lucide-react'
+import { Dna, Menu, X } from 'lucide-react'
+
+const NAV_LINKS = [
+  { label: 'Home',              id: 'hero' },
+  { label: 'Research Projects', id: 'research-portfolio' },
+  { label: 'Platform',         id: 'platform-modules' },
+  { label: 'Workflow',         id: 'workflow' },
+  { label: 'About',            id: 'why-greensynth' },
+]
 
 const LandingNavbar: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -13,9 +22,7 @@ const LandingNavbar: React.FC = () => {
   const scrollTo = useCallback((id: string) => {
     setMobileOpen(false)
     const el = document.getElementById(id)
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }, [])
 
   return (
@@ -25,12 +32,9 @@ const LandingNavbar: React.FC = () => {
           {/* Brand */}
           <a href="#hero" className="lp-navbar-brand" aria-label="GreenSynth Analytics — Home"
             onClick={(e) => { e.preventDefault(); scrollTo('hero') }}>
-            <img
-              src="/branding/greensynth-logo-dark-horizontal.png"
-              alt="GreenSynth logo"
-              className="lp-navbar-logo"
-              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
-            />
+            <div className="lp-navbar-logo-mark" aria-hidden="true">
+              <Dna size={25} style={{ color: '#34d399' }} />
+            </div>
             <div className="lp-navbar-brand-text">
               <span className="lp-navbar-brand-name">GreenSynth</span>
               <span className="lp-navbar-brand-sub">Analytics Platform</span>
@@ -39,13 +43,7 @@ const LandingNavbar: React.FC = () => {
 
           {/* Desktop links */}
           <ul className="lp-navbar-links" role="list">
-            {[
-              { label: 'Home',     id: 'hero' },
-              { label: 'Research', id: 'research-focus' },
-              { label: 'Platform', id: 'platform-modules' },
-              { label: 'Workflow', id: 'workflow' },
-              { label: 'About',   id: 'why-greensynth' },
-            ].map(({ label, id }) => (
+            {NAV_LINKS.map(({ label, id }) => (
               <li key={id}>
                 <button
                   className="lp-navbar-link"
@@ -83,13 +81,7 @@ const LandingNavbar: React.FC = () => {
           className={`lp-mobile-nav${mobileOpen ? ' lp-open' : ''}`}
           aria-hidden={!mobileOpen}
         >
-          {[
-            { label: 'Home',     id: 'hero' },
-            { label: 'Research', id: 'research-focus' },
-            { label: 'Platform', id: 'platform-modules' },
-            { label: 'Workflow', id: 'workflow' },
-            { label: 'About',   id: 'why-greensynth' },
-          ].map(({ label, id }) => (
+          {NAV_LINKS.map(({ label, id }) => (
             <button
               key={id}
               className="lp-mobile-nav-link"

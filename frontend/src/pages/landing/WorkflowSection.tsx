@@ -7,7 +7,8 @@
 import React from 'react'
 import {
   Folder, FlaskConical, Layers, Sliders, Activity, Calculator,
-  BarChart3, Cpu, Grid3X3, Target, Lightbulb, ShieldCheck, FileText, ChevronRight, ChevronDown,
+  BarChart3, Cpu, Grid3X3, Target, Lightbulb, ShieldCheck, FileText,
+  ChevronRight, ChevronDown,
 } from 'lucide-react'
 
 interface WorkflowStep {
@@ -15,61 +16,108 @@ interface WorkflowStep {
   icon: React.ReactNode
   title: string
   desc: string
+  phase: 'planning' | 'lab' | 'analysis' | 'ai' | 'validation'
 }
 
+const PHASE_META = {
+  planning:   { label: 'Planning',   color: '#3b9ede', bg: 'rgba(59,158,222,0.15)',  border: 'rgba(59,158,222,0.35)',  numBg: '#1e6fa0' },
+  lab:        { label: 'Lab',        color: '#34d399', bg: 'rgba(52,211,153,0.12)',  border: 'rgba(52,211,153,0.32)',  numBg: '#0f7a52' },
+  analysis:   { label: 'Analysis',   color: '#a78bfa', bg: 'rgba(167,139,250,0.13)', border: 'rgba(167,139,250,0.32)', numBg: '#6d3fc7' },
+  ai:         { label: 'AI & Opt.',  color: '#fb923c', bg: 'rgba(251,146,60,0.13)',  border: 'rgba(251,146,60,0.32)',  numBg: '#c05621' },
+  validation: { label: 'Validation', color: '#f472b6', bg: 'rgba(244,114,182,0.13)', border: 'rgba(244,114,182,0.32)', numBg: '#9b2563' },
+} as const
+
 const STEPS: WorkflowStep[] = [
-  { num: 1,  icon: <Folder size={16} />,       title: 'Project',                desc: 'Define and organise the research project.' },
-  { num: 2,  icon: <FlaskConical size={16} />,  title: 'Experiment',             desc: 'Design and record synthesis experiments.' },
-  { num: 3,  icon: <Layers size={16} />,        title: 'Sample',                 desc: 'Register prepared synthesis samples.' },
-  { num: 4,  icon: <Sliders size={16} />,       title: 'Synthesis Parameters',   desc: 'Document process variables and conditions.' },
-  { num: 5,  icon: <Activity size={16} />,      title: 'Characterization',       desc: 'Capture XRD, UV-Vis, FTIR, SEM, Electrical.' },
-  { num: 6,  icon: <Calculator size={16} />,    title: 'Scientific Calculations',desc: 'Derive material properties from raw data.' },
-  { num: 7,  icon: <BarChart3 size={16} />,     title: 'Statistical Analysis',   desc: 'Identify patterns and relationships.' },
-  { num: 8,  icon: <Cpu size={16} />,           title: 'Machine Learning',       desc: 'Train predictive models on experimental data.' },
-  { num: 9,  icon: <Grid3X3 size={16} />,       title: 'DOE',                    desc: 'Design of Experiments for parameter space.' },
-  { num: 10, icon: <Target size={16} />,        title: 'Experimental Optimization', desc: 'Identify candidate synthesis conditions.' },
-  { num: 11, icon: <Lightbulb size={16} />,     title: 'Recommendation',         desc: 'Generate experimentally testable suggestions.' },
-  { num: 12, icon: <ShieldCheck size={16} />,   title: 'Validation',             desc: 'Experimentally confirm predicted outcomes.' },
-  { num: 13, icon: <ShieldCheck size={16} />,   title: 'Drift Detection',        desc: 'Monitor model performance over time.' },
-  { num: 14, icon: <FileText size={16} />,      title: 'Research Report',        desc: 'Compile traceable, evidence-based findings.' },
+  { num: 1,  icon: <Folder size={15} />,       title: 'Project',                  desc: 'Define and organise the research project.',                    phase: 'planning' },
+  { num: 2,  icon: <FlaskConical size={15} />,  title: 'Experiment',               desc: 'Design and record synthesis experiments.',                      phase: 'planning' },
+  { num: 3,  icon: <Layers size={15} />,        title: 'Sample',                   desc: 'Register prepared synthesis samples.',                          phase: 'lab' },
+  { num: 4,  icon: <Sliders size={15} />,       title: 'Synthesis Parameters',     desc: 'Document process variables and conditions.',                    phase: 'lab' },
+  { num: 5,  icon: <Activity size={15} />,      title: 'Characterization',         desc: 'Capture XRD, UV-Vis, FTIR, SEM & Electrical data.',            phase: 'lab' },
+  { num: 6,  icon: <Calculator size={15} />,    title: 'Scientific Calculations',  desc: 'Derive material properties from raw instrument data.',          phase: 'analysis' },
+  { num: 7,  icon: <BarChart3 size={15} />,     title: 'Statistical Analysis',     desc: 'Identify patterns, regressions and DOE relationships.',         phase: 'analysis' },
+  { num: 8,  icon: <Cpu size={15} />,           title: 'Machine Learning',         desc: 'Train predictive models on experimental data.',                 phase: 'ai' },
+  { num: 9,  icon: <Grid3X3 size={15} />,       title: 'DOE',                      desc: 'Design of Experiments for efficient parameter space search.',   phase: 'ai' },
+  { num: 10, icon: <Target size={15} />,        title: 'Experimental Optimization',desc: 'Identify optimal candidate synthesis conditions.',              phase: 'ai' },
+  { num: 11, icon: <Lightbulb size={15} />,     title: 'Recommendation',           desc: 'Generate experimentally testable synthesis suggestions.',       phase: 'ai' },
+  { num: 12, icon: <ShieldCheck size={15} />,   title: 'Validation',               desc: 'Experimentally confirm model-predicted outcomes.',              phase: 'validation' },
+  { num: 13, icon: <ShieldCheck size={15} />,   title: 'Drift Detection',          desc: 'Monitor model performance against new data over time.',         phase: 'validation' },
+  { num: 14, icon: <FileText size={15} />,      title: 'Research Report',          desc: 'Compile traceable, evidence-based research findings.',          phase: 'validation' },
 ]
+
+interface StepCardProps {
+  step: WorkflowStep
+}
+
+const StepCard: React.FC<StepCardProps> = ({ step }) => {
+  const p = PHASE_META[step.phase]
+  return (
+    <div
+      className="lp-wf-card"
+      role="listitem"
+      aria-label={`Step ${step.num}: ${step.title}`}
+      style={{
+        background: p.bg,
+        borderColor: p.border,
+      }}
+    >
+      <div className="lp-wf-card-top">
+        <span
+          className="lp-wf-num"
+          style={{ background: p.numBg }}
+          aria-hidden="true"
+        >
+          {step.num}
+        </span>
+        <span className="lp-wf-icon" style={{ color: p.color }} aria-hidden="true">
+          {step.icon}
+        </span>
+      </div>
+      <div className="lp-wf-title" style={{ color: '#ffffff' }}>{step.title}</div>
+      <div className="lp-wf-desc">{step.desc}</div>
+    </div>
+  )
+}
 
 const WorkflowSection: React.FC = () => {
   const ROW1 = STEPS.slice(0, 7)
   const ROW2 = STEPS.slice(7, 14)
 
   return (
-    <section id="workflow" className="lp-section" aria-labelledby="workflow-heading">
+    <section id="workflow" className="lp-workflow-section" aria-labelledby="workflow-heading">
       <div className="lp-container">
-        <div className="lp-section-header">
+        {/* Header */}
+        <div className="lp-section-header" style={{ marginBottom: '44px' }}>
           <span className="lp-section-label">Complete Research Cycle</span>
-          <h2 id="workflow-heading" className="lp-section-heading">
+          <h2 id="workflow-heading" className="lp-section-heading lp-section-heading-light">
             One Platform for the Complete Research Cycle
           </h2>
-          <p className="lp-section-subheading">
+          <p className="lp-section-subheading lp-section-subheading-light">
             Connect experimental planning, laboratory data, characterization, analysis, prediction,
             optimization, and validation in one traceable research environment.
           </p>
         </div>
 
-        {/* ── Desktop: Two-Row Horizontal Grid ── */}
+        {/* Phase Legend */}
+        <div className="lp-wf-legend" aria-label="Workflow phase legend">
+          {(Object.entries(PHASE_META) as [string, typeof PHASE_META[keyof typeof PHASE_META]][]).map(([key, p]) => (
+            <div key={key} className="lp-wf-legend-item">
+              <span className="lp-wf-legend-dot" style={{ background: p.color }} />
+              <span className="lp-wf-legend-label">{p.label}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* ── Desktop: Two-Row Grid ── */}
         <div className="lp-workflow-desktop" aria-label="Research workflow steps">
           {/* Row 1: steps 1–7 */}
-          <div className="lp-workflow-row" style={{ display: 'flex', alignItems: 'stretch', marginBottom: '8px' }}>
+          <div className="lp-wf-row">
             {ROW1.map((step, i) => (
               <React.Fragment key={step.num}>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div className="lp-workflow-step-inner" role="listitem" aria-label={`Step ${step.num}: ${step.title}`}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span className="lp-workflow-step-num" aria-hidden="true">{step.num}</span>
-                      <span className="lp-workflow-step-icon" aria-hidden="true">{step.icon}</span>
-                    </div>
-                    <div className="lp-workflow-step-title">{step.title}</div>
-                    <div className="lp-workflow-step-desc">{step.desc}</div>
-                  </div>
+                <div style={{ flex: 1, minWidth: 0, display: 'flex' }}>
+                  <StepCard step={step} />
                 </div>
                 {i < ROW1.length - 1 && (
-                  <div className="lp-workflow-arrow" aria-hidden="true">
+                  <div className="lp-wf-arrow" aria-hidden="true">
                     <ChevronRight size={14} />
                   </div>
                 )}
@@ -77,29 +125,20 @@ const WorkflowSection: React.FC = () => {
             ))}
           </div>
 
-          {/* Connector: row 1 → row 2 (right-to-left) */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '0 4px', marginBottom: '8px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--color-text-muted)' }}>
-              <ChevronDown size={14} />
-            </div>
+          {/* Connector: row 1 → row 2 */}
+          <div className="lp-wf-turn" aria-hidden="true">
+            <ChevronDown size={16} style={{ color: 'rgba(200,216,232,0.4)' }} />
           </div>
 
-          {/* Row 2: steps 8–14 (right-to-left display) */}
-          <div className="lp-workflow-row" style={{ display: 'flex', alignItems: 'stretch', flexDirection: 'row-reverse' }}>
+          {/* Row 2: steps 8–14 (right-to-left) */}
+          <div className="lp-wf-row" style={{ flexDirection: 'row-reverse' }}>
             {ROW2.map((step, i) => (
               <React.Fragment key={step.num}>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div className="lp-workflow-step-inner" role="listitem" aria-label={`Step ${step.num}: ${step.title}`}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span className="lp-workflow-step-num" aria-hidden="true">{step.num}</span>
-                      <span className="lp-workflow-step-icon" aria-hidden="true">{step.icon}</span>
-                    </div>
-                    <div className="lp-workflow-step-title">{step.title}</div>
-                    <div className="lp-workflow-step-desc">{step.desc}</div>
-                  </div>
+                <div style={{ flex: 1, minWidth: 0, display: 'flex' }}>
+                  <StepCard step={step} />
                 </div>
                 {i < ROW2.length - 1 && (
-                  <div className="lp-workflow-arrow" aria-hidden="true">
+                  <div className="lp-wf-arrow" aria-hidden="true">
                     <ChevronRight size={14} style={{ transform: 'rotate(180deg)' }} />
                   </div>
                 )}
@@ -109,73 +148,44 @@ const WorkflowSection: React.FC = () => {
         </div>
 
         {/* ── Mobile: Vertical Timeline ── */}
-        <div
-          className="lp-workflow-mobile"
-          style={{ display: 'none' }}
-          aria-label="Research workflow steps"
-        >
-          {STEPS.map((step, i) => (
-            <div
-              key={step.num}
-              style={{ display: 'flex', alignItems: 'flex-start', gap: '14px', position: 'relative' }}
-            >
-              {/* Connector column */}
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
-                <div
-                  style={{
-                    width: '36px',
-                    height: '36px',
-                    borderRadius: '50%',
-                    background: 'var(--color-primary)',
-                    color: '#ffffff',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '0.75rem',
-                    fontWeight: 800,
-                    flexShrink: 0,
-                    zIndex: 1,
-                  }}
-                  aria-hidden="true"
-                >
-                  {step.num}
-                </div>
-                {i < STEPS.length - 1 && (
-                  <div style={{ width: '2px', flex: 1, minHeight: '24px', background: 'var(--color-border)', margin: '4px 0' }} aria-hidden="true" />
-                )}
-              </div>
-
-              {/* Content */}
-              <div style={{ paddingBottom: i < STEPS.length - 1 ? '16px' : 0, flex: 1 }}>
-                <div style={{
-                  background: '#ffffff',
-                  border: '1px solid var(--color-border)',
-                  borderRadius: '10px',
-                  padding: '14px 16px',
-                  boxShadow: 'var(--shadow-sm)',
-                }} role="listitem" aria-label={`Step ${step.num}: ${step.title}`}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                    <span style={{ color: 'var(--color-accent)' }} aria-hidden="true">{step.icon}</span>
-                    <span style={{ fontSize: '0.9375rem', fontWeight: 700, color: 'var(--color-text)' }}>
-                      {step.title}
-                    </span>
+        <div className="lp-workflow-mobile" aria-label="Research workflow steps">
+          {STEPS.map((step, i) => {
+            const p = PHASE_META[step.phase]
+            return (
+              <div key={step.num} className="lp-wf-mobile-item">
+                {/* Timeline column */}
+                <div className="lp-wf-mobile-col">
+                  <div
+                    className="lp-wf-mobile-num"
+                    style={{ background: p.numBg, boxShadow: `0 0 0 3px ${p.border}` }}
+                    aria-hidden="true"
+                  >
+                    {step.num}
                   </div>
-                  <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', lineHeight: 1.5, margin: 0 }}>
-                    {step.desc}
-                  </p>
+                  {i < STEPS.length - 1 && (
+                    <div className="lp-wf-mobile-line" aria-hidden="true" />
+                  )}
+                </div>
+                {/* Content card */}
+                <div className="lp-wf-mobile-content" style={{ paddingBottom: i < STEPS.length - 1 ? '16px' : 0 }}>
+                  <div
+                    className="lp-wf-mobile-card"
+                    style={{ borderColor: p.border, background: p.bg }}
+                    role="listitem"
+                    aria-label={`Step ${step.num}: ${step.title}`}
+                  >
+                    <div className="lp-wf-mobile-card-top">
+                      <span style={{ color: p.color }} aria-hidden="true">{step.icon}</span>
+                      <span className="lp-wf-mobile-title">{step.title}</span>
+                    </div>
+                    <p className="lp-wf-mobile-desc">{step.desc}</p>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </div>
-
-      <style>{`
-        @media (max-width: 768px) {
-          .lp-workflow-desktop { display: none !important; }
-          .lp-workflow-mobile  { display: flex !important; flex-direction: column; }
-        }
-      `}</style>
     </section>
   )
 }

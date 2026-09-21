@@ -1,9 +1,12 @@
 /**
  * GreenSynth Analytics — Landing Footer
+ * Updated: expanded Research Focus tags, added "Research Projects" link,
+ * added scientific disclaimer note.
  */
 
 import React from 'react'
 import { Link } from 'react-router-dom'
+import { Dna } from 'lucide-react'
 
 const LandingFooter: React.FC = () => {
   const scrollTo = (id: string) => {
@@ -17,15 +20,12 @@ const LandingFooter: React.FC = () => {
         <div className="lp-footer-main">
           {/* Brand */}
           <div>
-            <img
-              src="/branding/greensynth-logo-dark-horizontal.png"
-              alt="GreenSynth Analytics"
-              style={{ height: '28px', marginBottom: '14px' }}
-              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
-            />
+            <div className="lp-footer-logo-mark" aria-hidden="true">
+              <Dna size={25} style={{ color: '#34d399' }} />
+            </div>
             <div className="lp-footer-brand-name">GreenSynth Analytics</div>
             <div className="lp-footer-brand-desc">
-              A Data-Driven Research and Analytics Platform for Green Synthesis of Semiconductor Materials.
+              A data-driven research and analytics platform for green synthesis of semiconductor materials.
             </div>
           </div>
 
@@ -34,11 +34,11 @@ const LandingFooter: React.FC = () => {
             <div className="lp-footer-col-title">Navigation</div>
             <ul className="lp-footer-links" role="list">
               {[
-                { label: 'Home',     id: 'hero' },
-                { label: 'Research', id: 'research-focus' },
-                { label: 'Platform', id: 'platform-modules' },
-                { label: 'Workflow', id: 'workflow' },
-                { label: 'About',   id: 'why-greensynth' },
+                { label: 'Home',              id: 'hero' },
+                { label: 'Research Projects', id: 'research-portfolio' },
+                { label: 'Platform',         id: 'platform-modules' },
+                { label: 'Workflow',         id: 'workflow' },
+                { label: 'About',            id: 'why-greensynth' },
               ].map(({ label, id }) => (
                 <li key={id}>
                   <button className="lp-footer-link" onClick={() => scrollTo(id)}>
@@ -65,13 +65,29 @@ const LandingFooter: React.FC = () => {
           <div>
             <div className="lp-footer-col-title">Research Focus</div>
             <ul className="lp-footer-links" role="list">
-              {['Green Synthesis', 'Semiconductor Materials', 'CuO', 'Spray Pyrolysis', 'Phytochemical Synthesis'].map((t) => (
+              {[
+                'CuO',
+                'Silica / Silicon',
+                'Plant-based Green Synthesis',
+                'Sol-gel',
+                'Hydrothermal',
+                'Spray Pyrolysis',
+                'Characterization',
+                'Machine Learning',
+                'DOE & Optimization',
+              ].map((t) => (
                 <li key={t}>
                   <span className="lp-footer-link" style={{ cursor: 'default' }}>{t}</span>
                 </li>
               ))}
             </ul>
           </div>
+        </div>
+
+        {/* Disclaimer note */}
+        <div className="lp-footer-disclaimer" role="note">
+          GreenSynth Analytics supports scientific decision-making. Experimental recommendations
+          require physical testing and validation before being treated as scientific conclusions.
         </div>
 
         <div className="lp-footer-bottom">
@@ -81,7 +97,7 @@ const LandingFooter: React.FC = () => {
             <span>Research Platform</span>
           </div>
           <div className="lp-footer-bottom-right">
-            Data-Driven Green Synthesis Research
+            Data-Driven Green Synthesis Research — P1 to P8
           </div>
         </div>
       </div>

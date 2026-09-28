@@ -7,6 +7,7 @@
 import React, { useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { Dna, Menu, X } from 'lucide-react'
+import { useAuth } from '@/context/AuthContext'
 
 const NAV_LINKS = [
   { label: 'Home',              id: 'hero' },
@@ -18,6 +19,8 @@ const NAV_LINKS = [
 
 const LandingNavbar: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const { isAuthenticated, isAdmin } = useAuth()
+  const appDestination = isAdmin ? '/admin' : '/dashboard'
 
   const scrollTo = useCallback((id: string) => {
     setMobileOpen(false)
@@ -58,8 +61,8 @@ const LandingNavbar: React.FC = () => {
 
           {/* Desktop actions */}
           <div className="lp-navbar-actions">
-            <Link to="/login" className="lp-btn-nav-signin" id="navbar-signin-btn">
-              Sign In
+            <Link to={isAuthenticated ? appDestination : "/login"} className="lp-btn-nav-signin" id="navbar-signin-btn">
+              {isAuthenticated ? (isAdmin ? 'Admin Portal' : 'Open Dashboard') : 'Sign In'}
             </Link>
           </div>
 
@@ -92,12 +95,12 @@ const LandingNavbar: React.FC = () => {
           ))}
           <div className="lp-mobile-nav-divider" aria-hidden="true" />
           <Link
-            to="/login"
+            to={isAuthenticated ? appDestination : "/login"}
             className="lp-mobile-nav-signin"
             onClick={() => setMobileOpen(false)}
             id="mobile-signin-btn"
           >
-            Sign In
+            {isAuthenticated ? (isAdmin ? 'Admin Portal' : 'Open Dashboard') : 'Sign In'}
           </Link>
         </nav>
       </div>

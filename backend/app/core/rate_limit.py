@@ -19,8 +19,24 @@ from app.core.config import get_settings
 logger = logging.getLogger(__name__)
 settings = get_settings()
 
+
+def get_real_client_ip(request: Request) -> str:
+    """
+    Resolves client IP address, handling X-Forwarded-For and X-Real-IP headers
+    from reverse proxies (Render, Vercel, Cloudflare, etc.).
+    """
+    forwarded = request.headers.get("x-forwarded-for")
+    if forwarded:
+        # First IP in the comma-separated list is the original client
+        return forwarded.split(",")[0].strip()
+    real_ip = request.headers.get("x-real-ip")
+    if real_ip:
+        return real_ip.strip()
+    return get_remote_address(request)
+
+
 limiter = Limiter(
-    key_func=get_remote_address,
+    key_func=get_real_client_ip,
     default_limits=[settings.rate_limit_default],
     enabled=settings.rate_limit_enabled,
     storage_uri="memory://",
@@ -32,7 +48,7 @@ async def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded) 
     Standardized JSON response for HTTP 429 Too Many Requests.
     Follows GreenSynth error payload conventions.
     """
-    client_ip = get_remote_address(request)
+    client_ip = get_real_client_ip(request)
     logger.warning("Rate limit exceeded for client %s on %s: %s", client_ip, request.url.path, exc.detail)
 
     return JSONResponse(

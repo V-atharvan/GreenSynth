@@ -40,9 +40,9 @@ import AdminDashboard from '@/pages/admin/AdminDashboard'
 import Settings from '@/pages/Settings'
 import Profile from '@/pages/Profile'
 
-function RootIndexRoute() {
+function RootRedirect() {
   const { isAdmin } = useAuth()
-  return isAdmin ? <Navigate to="/admin" replace /> : <Dashboard />
+  return isAdmin ? <Navigate to="/admin" replace /> : <Navigate to="/dashboard" replace />
 }
 
 export default function App() {
@@ -64,12 +64,11 @@ export default function App() {
 
             {/* ── Protected Research Platform Routes ─────────────────── */}
             <Route element={<ProtectedRoute />}>
-              <Route path="/app" element={<MainLayout />}>
-                <Route index element={<RootIndexRoute />} />
-                <Route path="dashboard" element={<Dashboard />} />
-                <Route path="student" element={<Dashboard />} />
+              <Route element={<MainLayout />}>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/student" element={<Dashboard />} />
                 <Route
-                  path="admin"
+                  path="/admin"
                   element={
                     <AdminRoute>
                       <AdminDashboard />
@@ -77,36 +76,60 @@ export default function App() {
                   }
                 />
                 <Route
-                  path="admin/*"
+                  path="/admin/*"
                   element={
                     <AdminRoute>
                       <AdminDashboard />
                     </AdminRoute>
                   }
                 />
-                <Route path="projects" element={<Projects />} />
-                <Route path="projects/:id" element={<ProjectDetail />} />
-                <Route path="experiments" element={<Experiments />} />
-                <Route path="experiments/:id" element={<ExperimentDetail />} />
-                <Route path="samples" element={<Samples />} />
-                <Route path="samples/:id" element={<SampleDetail />} />
-                <Route path="comparison" element={<SampleComparison />} />
-                <Route path="ml" element={<MLDashboard />} />
-                <Route path="ml/datasets/new" element={<MLDatasetBuilder />} />
-                <Route path="ml/training" element={<MLModelTraining />} />
-                <Route path="ml/predict" element={<MLPrediction />} />
-                <Route path="ml/validation" element={<ModelValidationStudio />} />
-                <Route path="validation" element={<ValidationDashboard />} />
-                <Route path="validation/experimental" element={<ExperimentalValidation />} />
-                <Route path="recommendations" element={<RecommendationStudio />} />
-                <Route path="closed-loop" element={<ClosedLoopDashboard />} />
-                <Route path="doe" element={<DOEDashboard />} />
-                <Route path="statistics" element={<StatisticalAnalysisStudio />} />
-                <Route path="optimization" element={<OptimizationStudio />} />
-                <Route path="settings" element={<Settings />} />
-                <Route path="profile" element={<Profile />} />
+                <Route path="/projects" element={<Projects />} />
+                <Route path="/projects/:id" element={<ProjectDetail />} />
+                <Route path="/experiments" element={<Experiments />} />
+                <Route path="/experiments/:id" element={<ExperimentDetail />} />
+                <Route path="/samples" element={<Samples />} />
+                <Route path="/samples/:id" element={<SampleDetail />} />
+                <Route path="/comparison" element={<SampleComparison />} />
+                <Route path="/ml" element={<MLDashboard />} />
+                <Route path="/ml/datasets/new" element={<MLDatasetBuilder />} />
+                <Route path="/ml/training" element={<MLModelTraining />} />
+                <Route path="/ml/predict" element={<MLPrediction />} />
+                <Route path="/ml/validation" element={<ModelValidationStudio />} />
+                <Route path="/validation" element={<ValidationDashboard />} />
+                <Route path="/validation/experimental" element={<ExperimentalValidation />} />
+                <Route path="/recommendations" element={<RecommendationStudio />} />
+                <Route path="/closed-loop" element={<ClosedLoopDashboard />} />
+                <Route path="/doe" element={<DOEDashboard />} />
+                <Route path="/statistics" element={<StatisticalAnalysisStudio />} />
+                <Route path="/optimization" element={<OptimizationStudio />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/profile" element={<Profile />} />
+
+                {/* Legacy /app/* aliases for seamless backwards compatibility */}
+                <Route path="/app" element={<RootRedirect />} />
+                <Route path="/app/admin" element={<Navigate to="/admin" replace />} />
+                <Route path="/app/admin/*" element={<Navigate to="/admin" replace />} />
+                <Route path="/app/dashboard" element={<Navigate to="/dashboard" replace />} />
+                <Route path="/app/student" element={<Navigate to="/dashboard" replace />} />
+                <Route path="/app/projects" element={<Navigate to="/projects" replace />} />
+                <Route path="/app/projects/:id" element={<Navigate to="/projects" replace />} />
+                <Route path="/app/experiments" element={<Navigate to="/experiments" replace />} />
+                <Route path="/app/samples" element={<Navigate to="/samples" replace />} />
+                <Route path="/app/comparison" element={<Navigate to="/comparison" replace />} />
+                <Route path="/app/ml" element={<Navigate to="/ml" replace />} />
+                <Route path="/app/validation" element={<Navigate to="/validation" replace />} />
+                <Route path="/app/recommendations" element={<Navigate to="/recommendations" replace />} />
+                <Route path="/app/closed-loop" element={<Navigate to="/closed-loop" replace />} />
+                <Route path="/app/doe" element={<Navigate to="/doe" replace />} />
+                <Route path="/app/statistics" element={<Navigate to="/statistics" replace />} />
+                <Route path="/app/optimization" element={<Navigate to="/optimization" replace />} />
+                <Route path="/app/settings" element={<Navigate to="/settings" replace />} />
+                <Route path="/app/profile" element={<Navigate to="/profile" replace />} />
               </Route>
             </Route>
+
+            {/* ── Catch-All Fallback (Prevents blank white screens on unknown paths) ── */}
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </ProjectProvider>
       </AuthProvider>

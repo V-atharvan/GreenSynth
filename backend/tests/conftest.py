@@ -23,8 +23,11 @@ from app.main import app
 from app.api.deps import get_db
 from app.core.config import get_settings
 
+from app.core.rate_limit import limiter
+
 # Disable rate limiting during tests so rapid automated test cases don't hit 429
 get_settings().rate_limit_enabled = False
+limiter.enabled = False
 
 # ── In-memory SQLite for tests ─────────────────────────────
 # SQLite is used for testing speed and isolation.

@@ -114,8 +114,8 @@ class Settings(BaseSettings):
         description="Strict rate limit for login attempts (brute-force defense)",
     )
     rate_limit_auth_register: str = Field(
-        default="5/minute",
-        description="Strict rate limit for account/leader registration",
+        default="15/minute",
+        description="Rate limit for account/leader registration",
     )
 
     # ── CORS ──────────────────────────────────────────────

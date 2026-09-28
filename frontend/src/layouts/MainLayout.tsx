@@ -45,7 +45,7 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { to: '/',                label: 'Dashboard',             icon: LayoutDashboard, end: true },
+  { to: '/dashboard',        label: 'Dashboard',             icon: LayoutDashboard },
   { to: '/projects',        label: 'Projects',              icon: FolderKanban },
   { to: '/experiments',     label: 'Experiments',           icon: FlaskConical },
   { to: '/samples',         label: 'Samples',               icon: TestTube2 },
@@ -124,7 +124,7 @@ export default function MainLayout() {
   // Helper to determine if a bottom bar item is active
   const isPathActive = (type: 'home' | 'projects' | 'experiments' | 'samples' | 'research') => {
     const path = location.pathname
-    if (type === 'home') return path === '/'
+    if (type === 'home') return path === '/dashboard' || path === '/admin' || path === '/'
     if (type === 'projects') return path.startsWith('/projects')
     if (type === 'experiments') return path.startsWith('/experiments')
     if (type === 'samples') return path.startsWith('/samples')
@@ -243,7 +243,7 @@ export default function MainLayout() {
           {(sidebarOpen || mobileDrawerOpen) && (
             <div className="nav-section-label">Research</div>
           )}
-          {NAV_ITEMS.map((item) => {
+          {((isAdmin ? [{ to: '/admin', label: 'Admin Portal', icon: ShieldCheck, end: false } as NavItem] : []).concat(NAV_ITEMS)).map((item: NavItem) => {
             const IconComp = item.icon
             return (
               <NavLink
@@ -467,10 +467,10 @@ export default function MainLayout() {
       {/* ── Fixed Mobile Bottom Navigation Bar (Screens <= 767px) ──────── */}
       <nav className="mobile-bottom-nav" aria-label="Mobile Bottom Navigation">
         <NavLink
-          to="/"
+          to={isAdmin ? '/admin' : '/dashboard'}
           end
           className={`bottom-nav-item ${isPathActive('home') ? 'active' : ''}`}
-          aria-label="Home"
+          aria-label={isAdmin ? 'Admin' : 'Home'}
         >
           <Home className="bottom-nav-icon" />
           <span className="bottom-nav-label">Home</span>
@@ -523,7 +523,7 @@ export default function MainLayout() {
 
 function getPageTitle(pathname: string): string {
   if (pathname.startsWith('/admin')) return 'Admin Portal'
-  if (pathname === '/') return 'Dashboard'
+  if (pathname === '/' || pathname === '/dashboard') return 'Dashboard'
   if (pathname.startsWith('/projects')) return 'Projects'
   if (pathname.startsWith('/experiments')) return 'Experiments'
   if (pathname.startsWith('/samples')) return 'Samples'

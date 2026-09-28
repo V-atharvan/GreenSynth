@@ -1,22 +1,20 @@
 """
-GreenSynth Analytics — Machine Learning Module
+GreenSynth Analytics — Machine Learning & Prediction Subsystem
 
-STATUS: Architecture placeholder — NOT YET IMPLEMENTED
-
-This module will contain:
-  - Feature engineering pipeline
-  - Model training (Linear, Ridge, Lasso, Random Forest, Gradient Boosting)
-  - Model registry management
-  - Prediction generation with uncertainty quantification
-  - Anti-data-leakage safeguards
-  - Model performance evaluation (train/val/test splits)
-
-IMPORTANT CONSTRAINTS:
-  - ML is only enabled after a data-readiness gate is satisfied
-    (configurable minimum: 20 validated experiments)
-  - Every prediction includes uncertainty bounds
-  - Training, validation, and test metrics are ALL reported
-  - No data leakage: test IDs are verified disjoint from training IDs
-
-Development phase: 14–16
+Provides dataset generation, anti-leakage validation, multi-algorithm
+training pipelines, model evaluation, and uncertainty quantification.
 """
+
+from __future__ import annotations
+
+from app.ml.services.dataset_service import MLDatasetService
+from app.ml.services.training_service import MLTrainingService
+from app.ml.services.prediction_service import MLPredictionService
+from app.ml.services.registry_service import MLRegistryService
+
+__all__ = [
+    "MLDatasetService",
+    "MLTrainingService",
+    "MLPredictionService",
+    "MLRegistryService",
+]

@@ -48,6 +48,7 @@ def calculate_scherrer_crystallite_size(
     fwhm_deg: float,
     wavelength_nm: float = 0.15406,
     shape_factor_k: float = 0.9,
+    instrumental_broadening_deg: float = 0.0,
 ) -> ScherrerResult:
     """
     Calculate crystallite domain size D (nm) via Scherrer Equation.
@@ -57,6 +58,7 @@ def calculate_scherrer_crystallite_size(
       - shape_factor_k must be positive (> 0)
       - fwhm_deg must be positive (> 0)
       - peak_position_2theta_deg must be in range (0°, 180°)
+      - instrumental_broadening_deg must be >= 0 and strictly < fwhm_deg
     """
     if wavelength_nm <= 0:
         raise ScherrerCalculationError(
@@ -73,6 +75,16 @@ def calculate_scherrer_crystallite_size(
             "Cannot calculate crystallite size: FWHM is missing or non-positive."
         )
 
+    if instrumental_broadening_deg < 0:
+        raise ScherrerCalculationError(
+            f"Invalid instrumental broadening ({instrumental_broadening_deg}°). Must be non-negative."
+        )
+
+    if instrumental_broadening_deg >= fwhm_deg:
+        raise ScherrerCalculationError(
+            f"Instrumental broadening ({instrumental_broadening_deg}°) cannot be greater than or equal to observed FWHM ({fwhm_deg}°)."
+        )
+
     if peak_position_2theta_deg <= 0 or peak_position_2theta_deg >= 180:
         raise ScherrerCalculationError(
             f"Invalid peak position (2θ = {peak_position_2theta_deg}°). 2θ must be between 0° and 180°."
@@ -82,8 +94,13 @@ def calculate_scherrer_crystallite_size(
     theta_deg = peak_position_2theta_deg / 2.0
     theta_rad = math.radians(theta_deg)
 
-    # 2. Convert FWHM (deg) to β (radians)
-    beta_rad = math.radians(fwhm_deg)
+    # 2. Convert FWHM (deg) to β (radians) with instrumental broadening correction
+    b_obs_rad = math.radians(fwhm_deg)
+    if instrumental_broadening_deg > 0:
+        b_inst_rad = math.radians(instrumental_broadening_deg)
+        beta_rad = math.sqrt(max(1e-12, b_obs_rad**2 - b_inst_rad**2))
+    else:
+        beta_rad = b_obs_rad
 
     # 3. Compute Scherrer Crystallite Size D = (K * lambda) / (beta * cos(theta))
     cos_theta = math.cos(theta_rad)
@@ -103,8 +120,13 @@ def calculate_scherrer_crystallite_size(
         "peak_position_2theta_deg": peak_position_2theta_deg,
         "bragg_angle_theta_rad": theta_rad,
         "fwhm_deg": fwhm_deg,
+        "instrumental_broadening_deg": instrumental_broadening_deg,
         "broadening_beta_rad": beta_rad,
-        "broadening_cause": "Pure crystallite size broadening (instrumental broadening not subtracted)",
+        "broadening_correction": (
+            "Instrumental broadening subtracted (sqrt(beta_obs^2 - beta_inst^2))"
+            if instrumental_broadening_deg > 0
+            else "Pure crystallite size broadening (instrumental broadening assumed negligible / 0)"
+        ),
     }
 
     return ScherrerResult(

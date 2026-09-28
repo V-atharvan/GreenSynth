@@ -100,16 +100,34 @@ class Settings(BaseSettings):
         description="Access token expiration duration in minutes",
     )
 
+    # ── Rate Limiting (Security Hardening) ────────────────
+    rate_limit_enabled: bool = Field(
+        default=True,
+        description="Master switch to enable/disable API rate limiting",
+    )
+    rate_limit_default: str = Field(
+        default="120/minute",
+        description="Default rate limit for generic endpoints",
+    )
+    rate_limit_auth_login: str = Field(
+        default="10/minute",
+        description="Strict rate limit for login attempts (brute-force defense)",
+    )
+    rate_limit_auth_register: str = Field(
+        default="5/minute",
+        description="Strict rate limit for account/leader registration",
+    )
+
     # ── CORS ──────────────────────────────────────────────
     cors_origins: str = Field(
-        default="*,http://localhost:5173,http://localhost:3000,https://green-synth.vercel.app",
+        default="http://localhost:5173,http://localhost:3000,https://green-synth.vercel.app",
         description="Comma-separated list of allowed CORS origins",
     )
 
     @property
     def cors_origins_list(self) -> list[str]:
         """Return CORS origins as a list."""
-        return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
+        return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip() and origin.strip() != "*"]
 
     # ── Group & Invitation ────────────────────────────────
     max_group_members: int = Field(

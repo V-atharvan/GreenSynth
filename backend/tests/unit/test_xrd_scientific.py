@@ -102,3 +102,32 @@ def test_peak_detection_and_fwhm() -> None:
     assert abs(p.intensity - 550.0) < 5.0
     assert p.fwhm is not None
     assert abs(p.fwhm - 0.5) < 0.05
+
+
+def test_scherrer_instrumental_broadening_correction() -> None:
+    """Verify that instrumental broadening subtraction yields a larger corrected crystallite size."""
+    # 2theta = 35.5 deg, observed FWHM = 0.5 deg
+    res_uncorrected = calculate_scherrer_crystallite_size(
+        peak_position_2theta_deg=35.5,
+        fwhm_deg=0.5,
+        instrumental_broadening_deg=0.0,
+    )
+    # With instrumental broadening = 0.2 deg
+    res_corrected = calculate_scherrer_crystallite_size(
+        peak_position_2theta_deg=35.5,
+        fwhm_deg=0.5,
+        instrumental_broadening_deg=0.2,
+    )
+
+    # Corrected beta is smaller (sqrt(0.5^2 - 0.2^2) = ~0.458 deg), so crystallite size D must be larger!
+    assert res_corrected.crystallite_size_nm > res_uncorrected.crystallite_size_nm
+    assert res_corrected.assumptions["instrumental_broadening_deg"] == 0.2
+    assert "Instrumental broadening subtracted" in str(res_corrected.assumptions["broadening_correction"])
+
+    # Error case: instrumental broadening >= observed FWHM raises ScherrerCalculationError
+    with pytest.raises(ScherrerCalculationError, match="cannot be greater than or equal"):
+        calculate_scherrer_crystallite_size(
+            peak_position_2theta_deg=35.5,
+            fwhm_deg=0.5,
+            instrumental_broadening_deg=0.5,
+        )

@@ -21,6 +21,10 @@ import app.models  # noqa: F401
 from app.database.base import Base
 from app.main import app
 from app.api.deps import get_db
+from app.core.config import get_settings
+
+# Disable rate limiting during tests so rapid automated test cases don't hit 429
+get_settings().rate_limit_enabled = False
 
 # ── In-memory SQLite for tests ─────────────────────────────
 # SQLite is used for testing speed and isolation.

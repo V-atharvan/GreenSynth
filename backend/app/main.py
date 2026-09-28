@@ -17,6 +17,8 @@ from fastapi.responses import JSONResponse
 
 from app.core.config import get_settings
 from app.core.logging import configure_logging
+from app.core.rate_limit import limiter, rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 settings = get_settings()
 
@@ -38,34 +40,10 @@ async def lifespan(app: FastAPI):
     logger.info("=== GreenSynth Analytics starting up ===")
     logger.info("Version: %s | Debug: %s", settings.app_version, settings.debug)
 
+    import app.models  # noqa: F401 - Ensure all models are registered on Base.metadata
     from app.database.base import Base
     from app.database.session import async_engine, AsyncSessionLocal
     from app.database.seed import seed_demo_project
-
-    # Drop empty legacy 'does' & 'proposed_experiments' tables if missing columns on SQLite so create_all builds clean schema
-    if settings.database_url.startswith("sqlite"):
-        async with AsyncSessionLocal() as session:
-            try:
-                from sqlalchemy import text
-                res = await session.execute(text("PRAGMA table_info(does)"))
-                cols = {row[1] for row in res.fetchall()}
-                if cols and ("research_question" not in cols or "version" not in cols):
-                    cnt_res = await session.execute(text("SELECT COUNT(*) FROM does"))
-                    if cnt_res.scalar() == 0:
-                        await session.execute(text("DROP TABLE does"))
-                        await session.commit()
-                        logger.info("Dropped empty legacy 'does' table for clean schema creation.")
-
-                res_pe = await session.execute(text("PRAGMA table_info(proposed_experiments)"))
-                cols_pe = {row[1] for row in res_pe.fetchall()}
-                if cols_pe and "is_center_point" not in cols_pe:
-                    cnt_pe = await session.execute(text("SELECT COUNT(*) FROM proposed_experiments"))
-                    if cnt_pe.scalar() == 0:
-                        await session.execute(text("DROP TABLE proposed_experiments"))
-                        await session.commit()
-                        logger.info("Dropped empty legacy 'proposed_experiments' table for clean schema creation.")
-            except Exception as exc:
-                logger.warning("SQLite schema check warning: %s", exc)
 
     # Ensure tables exist
     async with async_engine.begin() as conn:
@@ -103,18 +81,23 @@ app = FastAPI(
 )
 
 
+# Attach rate limiter to application state
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
+
+
 # ── CORS Middleware ────────────────────────────────────────
-# Uses explicit origins from config, plus allow_origin_regex to match all Vercel deployments and localhost ports
+# Uses explicit origins from config, plus precise regex to match project Vercel deployments and localhost ports
 _allowed_origins = [o for o in settings.cors_origins_list if o != "*"]
 if not _allowed_origins:
-    _allowed_origins = ["http://localhost:5173", "http://localhost:3000", "https://green-synth.vercel.app"]
+    _allowed_origins = ["https://green-synth.vercel.app", "http://localhost:5173", "http://localhost:3000"]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_allowed_origins,
-    allow_origin_regex=r"https://.*\.vercel\.app|http://localhost:\d+",
+    allow_origin_regex=r"^https://green-synth(-[a-zA-Z0-9_-]+)?\.vercel\.app$|^http://localhost:\d+$",
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 

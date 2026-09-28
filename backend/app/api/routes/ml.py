@@ -11,10 +11,11 @@ import json
 import uuid
 from typing import Sequence
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Response, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.database.session import AsyncSessionLocal
 from app.api.deps import (
     get_authorized_project_ids,
     get_current_project,
@@ -139,6 +140,46 @@ async def list_dataset_records(
 
 
 # ── TRAINING ENDPOINTS ────────────────────────────────────────
+
+async def _execute_async_training(payload: MLTrainingRunCreateInput) -> None:
+    """Background task worker for non-blocking ML model training."""
+    async with AsyncSessionLocal() as session:
+        try:
+            service = MLTrainingService(session)
+            await service.run_training(payload)
+            await session.commit()
+        except Exception as exc:
+            import logging
+            logging.getLogger(__name__).error("Asynchronous ML training failed: %s", exc, exc_info=True)
+            await session.rollback()
+
+
+@router.post(
+    "/training-runs/async",
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="Trigger asynchronous ML training run in background",
+    description="Dispatches training to a background task to prevent 504 Gateway Timeouts on cloud platforms.",
+)
+async def train_models_async(
+    payload: MLTrainingRunCreateInput,
+    background_tasks: BackgroundTasks,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, str]:
+    """Dispatches model training execution to an asynchronous background worker."""
+    dataset = await MLDatasetService(db).get_dataset(payload.dataset_id)
+    if not current_user.is_admin:
+        auth_ids = await get_authorized_project_ids(current_user, db)
+        if dataset.project_id not in auth_ids:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Dataset not found.")
+
+    background_tasks.add_task(_execute_async_training, payload)
+    return {
+        "status": "QUEUED",
+        "message": "Model training run dispatched to background worker. Monitor completion via /training-runs.",
+        "dataset_id": str(payload.dataset_id),
+    }
+
 
 @router.post(
     "/training-runs",

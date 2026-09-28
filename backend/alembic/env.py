@@ -32,6 +32,7 @@ if config.config_file_name is not None:
 # Importing base.py also imports all models via its __init__ block,
 # so Alembic's autogenerate can see all table definitions.
 from app.database.base import Base  # noqa: E402
+import app.models  # noqa: F401, E402 - Register all ORM models on Base.metadata
 from app.core.config import get_settings  # noqa: E402
 
 target_metadata = Base.metadata

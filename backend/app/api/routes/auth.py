@@ -9,10 +9,14 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db, require_admin
+from app.core.config import get_settings
+from app.core.rate_limit import limiter
+
+settings = get_settings()
 from app.models.user import User
 from app.schemas.auth import (
     AcceptInvitationRequest,
@@ -46,7 +50,9 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
         "with the selected Project, creates their leader membership, and returns a JWT access token."
     ),
 )
+@limiter.limit(settings.rate_limit_auth_register)
 async def register_leader(
+    request: Request,
     payload: LeaderRegisterRequest,
     db: AsyncSession = Depends(get_db),
 ) -> APIResponse[TokenResponse]:
@@ -66,7 +72,9 @@ async def register_leader(
     summary="User Login",
     description="Authenticates an existing user via email and password, returning a signed JWT access token.",
 )
+@limiter.limit(settings.rate_limit_auth_login)
 async def login(
+    request: Request,
     payload: LoginRequest,
     db: AsyncSession = Depends(get_db),
 ) -> APIResponse[TokenResponse]:
@@ -89,7 +97,9 @@ async def login(
         "activates the account, joins the research group, and returns a JWT access token."
     ),
 )
+@limiter.limit(settings.rate_limit_auth_register)
 async def accept_invitation(
+    request: Request,
     payload: AcceptInvitationRequest,
     db: AsyncSession = Depends(get_db),
 ) -> APIResponse[TokenResponse]:
@@ -129,7 +139,9 @@ async def validate_invitation(
     summary="Accept Member Invitation and Set Password",
     description="Validates onboarding token, creates student account, joins group, and returns JWT.",
 )
+@limiter.limit(settings.rate_limit_auth_register)
 async def accept_invitation_v2(
+    request: Request,
     payload: AcceptInvitationPayload,
     db: AsyncSession = Depends(get_db),
 ) -> APIResponse[TokenResponse]:
@@ -214,7 +226,9 @@ async def update_me(
     summary="Change User Password",
     description="Verifies current password and updates to a new cryptographically hashed password.",
 )
+@limiter.limit("5/minute")
 async def change_password(
+    request: Request,
     payload: ChangePasswordRequest,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),

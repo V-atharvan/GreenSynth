@@ -16,7 +16,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import TokenDecodeError, decode_access_token
-from app.database.session import AsyncSessionLocal
+from app.database.session import AsyncSessionLocal, get_db
 from app.models.group_membership import GroupMembership, MembershipStatus
 from app.models.project import Project, ProjectStatus
 from app.models.research_group import GroupStatus, ResearchGroup
@@ -25,23 +25,8 @@ from app.models.user import User, UserRole
 # Optional bearer scheme to allow customized error messages on missing headers
 bearer_scheme = HTTPBearer(auto_error=False)
 
-
-async def get_db() -> AsyncGenerator[AsyncSession, None]:
-    """
-    FastAPI dependency: yields an async database session.
-
-    The session is committed on success, rolled back on any exception,
-    and always closed after the request.
-    """
-    async with AsyncSessionLocal() as session:
-        try:
-            yield session
-            await session.commit()
-        except Exception:
-            await session.rollback()
-            raise
-        finally:
-            await session.close()
+# Re-export get_db from app.database.session as the single canonical source
+__all__ = ["get_db"]
 
 
 async def get_current_user(

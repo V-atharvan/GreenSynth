@@ -25,6 +25,7 @@ RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
     jinja2 \
     "python-jose[cryptography]" \
     "passlib[bcrypt]" \
+    slowapi \
     numpy \
     pandas \
     scipy \

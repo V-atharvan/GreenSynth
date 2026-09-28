@@ -12,6 +12,7 @@ IMPORTANT:
 from __future__ import annotations
 
 import logging
+import os
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -33,8 +34,8 @@ from app.models.user import User, UserRole
 
 logger = logging.getLogger(__name__)
 
-ADMIN_EMAIL = "v.atharvan@gmail.com"
-ADMIN_DEFAULT_PASSWORD = "aaaaaaaa"
+ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "v.atharvan@gmail.com")
+ADMIN_DEFAULT_PASSWORD = os.getenv("ADMIN_INITIAL_PASSWORD", "GreenSynth#Admin2026!Secure")
 
 ALL_PROJECT_SPECS = [
     {

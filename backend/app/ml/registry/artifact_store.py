@@ -59,7 +59,10 @@ class ModelArtifactStore:
     def load_artifact(self, artifact_path: str, expected_hash: str | None = None) -> dict[str, Any]:
         p = Path(artifact_path)
         if not p.exists():
-            raise FileNotFoundError(f"Model artifact path does not exist: {artifact_path}")
+            if (Path("..") / p).exists():
+                p = Path("..") / p
+            else:
+                raise FileNotFoundError(f"Model artifact path does not exist: {artifact_path}")
         if expected_hash:
             curr_hash = self.compute_checksum(str(p))
             if curr_hash != expected_hash:

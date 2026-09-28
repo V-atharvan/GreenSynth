@@ -37,6 +37,48 @@ from app.reporting.schemas import (
 )
 
 
+def _load_raw_csv_columns(
+    storage_path: str | None, original_filename: str | None, technique_dir: str
+) -> tuple[list[float], list[float]]:
+    """Helper to locate and extract first two numerical columns from an experimental CSV file."""
+    if not original_filename:
+        return [], []
+    import csv
+    from pathlib import Path
+
+    candidates: list[Path] = []
+    if storage_path:
+        candidates.append(Path(storage_path))
+        candidates.append(Path("..") / storage_path)
+    candidates.extend([
+        Path("data") / "raw" / original_filename,
+        Path("..") / "data" / "raw" / original_filename,
+        Path("synthetic_data") / "p7" / "raw" / technique_dir / original_filename,
+        Path("..") / "synthetic_data" / "p7" / "raw" / technique_dir / original_filename,
+    ])
+
+    for cand in candidates:
+        if cand.exists() and cand.is_file():
+            col1: list[float] = []
+            col2: list[float] = []
+            try:
+                with open(cand, mode="r", encoding="utf-8") as f:
+                    reader = csv.reader(f)
+                    next(reader, None)  # header
+                    for row in reader:
+                        if len(row) >= 2:
+                            try:
+                                col1.append(float(row[0]))
+                                col2.append(float(row[1]))
+                            except (ValueError, TypeError):
+                                continue
+                if col1 and col2:
+                    return col1, col2
+            except Exception:
+                continue
+    return [], []
+
+
 class ExperimentReportDataBuilder:
     """
     Data collection service assembling DTO for PDF report generation.
@@ -166,7 +208,7 @@ class ExperimentReportDataBuilder:
                             xrd_section.available = True
                             xrd_section.raw_filename = rf.original_filename
                             xrd_section.analysis_version = getattr(ar, "software_version", None) or "v1.0"
-                            xrd_section.processing_parameters = getattr(ar, "parameters", None) or {}
+                            xrd_section.processing_parameters = (getattr(ar, "parameters", None) or {}) if ar else {}
 
                             # Fetch peaks
                             peak_stmt = select(XRDPeak).where(XRDPeak.analysis_run_id == ar.id)
@@ -186,29 +228,72 @@ class ExperimentReportDataBuilder:
                             # Extract crystallite size
                             for p in calc_props:
                                 if "crystallite" in p["property_name"].lower():
-                                    xrd_section.crystallite_size_nm = float(p["value"])
+                                    try:
+                                        xrd_section.crystallite_size_nm = float(p["value"])
+                                    except (ValueError, TypeError):
+                                        pass
+
+                            # Extract real raw XRD data arrays
+                            tt_arr, inten_arr = _load_raw_csv_columns(rf.storage_path, rf.original_filename, "xrd")
+                            xrd_section.two_theta = tt_arr
+                            xrd_section.intensity = inten_arr
 
                         elif technique == "UV_VIS" and not uvvis_section.available:
                             uvvis_section.available = True
                             uvvis_section.raw_filename = rf.original_filename
                             uvvis_section.analysis_version = getattr(ar, "software_version", None) or "v1.0"
                             for p in calc_props:
-                                if "band_gap" in p["property_name"].lower():
-                                    uvvis_section.optical_band_gap_ev = float(p["value"])
-                            for p in calc_props:
-                                if "band_gap" in p["property_name"].lower():
-                                    uvvis_section.optical_band_gap_ev = float(p["value"])
+                                p_name = p["property_name"].lower().replace("_", " ")
+                                if "band gap" in p_name or "bandgap" in p_name or "eg" in p_name:
+                                    try:
+                                        uvvis_section.optical_band_gap_ev = float(p["value"])
+                                    except (ValueError, TypeError):
+                                        pass
+
+                            # Extract real UV-Vis raw spectra & compute Tauc curve
+                            wl_arr, abs_arr = _load_raw_csv_columns(rf.storage_path, rf.original_filename, "uvvis")
+                            if wl_arr and abs_arr:
+                                import numpy as np
+                                wl = np.array(wl_arr)
+                                ab = np.array(abs_arr)
+                                valid = wl > 0
+                                wl = wl[valid]
+                                ab = ab[valid]
+                                if len(wl) > 0:
+                                    hnu = 1239.84193 / wl
+                                    s_idx = np.argsort(hnu)
+                                    hnu = hnu[s_idx]
+                                    ab = ab[s_idx]
+                                    tauc = (ab * hnu) ** 2
+                                    uvvis_section.photon_energies = hnu.tolist()
+                                    uvvis_section.tauc_values = tauc.tolist()
 
                         elif technique == "ELECTRICAL" and not electrical_section.available:
                             electrical_section.available = True
                             electrical_section.raw_filename = rf.original_filename
                             for p in calc_props:
-                                if "conductivity" in p["property_name"].lower():
-                                    electrical_section.conductivity_s_cm = float(p["value"])
-                                elif "resistivity" in p["property_name"].lower():
-                                    electrical_section.resistivity_ohm_cm = float(p["value"])
-                                elif "resistance" in p["property_name"].lower():
-                                    electrical_section.resistance_ohms = float(p["value"])
+                                p_name = p["property_name"].lower().replace("_", " ")
+                                if "conductivity" in p_name:
+                                    try:
+                                        electrical_section.conductivity_s_cm = float(p["value"])
+                                    except (ValueError, TypeError):
+                                        pass
+                                elif "resistivity" in p_name:
+                                    try:
+                                        electrical_section.resistivity_ohm_cm = float(p["value"])
+                                    except (ValueError, TypeError):
+                                        pass
+                                elif "resistance" in p_name:
+                                    try:
+                                        electrical_section.resistance_ohms = float(p["value"])
+                                    except (ValueError, TypeError):
+                                        pass
+
+                            # Extract real I-V measurement data
+                            v_arr, i_arr = _load_raw_csv_columns(rf.storage_path, rf.original_filename, "electrical")
+                            if v_arr and i_arr:
+                                electrical_section.voltages = v_arr
+                                electrical_section.currents_ma = [curr * 1000.0 for curr in i_arr]
 
                     # Build summary row
                     prop_str = ", ".join(f"{p['property_name']}: {p['value']} {p['unit'] or ''}" for p in calc_props) if calc_props else "Pending"
@@ -252,28 +337,84 @@ class ExperimentReportDataBuilder:
             stat_section.sample_size_n = getattr(stat_obj, "sample_size", 0)
             stat_section.metrics = getattr(stat_obj, "results_json", {}) or {}
 
-        # 6. Fetch ML Prediction
-        from app.models.ml import MLDataset
+        # 6. Fetch ML Prediction / Evaluate for this experiment
+        from app.models.ml import MLDataset, MLDatasetRecord, MLModel, MLPrediction
+        from app.ml.services.prediction_service import MLPredictionService
+        from app.ml.schemas import MLPredictInput
+        from sqlalchemy import case
+
         ml_section = MLPredictionReportSectionSchema()
-        pred_stmt = (
-            select(MLPrediction)
-            .join(MLDataset, MLPrediction.dataset_id == MLDataset.id)
-            .where(MLDataset.project_id == proj.id)
-            .options(selectinload(MLPrediction.model))
+
+        # Query best model trained for this project
+        model_stmt = (
+            select(MLModel)
+            .join(MLDataset, MLModel.dataset_id == MLDataset.id)
+            .where(
+                MLDataset.project_id == proj.id,
+                MLModel.status.in_(["VALIDATED", "APPROVED", "TRAINED", "ACTIVE", "PRODUCTION_CANDIDATE"])
+            )
+            .order_by(
+                case(
+                    (MLModel.model_type == "RANDOM_FOREST", 1),
+                    (MLModel.model_type == "GRADIENT_BOOSTING", 2),
+                    (MLModel.model_type == "RIDGE", 3),
+                    (MLModel.model_type == "LINEAR_REGRESSION", 4),
+                    else_=5,
+                )
+            )
         )
-        pred_res = await db.execute(pred_stmt)
-        pred_obj = pred_res.scalars().first()
-        if pred_obj:
-            ml_section.available = True
-            ml_section.predicted_value = pred_obj.predicted_value
-            ml_section.target_property = pred_obj.predicted_property
-            ml_section.lower_bound = pred_obj.uncertainty_lower
-            ml_section.upper_bound = pred_obj.uncertainty_upper
-            ml_section.domain_status = pred_obj.applicability_status or "IN_DOMAIN"
-            if pred_obj.model:
-                ml_section.model_name = pred_obj.model.name
-                ml_section.model_version = pred_obj.model.version
-                ml_section.r2_score = pred_obj.model.metrics.get("r2") if isinstance(pred_obj.model.metrics, dict) else None
+        model_res = await db.execute(model_stmt)
+        active_model = model_res.scalars().first()
+
+        if active_model:
+            # Query dataset record with input features for this experiment
+            rec_stmt = select(MLDatasetRecord).where(MLDatasetRecord.experiment_id == exp.id)
+            rec_res = await db.execute(rec_stmt)
+            exp_rec = rec_res.scalars().first()
+
+            input_features: dict[str, float] = {}
+            if exp_rec and isinstance(exp_rec.feature_values, dict):
+                for k, v in exp_rec.feature_values.items():
+                    try:
+                        input_features[k] = float(v)
+                    except (ValueError, TypeError):
+                        pass
+            elif synthesis_params:
+                for p in synthesis_params:
+                    code = p.get("parameter_code")
+                    val = p.get("value")
+                    if code and val is not None:
+                        try:
+                            input_features[code] = float(val)
+                        except (ValueError, TypeError):
+                            pass
+
+            if input_features and all(fn in input_features for fn in active_model.feature_names):
+                try:
+                    pred_service = MLPredictionService(db)
+                    pred_input = MLPredictInput(input_parameters={fn: input_features[fn] for fn in active_model.feature_names})
+                    pred_result = await pred_service.predict(active_model.id, pred_input)
+
+                    ml_section.available = True
+                    ml_section.model_name = active_model.name
+                    ml_section.model_version = active_model.version
+                    if isinstance(active_model.metrics, dict):
+                        ml_section.r2_score = active_model.metrics.get("r2") or active_model.metrics.get("test_r2") or active_model.metrics.get("cv_r2")
+                    ml_section.target_property = active_model.target_property
+                    ml_section.predicted_value = round(pred_result.predicted_value, 4)
+                    ml_section.lower_bound = round(pred_result.uncertainty_lower, 4) if pred_result.uncertainty_lower is not None else None
+                    ml_section.upper_bound = round(pred_result.uncertainty_upper, 4) if pred_result.uncertainty_upper is not None else None
+                    ml_section.domain_status = pred_result.applicability_status or "IN_DOMAIN"
+
+                    # Closed-loop validation: compare with actual measured conductivity if available
+                    actual_cond = electrical_section.conductivity_s_cm
+                    if actual_cond is not None and actual_cond > 0:
+                        ml_section.actual_value = round(actual_cond, 5)
+                        residual = round(actual_cond - pred_result.predicted_value, 5)
+                        ml_section.residual_error = residual
+                        ml_section.relative_error_pct = round(abs(residual) / actual_cond * 100, 2)
+                except Exception:
+                    pass
 
         # Assemble DTO
         return ExperimentReportData(

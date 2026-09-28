@@ -272,7 +272,11 @@ class PDFReportRenderer:
                 story.append(Paragraph(info, body_style))
 
             story.append(Spacer(1, 6))
-            xrd_plot_bytes = ReportChartGenerator.generate_xrd_plot(peaks=data.xrd.peaks)
+            xrd_plot_bytes = ReportChartGenerator.generate_xrd_plot(
+                two_theta=data.xrd.two_theta,
+                intensity=data.xrd.intensity,
+                peaks=data.xrd.peaks,
+            )
             xrd_img = Image(io.BytesIO(xrd_plot_bytes), width=450, height=220)
             story.append(xrd_img)
         else:
@@ -283,16 +287,21 @@ class PDFReportRenderer:
         # ── 6. UV-VIS SPECTROSCOPY SECTION ────────────────────────
         story.append(Paragraph("5. UV-Vis Spectroscopy & Band Gap Analysis", h1_style))
         if data.uvvis.available:
+            eg_display = f"{data.uvvis.optical_band_gap_ev:.3f} eV" if data.uvvis.optical_band_gap_ev is not None else "N/A"
             uv_info = [
                 f"<b>Raw File:</b> {data.uvvis.raw_filename} | <b>Transition Model:</b> {data.uvvis.transition_type}",
-                f"<b>Optical Band Gap (Eg):</b> <b>{data.uvvis.optical_band_gap_ev or 'N/A'} eV</b> [CALCULATED DATA]",
+                f"<b>Optical Band Gap (Eg):</b> <b>{eg_display}</b> [CALCULATED DATA]",
                 f"<b>Extrapolation Equation:</b> {data.uvvis.tauc_equation}",
             ]
             for info in uv_info:
                 story.append(Paragraph(info, body_style))
 
             story.append(Spacer(1, 6))
-            uv_plot_bytes = ReportChartGenerator.generate_uvvis_tauc_plot(data.uvvis.optical_band_gap_ev)
+            uv_plot_bytes = ReportChartGenerator.generate_uvvis_tauc_plot(
+                band_gap_ev=data.uvvis.optical_band_gap_ev,
+                photon_energies=data.uvvis.photon_energies,
+                tauc_values=data.uvvis.tauc_values,
+            )
             uv_img = Image(io.BytesIO(uv_plot_bytes), width=450, height=220)
             story.append(uv_img)
         else:
@@ -312,7 +321,11 @@ class PDFReportRenderer:
                 story.append(Paragraph(info, body_style))
 
             story.append(Spacer(1, 6))
-            elec_plot_bytes = ReportChartGenerator.generate_electrical_iv_plot(data.electrical.resistance_ohms)
+            elec_plot_bytes = ReportChartGenerator.generate_electrical_iv_plot(
+                resistance_ohms=data.electrical.resistance_ohms,
+                voltages=data.electrical.voltages,
+                currents_ma=data.electrical.currents_ma,
+            )
             elec_img = Image(io.BytesIO(elec_plot_bytes), width=450, height=220)
             story.append(elec_img)
         else:
@@ -323,12 +336,19 @@ class PDFReportRenderer:
         # ── 8. ML PREDICTION & VALIDATION SECTION ─────────────────
         story.append(Paragraph("7. Machine Learning Prediction & Closed-Loop Validation", h1_style))
         if data.ml_prediction.available:
+            r2_val = f"{data.ml_prediction.r2_score:.4f}" if data.ml_prediction.r2_score is not None else "N/A"
             ml_text = [
-                f"<b>Trained Model:</b> {data.ml_prediction.model_name} (v{data.ml_prediction.model_version}) | <b>Cross-Validation R²:</b> {data.ml_prediction.r2_score or 'N/A'}",
+                f"<b>Trained Model:</b> {data.ml_prediction.model_name} (v{data.ml_prediction.model_version}) | <b>Cross-Validation R²:</b> {r2_val}",
                 f"<b>Predicted Property:</b> {data.ml_prediction.target_property} = <b>{data.ml_prediction.predicted_value}</b> [PREDICTED DATA]",
                 f"<b>95% Confidence Interval:</b> [{data.ml_prediction.lower_bound}, {data.ml_prediction.upper_bound}] | <b>Domain:</b> {data.ml_prediction.domain_status}",
-                f"<i>Note: {data.ml_prediction.disclaimer}</i>",
             ]
+            if data.ml_prediction.actual_value is not None:
+                res_str = f"{data.ml_prediction.residual_error:+.4f}" if data.ml_prediction.residual_error is not None else "0.0"
+                err_str = f"{data.ml_prediction.relative_error_pct:.2f}%" if data.ml_prediction.relative_error_pct is not None else "—"
+                ml_text.append(
+                    f"<b>Closed-Loop Validation:</b> Actual = <b>{data.ml_prediction.actual_value}</b> vs Predicted = <b>{data.ml_prediction.predicted_value}</b> | Residual: {res_str} | Relative Error: <b>{err_str}</b>"
+                )
+            ml_text.append(f"<i>Note: {data.ml_prediction.disclaimer}</i>")
             for t in ml_text:
                 story.append(Paragraph(t, body_style))
         else:

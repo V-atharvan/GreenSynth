@@ -44,6 +44,8 @@ class XRDReportSectionSchema(BaseModel):
     processing_parameters: dict[str, Any] = Field(default_factory=dict)
     peaks: list[dict[str, Any]] = Field(default_factory=list)
     crystallite_size_nm: float | None = None
+    two_theta: list[float] = Field(default_factory=list)
+    intensity: list[float] = Field(default_factory=list)
     formula_used: str = "Scherrer Equation: D = (K * λ) / (β * cos θ)"
     disclaimer: str = "Peak positions and FWHM reported from software analysis. Phase identification requires reference comparison."
     plot_bytes: bytes | None = None
@@ -65,6 +67,8 @@ class UVVisReportSectionSchema(BaseModel):
     analysis_version: str | None = None
     transition_type: str = "Direct Allowed (γ = 0.5)"
     optical_band_gap_ev: float | None = None
+    photon_energies: list[float] = Field(default_factory=list)
+    tauc_values: list[float] = Field(default_factory=list)
     tauc_equation: str = "(α * hν)^(1/γ) vs hν"
     plot_bytes: bytes | None = None
 
@@ -79,6 +83,8 @@ class ElectricalReportSectionSchema(BaseModel):
     resistance_ohms: float | None = None
     resistivity_ohm_cm: float | None = None
     conductivity_s_cm: float | None = None
+    voltages: list[float] = Field(default_factory=list)
+    currents_ma: list[float] = Field(default_factory=list)
     r2_score: float | None = None
     plot_bytes: bytes | None = None
 
@@ -98,6 +104,9 @@ class MLPredictionReportSectionSchema(BaseModel):
     r2_score: float | None = None
     target_property: str | None = None
     predicted_value: float | None = None
+    actual_value: float | None = None
+    residual_error: float | None = None
+    relative_error_pct: float | None = None
     lower_bound: float | None = None
     upper_bound: float | None = None
     domain_status: str = "IN_DOMAIN"

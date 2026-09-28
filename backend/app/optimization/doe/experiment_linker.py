@@ -39,6 +39,14 @@ class DOEExperimentLinker:
         if not pe:
             raise ValueError(f"ProposedExperiment {proposed_id} not found.")
 
+        if pe.status == "PLANNED" and pe.converted_experiment_id:
+            res_existing_exp = await self.db.execute(
+                select(Experiment).where(Experiment.id == pe.converted_experiment_id)
+            )
+            existing_exp = res_existing_exp.scalar_one_or_none()
+            if existing_exp:
+                return existing_exp
+
         if pe.status not in ("PROPOSED", "APPROVED"):
             raise ValueError(f"ProposedExperiment {proposed_id} is in invalid status '{pe.status}' for conversion.")
 
@@ -47,8 +55,34 @@ class DOEExperimentLinker:
         doe_obj = res_doe.scalar_one_or_none()
         project_id = doe_obj.project_id if doe_obj else uuid.uuid4()
 
-        # Create PLANNED experiment
-        exp_code = f"EXP-DOE-{pe.run_order:03d}"
+        # Determine a guaranteed unique experiment_code
+        base_code = f"EXP-DOE-{pe.run_order:03d}"
+        res_exist = await self.db.execute(
+            select(Experiment.id).where(Experiment.experiment_code == base_code)
+        )
+        if not res_exist.scalar_one_or_none():
+            exp_code = base_code
+        else:
+            # Suffix with study short hash and run order to ensure global uniqueness across multiple DOE studies
+            study_short = str(pe.doe_id)[:4].upper()
+            cand_code = f"EXP-DOE-{study_short}-{pe.run_order:03d}"
+            res_cand = await self.db.execute(
+                select(Experiment.id).where(Experiment.experiment_code == cand_code)
+            )
+            if not res_cand.scalar_one_or_none():
+                exp_code = cand_code
+            else:
+                seq = 2
+                while True:
+                    seq_code = f"EXP-DOE-{study_short}-{pe.run_order:03d}-V{seq}"
+                    res_seq = await self.db.execute(
+                        select(Experiment.id).where(Experiment.experiment_code == seq_code)
+                    )
+                    if not res_seq.scalar_one_or_none():
+                        exp_code = seq_code
+                        break
+                    seq += 1
+
         exp = Experiment(
             id=uuid.uuid4(),
             project_id=project_id,

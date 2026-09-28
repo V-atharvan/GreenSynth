@@ -3,12 +3,15 @@
  */
 
 import React, { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { TrendingUp, AlertTriangle } from 'lucide-react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { TrendingUp, AlertTriangle, Sparkles, RotateCcw } from 'lucide-react'
 import { mlService, MLModel, MLPrediction } from '@/services/mlService'
 
 export default function MLPredictionPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const preselectedModelId = searchParams.get('model')
+
   const [models, setModels] = useState<MLModel[]>([])
   const [selectedModelId, setSelectedModelId] = useState<string>('')
   const [selectedModel, setSelectedModel] = useState<MLModel | null>(null)
@@ -18,28 +21,55 @@ export default function MLPredictionPage() {
   const [prediction, setPrediction] = useState<MLPrediction | null>(null)
   const [error, setError] = useState<string | null>(null)
 
+  const getSensibleDefault = (featureName: string, ranges?: any): number => {
+    if (ranges && ranges[featureName]?.mean != null) {
+      return Number(ranges[featureName].mean.toFixed(2))
+    }
+    const fn = featureName.toLowerCase()
+    if (fn.includes('precursor_concentration')) return 0.25
+    if (fn.includes('precursor_solution_volume')) return 50.0
+    if (fn.includes('extract_concentration')) return 10.0
+    if (fn.includes('extract_volume')) return 20.0
+    if (fn.includes('ethanol_volume')) return 30.0
+    if (fn.includes('substrate_temperature')) return 350.0
+    if (fn.includes('spray_rate')) return 2.5
+    if (fn.includes('spray_duration')) return 15.0
+    if (fn.includes('distance')) return 15.0
+    if (fn.includes('pressure')) return 150.0
+    if (fn.includes('cycles')) return 5.0
+    if (fn.includes('ambient_temperature')) return 25.0
+    if (fn.includes('humidity')) return 45.0
+    return 1.0
+  }
+
+  const initInputFields = (model: MLModel) => {
+    const defaults: Record<string, number> = {}
+    const ranges = (model as any).feature_ranges_json
+    model.feature_names.forEach((fn) => {
+      defaults[fn] = getSensibleDefault(fn, ranges)
+    })
+    setInputFields(defaults)
+  }
+
   useEffect(() => {
     async function loadApprovedModels() {
       try {
         const mList = await mlService.getModels()
         setModels(mList)
         if (mList.length > 0) {
-          setSelectedModelId(mList[0].id)
-          setSelectedModel(mList[0])
-          initInputFields(mList[0])
+          const target = preselectedModelId
+            ? mList.find((m) => m.id === preselectedModelId) || mList[0]
+            : mList.find((m) => m.model_type === 'RANDOM_FOREST' || m.status === 'PRODUCTION_CANDIDATE') || mList[0]
+          setSelectedModelId(target.id)
+          setSelectedModel(target)
+          initInputFields(target)
         }
       } catch (err) {
         console.error('Failed to load models:', err)
       }
     }
     loadApprovedModels()
-  }, [])
-
-  const initInputFields = (model: MLModel) => {
-    const defaults: Record<string, number> = {}
-    model.feature_names.forEach((fn) => { defaults[fn] = 300.0 })
-    setInputFields(defaults)
-  }
+  }, [preselectedModelId])
 
   const handleModelChange = (modelId: string) => {
     setSelectedModelId(modelId)
@@ -127,9 +157,20 @@ export default function MLPredictionPage() {
 
             {selectedModel && (
               <>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 12, borderBottom: '1px solid var(--color-border-light)' }}>
-                  <div style={{ fontWeight: 600, fontSize: '0.9375rem', color: 'var(--color-text)' }}>
-                    Synthesis Parameter Inputs
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 12, borderBottom: '1px solid var(--color-border-light)', flexWrap: 'wrap', gap: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ fontWeight: 600, fontSize: '0.9375rem', color: 'var(--color-text)' }}>
+                      Synthesis Parameter Inputs
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => selectedModel && initInputFields(selectedModel)}
+                      className="gs-btn gs-btn-secondary"
+                      style={{ padding: '3px 8px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: 4 }}
+                      title="Reset to benchmark synthesis values"
+                    >
+                      <RotateCcw size={12} /> Reset to Typical Synthesis Conditions
+                    </button>
                   </div>
                   <span className="gs-chip teal" style={{ background: '#d1fae5', color: '#065f46' }}>
                     Target: {selectedModel.target_property} ({selectedModel.target_unit})
@@ -137,19 +178,33 @@ export default function MLPredictionPage() {
                 </div>
 
                 <div className="gs-form-row">
-                  {selectedModel.feature_names.map((fname) => (
-                    <div key={fname} className="gs-field">
-                      <label className="gs-label">{fname.replace(/_/g, ' ')}</label>
-                      <input
-                        type="number"
-                        step="any"
-                        value={inputFields[fname] ?? 0}
-                        onChange={(e) => setInputFields({ ...inputFields, [fname]: parseFloat(e.target.value) || 0 })}
-                        required
-                        className="gs-input"
-                      />
-                    </div>
-                  ))}
+                  {selectedModel.feature_names.map((fname) => {
+                    const range = (selectedModel as any).feature_ranges_json?.[fname]
+                    const spec = selectedModel.feature_specs?.find((s: any) => s.feature_name === fname)
+                    return (
+                      <div key={fname} className="gs-field">
+                        <label className="gs-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span>
+                            {fname.replace(/_/g, ' ')}
+                            {spec?.unit ? ` (${spec.unit})` : ''}
+                          </span>
+                          {range && (
+                            <span style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 400 }}>
+                              [{range.min} — {range.max}]
+                            </span>
+                          )}
+                        </label>
+                        <input
+                          type="number"
+                          step="any"
+                          value={inputFields[fname] ?? 0}
+                          onChange={(e) => setInputFields({ ...inputFields, [fname]: parseFloat(e.target.value) || 0 })}
+                          required
+                          className="gs-input"
+                        />
+                      </div>
+                    )
+                  })}
                 </div>
 
                 <div className="gs-field">

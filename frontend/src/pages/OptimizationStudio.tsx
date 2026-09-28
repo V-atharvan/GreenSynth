@@ -31,6 +31,7 @@ import {
   Info,
   Check,
   X,
+  RefreshCw,
   FolderKanban,
 } from 'lucide-react'
 
@@ -57,34 +58,71 @@ export default function OptimizationStudio() {
   const [selectedCandidates, setSelectedCandidates] = useState<string[]>([])
   const [reportModal, setReportModal] = useState<OptimizationReport | null>(null)
 
-  const [loading, setLoading] = useState<boolean>(false)
+  const [pageLoading, setPageLoading] = useState<boolean>(true)
+  const [generatingCandidates, setGeneratingCandidates] = useState<boolean>(false)
+  const [creatingObjective, setCreatingObjective] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
 
-  useEffect(() => {
+  const loadProjectData = async () => {
     if (!projectId) return
-    async function loadProjectData() {
-      setLoading(true)
-      try {
-        const [objs, cons, rList, mList] = await Promise.all([
-          optimizationService.listObjectives(projectId!),
-          optimizationService.listConstraints(projectId!),
-          optimizationService.listRuns(projectId!),
-          mlService.getModels(),
-        ])
-        setObjectives(objs)
-        setConstraints(cons)
-        setRuns(rList)
-        setModels(mList)
-        if (objs.length > 0 && objs[0].id) setSelectedObjectiveId(objs[0].id)
-        if (mList.length > 0 && mList[0].id) setSelectedModelId(mList[0].id)
-        if (rList.length > 0) setActiveRun(rList[0])
-      } catch (err: any) {
-        setError(err?.message || 'Failed to load optimization project data.')
-      } finally {
-        setLoading(false)
+    setPageLoading(true)
+    setError(null)
+    try {
+      const [objsRes, consRes, runsRes, modelsRes] = await Promise.allSettled([
+        optimizationService.listObjectives(projectId),
+        optimizationService.listConstraints(projectId),
+        optimizationService.listRuns(projectId),
+        mlService.getModels(undefined, undefined, projectId),
+      ])
+
+      const objs = objsRes.status === 'fulfilled' ? objsRes.value : []
+      const cons = consRes.status === 'fulfilled' ? consRes.value : []
+      const rList = runsRes.status === 'fulfilled' ? runsRes.value : []
+      let mList = modelsRes.status === 'fulfilled' ? modelsRes.value : []
+
+      // If projectId-scoped filter returned 0 models, fallback to all available models
+      if (mList.length === 0) {
+        try {
+          mList = await mlService.getModels()
+        } catch (e) {
+          console.warn('Fallback getModels failed:', e)
+        }
       }
+
+      setObjectives(objs)
+      setConstraints(cons)
+      setRuns(rList)
+      setModels(mList)
+
+      if (objs.length > 0 && objs[0].id) {
+        setSelectedObjectiveId((prev) => (prev && objs.some((o) => o.id === prev) ? prev : objs[0].id!))
+      }
+
+      if (mList.length > 0) {
+        setSelectedModelId((prev) => {
+          if (prev && mList.some((m) => m.id === prev)) return prev
+          // Prioritize ACTIVE, then VALIDATED, then PRODUCTION_CANDIDATE, then first
+          const preferred =
+            mList.find((m) => m.status === 'ACTIVE') ||
+            mList.find((m) => m.status === 'VALIDATED') ||
+            mList.find((m) => m.status === 'PRODUCTION_CANDIDATE') ||
+            mList[0]
+          return preferred?.id || mList[0].id
+        })
+      }
+
+      if (rList.length > 0) {
+        setActiveRun((prev) => (prev && rList.some((r) => r.id === prev.id) ? prev : rList[0]))
+      }
+    } catch (err: any) {
+      setError(err?.message || 'Failed to load optimization project data.')
+    } finally {
+      setPageLoading(false)
     }
+  }
+
+  useEffect(() => {
     loadProjectData()
   }, [projectId])
 
@@ -92,6 +130,7 @@ export default function OptimizationStudio() {
     if (!projectId) return
     setError(null)
     setSuccessMsg(null)
+    setCreatingObjective(true)
     try {
       const created = await optimizationService.createObjective({
         project_id: projectId,
@@ -106,6 +145,8 @@ export default function OptimizationStudio() {
       setSuccessMsg(`Created optimization objective '${created.name}'!`)
     } catch (err: any) {
       setError(err?.response?.data?.detail || 'Failed to create objective.')
+    } finally {
+      setCreatingObjective(false)
     }
   }
 
@@ -114,7 +155,7 @@ export default function OptimizationStudio() {
       setError('Please select an objective and model.')
       return
     }
-    setLoading(true)
+    setGeneratingCandidates(true)
     setError(null)
     setSuccessMsg(null)
 
@@ -134,7 +175,7 @@ export default function OptimizationStudio() {
     } catch (err: any) {
       setError(err?.response?.data?.detail || err?.message || 'Candidate generation failed.')
     } finally {
-      setLoading(false)
+      setGeneratingCandidates(false)
     }
   }
 
@@ -204,8 +245,8 @@ export default function OptimizationStudio() {
           </p>
         </div>
 
-        <div className="gs-header-actions">
-          <div className="gs-field">
+        <div className="gs-header-actions" style={{ display: 'flex', alignItems: 'flex-end', gap: 10 }}>
+          <div className="gs-field" style={{ margin: 0 }}>
             <label className="gs-label">Assigned Project</label>
             <div
               style={{
@@ -225,6 +266,16 @@ export default function OptimizationStudio() {
               <span>{projectCode ? `${projectCode} — ${projectName || projectCode}` : 'Loading...'}</span>
             </div>
           </div>
+          <button
+            onClick={loadProjectData}
+            disabled={pageLoading}
+            className="gs-btn gs-btn-outline"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 38 }}
+            title="Refresh optimization models, objectives, and runs"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${pageLoading ? 'animate-spin text-teal-600' : ''}`} />
+            <span>{pageLoading ? 'Refreshing…' : 'Refresh'}</span>
+          </button>
         </div>
       </div>
 
@@ -323,15 +374,28 @@ export default function OptimizationStudio() {
 
             <button
               onClick={handleCreateObjective}
+              disabled={creatingObjective || !projectId}
               className="gs-btn gs-btn-emerald"
-              style={{ width: 'fit-content' }}
+              style={{ width: 'fit-content', display: 'inline-flex', alignItems: 'center', gap: 6 }}
             >
-              + Create Objective
+              {creatingObjective ? (
+                <>
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  <span>Creating Objective…</span>
+                </>
+              ) : (
+                <span>+ Create Objective</span>
+              )}
             </button>
 
-            {objectives.length > 0 && (
+            {pageLoading ? (
+              <div style={{ padding: '14px', background: '#f8fafc', borderRadius: '6px', border: '1px solid #e2e8f0', color: '#64748b', fontSize: '13px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <RefreshCw className="w-4 h-4 animate-spin text-emerald-600" />
+                <span>Loading active objectives…</span>
+              </div>
+            ) : objectives.length > 0 ? (
               <div>
-                <div className="gs-label" style={{ marginBottom: 8 }}>Active Objectives List</div>
+                <div className="gs-label" style={{ marginBottom: 8 }}>Active Objectives List ({objectives.length})</div>
                 <div className="gs-table-wrapper">
                   <table className="gs-table">
                     <thead>
@@ -364,6 +428,10 @@ export default function OptimizationStudio() {
                   </table>
                 </div>
               </div>
+            ) : (
+              <div style={{ padding: '14px', background: '#f8fafc', borderRadius: '6px', border: '1px solid #e2e8f0', color: '#64748b', fontSize: '13px' }}>
+                No active objectives configured for this project yet. Choose your target property and direction above and click <strong>"+ Create Objective"</strong>.
+              </div>
             )}
           </div>
         </div>
@@ -383,21 +451,28 @@ export default function OptimizationStudio() {
                 value={selectedModelId}
                 onChange={(e) => setSelectedModelId(e.target.value)}
                 className="gs-input"
+                disabled={pageLoading || models.length === 0}
               >
-                {models.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.name} ({m.model_type}) — Target: {m.target_property} [{m.status}]
-                  </option>
-                ))}
+                {pageLoading ? (
+                  <option value="">Loading validated ML models…</option>
+                ) : models.length === 0 ? (
+                  <option value="">No validated ML models available</option>
+                ) : (
+                  models.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.name} ({m.model_type}) — Target: {m.target_property} [{m.status}]
+                    </option>
+                  ))
+                )}
               </select>
             </div>
 
             {selectedModel && (
               <div style={{ padding: '12px 14px', background: '#f8fafc', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8125rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8125rem' }}>
                   <span style={{ color: 'var(--color-text-secondary)' }}>Model Gate Check:</span>
                   <span className={`gs-chip ${isModelCritical ? 'critical' : 'stable'}`}>
-                    {isModelCritical ? 'BLOCKED (RETIRED)' : 'PASSED (APPROVED)'}
+                    {isModelCritical ? 'BLOCKED (RETIRED)' : `PASSED (${selectedModel.status})`}
                   </span>
                 </div>
               </div>
@@ -454,17 +529,37 @@ export default function OptimizationStudio() {
 
             <button
               onClick={handleRunCandidateGeneration}
-              disabled={loading || isModelCritical || !selectedObjectiveId || !selectedModelId}
+              disabled={generatingCandidates || pageLoading || isModelCritical || !selectedObjectiveId || !selectedModelId}
               className="gs-btn gs-btn-indigo"
               style={{ width: '100%', justifyContent: 'center', display: 'inline-flex', alignItems: 'center', gap: 6 }}
             >
-              <Zap className="w-4 h-4" />
-              {loading ? 'Generating Candidates…' : 'Run Candidate Generation'}
+              {generatingCandidates ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <span>Generating Candidates…</span>
+                </>
+              ) : (
+                <>
+                  <Zap className="w-4 h-4" />
+                  <span>Run Candidate Generation</span>
+                </>
+              )}
             </button>
           </div>
         </div>
 
       </div>
+
+      {/* Empty State when no candidates generated yet */}
+      {!activeRun && !pageLoading && (
+        <div className="gs-panel" style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--color-text-secondary)' }}>
+          <FlaskConical className="w-10 h-10 text-slate-300" style={{ margin: '0 auto 12px auto' }} />
+          <div style={{ fontWeight: 600, fontSize: '0.9375rem', color: 'var(--color-text)' }}>No Optimization Candidates Generated Yet</div>
+          <p style={{ fontSize: '0.8125rem', maxWidth: 480, margin: '6px auto 0 auto' }}>
+            Select a validated ML model and objective above, then click <strong>"Run Candidate Generation"</strong> to synthesize promising experimental conditions within verified domain boundaries.
+          </p>
+        </div>
+      )}
 
       {/* Candidates Results Table */}
       {activeRun && (
@@ -478,13 +573,35 @@ export default function OptimizationStudio() {
                 Run ID: <code style={{ color: '#0d9488' }}>{activeRun.id.substring(0, 8)}</code> | Seed: {activeRun.random_seed} | Feasible: {activeRun.feasible_candidate_count}
               </p>
             </div>
-            <button
-              onClick={handleViewReport}
-              className="gs-btn gs-btn-outline gs-btn-sm"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
-            >
-              <Download className="w-3.5 h-3.5" /> View Optimization Report
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              {runs.length > 1 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)' }}>Run:</span>
+                  <select
+                    value={activeRun.id}
+                    onChange={(e) => {
+                      const found = runs.find((r) => r.id === e.target.value)
+                      if (found) setActiveRun(found)
+                    }}
+                    className="gs-input"
+                    style={{ width: 'auto', padding: '4px 8px', fontSize: '12px' }}
+                  >
+                    {runs.map((r, idx) => (
+                      <option key={r.id} value={r.id}>
+                        Run #{runs.length - idx} ({r.generation_method} — {r.candidates?.length || 0} candidates)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              <button
+                onClick={handleViewReport}
+                className="gs-btn gs-btn-outline gs-btn-sm"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
+              >
+                <Download className="w-3.5 h-3.5" /> View Optimization Report
+              </button>
+            </div>
           </div>
 
           <div className="gs-table-wrapper">

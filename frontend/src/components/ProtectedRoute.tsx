@@ -51,7 +51,11 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
             color: 'var(--color-primary, #1e3a5f)',
           }}
         >
-          <Dna className="w-6 h-6 text-emerald-600" style={{ color: '#0f766e' }} />
+          <img
+            src="/branding/greensynth-mark.png"
+            alt="GreenSynth Logo"
+            style={{ width: '28px', height: '28px', objectFit: 'contain' }}
+          />
           <span>GreenSynth Analytics</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#6c757d', fontSize: '14px' }}>

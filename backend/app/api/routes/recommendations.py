@@ -147,6 +147,40 @@ async def approve_candidate(
 
 
 @router.post(
+    "/candidates/{candidate_id}/reject",
+    response_model=RecommendationCandidateResponse,
+    summary="Reject recommendation candidate",
+)
+async def reject_candidate(
+    candidate_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> RecommendationCandidateResponse:
+    """Rejects/dismisses a recommendation candidate with IDOR protection."""
+    res = await db.execute(
+        select(RecommendationCandidate, Recommendation.project_id)
+        .join(Recommendation, RecommendationCandidate.recommendation_id == Recommendation.id)
+        .where(RecommendationCandidate.id == candidate_id)
+    )
+    row = res.first()
+    if not row:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Candidate not found.")
+
+    cand, p_id = row
+    if not current_user.is_admin:
+        auth_ids = await get_authorized_project_ids(current_user, db)
+        if p_id not in auth_ids:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Candidate not found.")
+
+    service = RecommendationService(db)
+    try:
+        cand_updated = await service.reject_candidate(candidate_id)
+        return RecommendationCandidateResponse.model_validate(cand_updated)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+
+
+@router.post(
     "/candidates/{candidate_id}/modify",
     response_model=RecommendationCandidateResponse,
     summary="Modify candidate parameter values",

@@ -44,7 +44,7 @@ class MLTrainingService:
 
     def _instantiate_model(self, model_type: str, hyperparams: dict[str, Any] | None = None) -> BaseMLModel:
         hparams = hyperparams or {}
-        if model_type == "MEAN_BASELINE":
+        if model_type in ("MEAN_BASELINE", "BASELINE"):
             return MeanBaselineModel(hyperparameters=hparams)
         elif model_type == "LINEAR_REGRESSION":
             return LinearRegressionModel(hyperparameters=hparams)

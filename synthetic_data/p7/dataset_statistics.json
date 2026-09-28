@@ -1,0 +1,88 @@
+{
+  "dataset_name": "Project P7 Spray Pyrolysis Synthetic Research Dataset",
+  "generated_at": "2026-09-28T04:28:49.296442+00:00",
+  "random_seed": 20260928,
+  "provenance": {
+    "creator": "GreenSynth Synthetic Research Team",
+    "project_id": "268fa4a4-a396-4749-9621-39f1a9129684",
+    "project_code": "P7",
+    "material": "CuO",
+    "solvent": "Ethanol",
+    "extract": "Mulberry",
+    "method": "Spray Pyrolysis",
+    "disclaimer": "SYNTHETIC / SIMULATED DATA FOR PLATFORM VALIDATION AND ML TESTING. NOT REAL LAB MEASUREMENTS."
+  },
+  "experiment_counts": {
+    "total_experiments": 400,
+    "by_status": {
+      "COMPLETED": 382,
+      "FAILED": 12,
+      "IN_PROGRESS": 4,
+      "PLANNED": 2
+    },
+    "by_group": {
+      "GROUP_A": 50,
+      "GROUP_B": 70,
+      "GROUP_C": 70,
+      "GROUP_D": 60,
+      "GROUP_E": 40,
+      "GROUP_F": 50,
+      "GROUP_G": 40,
+      "GROUP_H": 20
+    }
+  },
+  "sample_counts": {
+    "total_samples": 412,
+    "single_sample_experiments": 388,
+    "replicate_sample_experiments": 12
+  },
+  "characterization_counts": {
+    "total_characterizations": 1380,
+    "by_technique": {
+      "XRD": 390,
+      "UV_VIS": 309,
+      "FTIR": 287,
+      "ELECTRICAL": 394
+    }
+  },
+  "calculated_properties_count": 1881,
+  "target_property_metrics": {
+    "property_name": "Electrical Conductivity",
+    "unit": "S/cm",
+    "count": 394,
+    "mean": 0.5264771573604061,
+    "std": 0.2628696641300365,
+    "min": 0.01586,
+    "q25": 0.3586475,
+    "median": 0.567555,
+    "q75": 0.68123,
+    "max": 1.07345
+  },
+  "feature_metrics": {
+    "substrate_temperature_c": {
+      "mean": 354.925,
+      "min": 174.0,
+      "max": 477.3
+    },
+    "precursor_concentration_mol_l": {
+      "mean": 0.22183574999999997,
+      "min": 0.0858,
+      "max": 0.4458
+    },
+    "mulberry_extract_concentration_g_l": {
+      "mean": 16.6735,
+      "min": 0.2,
+      "max": 40.33
+    },
+    "crystallite_size_nm": {
+      "mean": 22.421025641025643,
+      "min": 10.5,
+      "max": 32.63
+    },
+    "band_gap_ev": {
+      "mean": 1.4634433656957928,
+      "min": 1.351,
+      "max": 1.717
+    }
+  }
+}

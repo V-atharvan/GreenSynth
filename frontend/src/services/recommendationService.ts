@@ -84,6 +84,11 @@ export const recommendationService = {
     return res.data
   },
 
+  rejectCandidate: async (candidateId: string): Promise<RecommendationCandidate> => {
+    const res = await apiClient.post<RecommendationCandidate>(`/recommendations/candidates/${candidateId}/reject`)
+    return res.data
+  },
+
   modifyCandidate: async (
     candidateId: string,
     payload: {

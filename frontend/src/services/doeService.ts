@@ -215,8 +215,17 @@ export const doeService = {
     return res.data;
   },
 
+  exportDOECSV: async (doeId: string): Promise<Blob> => {
+    const res = await apiClient.get<Blob>(`/doe/${doeId}/export`, {
+      responseType: 'blob',
+    });
+    return res.data;
+  },
+
   exportDOECSVUrl: (doeId: string): string => {
     const baseUrl = apiClient.defaults.baseURL || '/api/v1';
-    return `${baseUrl}/doe/${doeId}/export`;
+    const token = localStorage.getItem('token') || localStorage.getItem('access_token');
+    return token ? `${baseUrl}/doe/${doeId}/export?token=${token}` : `${baseUrl}/doe/${doeId}/export`;
   },
 };
+

@@ -57,7 +57,7 @@ export function FileMetadataModal({ file, isOpen = true, onClose }: FileMetadata
             <div className="detail-item">
               <span className="detail-label">File Format / Extension</span>
               <span className="detail-value text-mono">
-                .{file.file_extension.toUpperCase()} ({file.mime_type || 'binary'})
+                .{file.file_extension.replace(/^\./, '').toUpperCase()} ({file.mime_type || 'binary'})
               </span>
             </div>
 

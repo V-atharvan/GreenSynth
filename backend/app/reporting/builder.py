@@ -231,7 +231,7 @@ class ExperimentReportDataBuilder:
                             analysis_run_id=str(ar.id) if ar else None,
                             analysis_method=getattr(ar, "analysis_type", None) if ar else None,
                             software_version="1.0.0-research",
-                            processing_parameters=getattr(ar, "parameters", {}) if ar else {},
+                            processing_parameters=(getattr(ar, "parameters", None) or {}) if ar else {},
                             calculated_properties=calc_props,
                         )
                     )

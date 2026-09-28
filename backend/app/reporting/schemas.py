@@ -11,7 +11,7 @@ import uuid
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class ProvenanceItemSchema(BaseModel):
@@ -26,6 +26,16 @@ class ProvenanceItemSchema(BaseModel):
     processing_parameters: dict[str, Any] = Field(default_factory=dict)
     calculated_properties: list[dict[str, Any]] = Field(default_factory=list)
 
+    @field_validator("processing_parameters", mode="before")
+    @classmethod
+    def ensure_dict(cls, v: Any) -> dict[str, Any]:
+        return v if isinstance(v, dict) else {}
+
+    @field_validator("calculated_properties", mode="before")
+    @classmethod
+    def ensure_list(cls, v: Any) -> list[dict[str, Any]]:
+        return v if isinstance(v, list) else []
+
 
 class XRDReportSectionSchema(BaseModel):
     available: bool = False
@@ -37,6 +47,16 @@ class XRDReportSectionSchema(BaseModel):
     formula_used: str = "Scherrer Equation: D = (K * λ) / (β * cos θ)"
     disclaimer: str = "Peak positions and FWHM reported from software analysis. Phase identification requires reference comparison."
     plot_bytes: bytes | None = None
+
+    @field_validator("processing_parameters", mode="before")
+    @classmethod
+    def ensure_xrd_dict(cls, v: Any) -> dict[str, Any]:
+        return v if isinstance(v, dict) else {}
+
+    @field_validator("peaks", mode="before")
+    @classmethod
+    def ensure_peaks_list(cls, v: Any) -> list[dict[str, Any]]:
+        return v if isinstance(v, list) else []
 
 
 class UVVisReportSectionSchema(BaseModel):

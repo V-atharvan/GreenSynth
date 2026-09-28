@@ -1,0 +1,102 @@
+{
+  "timestamp": "2026-09-28T04:46:13.650868+00:00",
+  "status": "COMPLETED",
+  "project_code": "P7",
+  "dataset": {
+    "id": "49d0ab52-4876-47cb-9230-228930792bc1",
+    "name": "P7 CuO Spray Pyrolysis Conductivity Dataset",
+    "target_property": "Electrical Conductivity",
+    "target_unit": "S/cm",
+    "eligible_count": 395,
+    "excluded_count": 21,
+    "is_synthetic": false
+  },
+  "models_trained": [
+    {
+      "model_id": "f1853254-0a4d-446f-bede-8152254deec1",
+      "model_name": "P7 CuO Spray Pyrolysis Conductivity Dataset \u2014 MEAN_BASELINE",
+      "model_type": "MEAN_BASELINE",
+      "version": "1.0",
+      "status": "TRAINED",
+      "cv_r2": -0.005,
+      "cv_rmse": 0.2625,
+      "cv_mae": 0.2112,
+      "train_r2": 0.0,
+      "is_overfit": false
+    },
+    {
+      "model_id": "0b840ea6-3c7f-492e-95d7-ad6be2f240c2",
+      "model_name": "P7 CuO Spray Pyrolysis Conductivity Dataset \u2014 LINEAR_REGRESSION",
+      "model_type": "LINEAR_REGRESSION",
+      "version": "1.0",
+      "status": "VALIDATED",
+      "cv_r2": 0.3019,
+      "cv_rmse": 0.2166,
+      "cv_mae": 0.1724,
+      "train_r2": 0.393,
+      "is_overfit": false
+    },
+    {
+      "model_id": "09cc4433-d750-4b12-8b75-1e76311f47e4",
+      "model_name": "P7 CuO Spray Pyrolysis Conductivity Dataset \u2014 RIDGE",
+      "model_type": "RIDGE",
+      "version": "1.0",
+      "status": "VALIDATED",
+      "cv_r2": 0.3023,
+      "cv_rmse": 0.2166,
+      "cv_mae": 0.1724,
+      "train_r2": 0.393,
+      "is_overfit": false
+    },
+    {
+      "model_id": "8910ae81-4515-4fca-8657-2908a8008710",
+      "model_name": "P7 CuO Spray Pyrolysis Conductivity Dataset \u2014 RANDOM_FOREST",
+      "model_type": "RANDOM_FOREST",
+      "version": "1.0",
+      "status": "VALIDATED",
+      "cv_r2": 0.6685,
+      "cv_rmse": 0.1501,
+      "cv_mae": 0.1214,
+      "train_r2": 0.9578,
+      "is_overfit": false
+    },
+    {
+      "model_id": "3c2fc284-bf39-4a2a-98ca-f7763d68f0b4",
+      "model_name": "P7 CuO Spray Pyrolysis Conductivity Dataset \u2014 GRADIENT_BOOSTING",
+      "model_type": "GRADIENT_BOOSTING",
+      "version": "1.0",
+      "status": "VALIDATED",
+      "cv_r2": 0.636,
+      "cv_rmse": 0.1558,
+      "cv_mae": 0.1243,
+      "train_r2": 0.8921,
+      "is_overfit": false
+    }
+  ],
+  "champion_model": {
+    "id": "8910ae81-4515-4fca-8657-2908a8008710",
+    "model_type": "RANDOM_FOREST",
+    "cv_r2": 0.6685
+  },
+  "test_prediction": {
+    "input_features": {
+      "substrate_temperature_c": 370.0,
+      "precursor_concentration": 0.22,
+      "precursor_solution_volume": 80.0,
+      "mulberry_extract_concentration": 16.0,
+      "mulberry_extract_volume": 20.0,
+      "ethanol_volume": 150.0,
+      "spray_rate_ml_min": 4.2,
+      "spray_duration_min": 25.0,
+      "nozzle_substrate_distance_cm": 20.0,
+      "carrier_gas_pressure_kpa": 210.0,
+      "spray_cycles": 20,
+      "ambient_temperature_c": 24.5,
+      "ambient_relative_humidity": 45.0
+    },
+    "predicted_conductivity_s_cm": 0.6449,
+    "ci_lower": 0.3507,
+    "ci_upper": 0.9391,
+    "applicability_status": "VALID"
+  }
+}

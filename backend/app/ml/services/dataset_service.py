@@ -51,46 +51,64 @@ class MLDatasetService:
         exp_res = await self.db.execute(q_exp)
         experiments = exp_res.scalars().all()
 
+        # Bulk query all samples, parameters, and calculated properties for project to avoid N+1 WAN latency
+        exp_ids = [exp.id for exp in experiments]
+
+        # 2a. Bulk fetch all samples
+        s_res = await self.db.execute(
+            select(Sample).where(Sample.experiment_id.in_(exp_ids))
+        )
+        all_samples = s_res.scalars().all()
+        samples_by_exp: dict[uuid.UUID, list[Sample]] = {}
+        for s in all_samples:
+            samples_by_exp.setdefault(s.experiment_id, []).append(s)
+
+        # 2b. Bulk fetch all experiment parameters
+        p_res = await self.db.execute(
+            select(
+                ExperimentParameter,
+                ParameterDefinition.parameter_code,
+                ParameterDefinition.parameter_name,
+            )
+            .join(ParameterDefinition, ExperimentParameter.parameter_definition_id == ParameterDefinition.id)
+            .where(ExperimentParameter.experiment_id.in_(exp_ids))
+        )
+        params_by_exp: dict[uuid.UUID, tuple[dict[str, Any], dict[str, str]]] = {}
+        for ep, pcode, pname in p_res.all():
+            num_val = ep.value_numeric
+            if num_val is None and ep.value:
+                try:
+                    num_val = float(ep.value)
+                except ValueError:
+                    num_val = ep.value
+            val_to_store = num_val if num_val is not None else ep.value
+            if val_to_store is not None:
+                if ep.experiment_id not in params_by_exp:
+                    params_by_exp[ep.experiment_id] = ({}, {})
+                pmap, pumap = params_by_exp[ep.experiment_id]
+                pmap[pcode] = val_to_store
+                pmap[pname] = val_to_store
+                if ep.unit:
+                    pumap[pcode] = ep.unit
+                    pumap[pname] = ep.unit
+
+        # 2c. Bulk fetch all calculated properties
+        all_sample_ids = [s.id for s in all_samples]
+        props_by_sample: dict[uuid.UUID, list[CalculatedProperty]] = {}
+        if all_sample_ids:
+            cp_res = await self.db.execute(
+                select(CalculatedProperty).where(CalculatedProperty.sample_id.in_(all_sample_ids))
+            )
+            for cp in cp_res.scalars().all():
+                props_by_sample.setdefault(cp.sample_id, []).append(cp)
+
         candidate_items: list[dict] = []
         for exp in experiments:
-            # Query samples for this experiment
-            s_res = await self.db.execute(select(Sample).where(Sample.experiment_id == exp.id))
-            samples = s_res.scalars().all()
+            exp_samples = samples_by_exp.get(exp.id, [])
+            params_map, param_units_map = params_by_exp.get(exp.id, ({}, {}))
 
-            # Query recorded parameters for this experiment (mapping both code and display name)
-            p_res = await self.db.execute(
-                select(
-                    ExperimentParameter,
-                    ParameterDefinition.parameter_code,
-                    ParameterDefinition.parameter_name,
-                )
-                .join(ParameterDefinition, ExperimentParameter.parameter_definition_id == ParameterDefinition.id)
-                .where(ExperimentParameter.experiment_id == exp.id)
-            )
-            param_rows = p_res.all()
-            params_map: dict[str, Any] = {}
-            param_units_map: dict[str, str] = {}
-            for ep, pcode, pname in param_rows:
-                num_val = ep.value_numeric
-                if num_val is None and ep.value:
-                    try:
-                        num_val = float(ep.value)
-                    except ValueError:
-                        num_val = ep.value
-                val_to_store = num_val if num_val is not None else ep.value
-                if val_to_store is not None:
-                    params_map[pcode] = val_to_store
-                    params_map[pname] = val_to_store
-                    if ep.unit:
-                        param_units_map[pcode] = ep.unit
-                        param_units_map[pname] = ep.unit
-
-            for smp in samples:
-                # Query calculated properties for sample
-                cp_res = await self.db.execute(
-                    select(CalculatedProperty).where(CalculatedProperty.sample_id == smp.id)
-                )
-                calc_props = cp_res.scalars().all()
+            for smp in exp_samples:
+                calc_props = props_by_sample.get(smp.id, [])
                 props_map: dict[str, float] = {}
                 prop_units_map: dict[str, str] = {}
                 analysis_run_id = None
@@ -99,16 +117,6 @@ class MLDatasetService:
                     props_map[cp.property_name] = cp.value
                     prop_units_map[cp.property_name] = cp.unit
                     analysis_run_id = str(cp.analysis_run_id)
-                    logger.info(
-                        "ML Dataset Data Flow — Found CalculatedProperty: exp_id=%s, sample_id=%s (%s), run_id=%s, property_name='%s', value=%s, unit='%s'",
-                        exp.id,
-                        smp.id,
-                        smp.sample_code,
-                        cp.analysis_run_id,
-                        cp.property_name,
-                        cp.value,
-                        cp.unit,
-                    )
 
                 candidate_items.append({
                     "experiment_id": str(exp.id),
@@ -171,7 +179,7 @@ class MLDatasetService:
                 target_value=item.target_value,
                 target_unit=item.target_unit,
                 is_eligible=item.is_eligible,
-                exclusion_reason=item.exclusion_reason,
+                exclusion_reason=item.exclusion_reason[:64] if item.exclusion_reason else None,
                 provenance_details=item.provenance_details,
             )
             self.db.add(rec)

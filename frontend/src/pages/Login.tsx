@@ -97,15 +97,20 @@ export default function Login() {
             display: 'inline-flex',
             alignItems: 'center',
             justifyContent: 'center',
-            width: '54px',
-            height: '54px',
+            width: '60px',
+            height: '60px',
             backgroundColor: '#1e3a5f',
-            borderRadius: '14px',
+            borderRadius: '16px',
             marginBottom: '12px',
-            boxShadow: '0 4px 12px rgba(30, 58, 95, 0.25)',
+            boxShadow: '0 4px 16px rgba(30, 58, 95, 0.28)',
+            padding: '8px',
           }}
         >
-          <Dna className="w-8 h-8 text-emerald-400" style={{ color: '#34d399' }} />
+          <img
+            src="/branding/greensynth-mark.png"
+            alt="GreenSynth Logo"
+            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+          />
         </div>
         <h1
           style={{

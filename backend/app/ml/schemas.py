@@ -135,6 +135,7 @@ class MLModelResponse(BaseModel):
     hyperparameters: dict[str, Any]
     metrics: dict[str, Any]
     feature_importance: dict[str, float] | None = None
+    feature_ranges_json: dict[str, Any] | None = None
     library_versions: dict[str, str]
     status: str
     approval_notes: str | None = None

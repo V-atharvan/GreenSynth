@@ -1,0 +1,58 @@
+{
+  "doe_id": "00366428-5e51-4a6d-b9ea-1bb98b857204",
+  "name": "P7 Central Composite Design \u2014 Conductivity Optimization",
+  "method": "CENTRAL_COMPOSITE",
+  "total_runs": 29,
+  "sample_runs": [
+    {
+      "run_order": 1,
+      "factor_values": {
+        "mulberry_extract_volume": 10.0,
+        "precursor_concentration": 0.35,
+        "substrate_temperature_c": 420.0,
+        "mulberry_extract_concentration": 5.0
+      },
+      "status": "PROPOSED"
+    },
+    {
+      "run_order": 2,
+      "factor_values": {
+        "mulberry_extract_volume": 40.0,
+        "precursor_concentration": 0.35,
+        "substrate_temperature_c": 300.0,
+        "mulberry_extract_concentration": 5.0
+      },
+      "status": "PROPOSED"
+    },
+    {
+      "run_order": 3,
+      "factor_values": {
+        "mulberry_extract_volume": 25.0,
+        "precursor_concentration": 0.22,
+        "substrate_temperature_c": 360.0,
+        "mulberry_extract_concentration": 17.5
+      },
+      "status": "PROPOSED"
+    },
+    {
+      "run_order": 4,
+      "factor_values": {
+        "mulberry_extract_volume": 25.0,
+        "precursor_concentration": 0.1,
+        "substrate_temperature_c": 360.0,
+        "mulberry_extract_concentration": 17.5
+      },
+      "status": "PROPOSED"
+    },
+    {
+      "run_order": 5,
+      "factor_values": {
+        "mulberry_extract_volume": 10.0,
+        "precursor_concentration": 0.1,
+        "substrate_temperature_c": 300.0,
+        "mulberry_extract_concentration": 30.0
+      },
+      "status": "PROPOSED"
+    }
+  ]
+}

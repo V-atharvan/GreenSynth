@@ -31,6 +31,7 @@ __all__ = ["get_db"]
 
 async def get_current_user(
     auth_credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
+    token: str | None = Query(None, description="Optional bearer token for direct browser downloads"),
     db: AsyncSession = Depends(get_db),
 ) -> User:
     """
@@ -38,7 +39,13 @@ async def get_current_user(
     verifying user existence and active status in the database.
     Missing, invalid, expired, or inactive credentials return HTTP 401.
     """
-    if auth_credentials is None or not auth_credentials.credentials:
+    raw_token = None
+    if auth_credentials and auth_credentials.credentials:
+        raw_token = auth_credentials.credentials
+    elif isinstance(token, str) and token:
+        raw_token = token
+
+    if not raw_token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authentication credentials were not provided.",
@@ -46,7 +53,7 @@ async def get_current_user(
         )
 
     try:
-        payload = decode_access_token(auth_credentials.credentials)
+        payload = decode_access_token(raw_token)
     except TokenDecodeError as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

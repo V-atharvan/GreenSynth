@@ -20,8 +20,12 @@ const LandingFooter: React.FC = () => {
         <div className="lp-footer-main">
           {/* Brand */}
           <div>
-            <div className="lp-footer-logo-mark" aria-hidden="true">
-              <Dna size={25} style={{ color: '#34d399' }} />
+            <div className="lp-footer-logo-mark" aria-hidden="true" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <img
+                src="/branding/greensynth-mark.png"
+                alt="GreenSynth Logo"
+                style={{ width: '26px', height: '26px', objectFit: 'contain' }}
+              />
             </div>
             <div className="lp-footer-brand-name">GreenSynth Analytics</div>
             <div className="lp-footer-brand-desc">

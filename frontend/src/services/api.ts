@@ -44,9 +44,20 @@ apiClient.interceptors.request.use((config) => {
 // Normalizes API errors to a consistent shape and handles session expiry.
 apiClient.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
     if (error.response) {
-      const { status, data } = error.response
+      const { status } = error.response
+      let data = error.response.data
+
+      // If responseType was 'blob' and the server returned a JSON error payload, parse it
+      if (typeof Blob !== 'undefined' && data instanceof Blob) {
+        try {
+          const text = await data.text()
+          data = JSON.parse(text)
+        } catch {
+          // not JSON, keep original data
+        }
+      }
 
       // Extract formatted message
       let message = 'An unexpected error occurred.'

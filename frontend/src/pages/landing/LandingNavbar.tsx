@@ -35,8 +35,12 @@ const LandingNavbar: React.FC = () => {
           {/* Brand */}
           <a href="#hero" className="lp-navbar-brand" aria-label="GreenSynth Analytics — Home"
             onClick={(e) => { e.preventDefault(); scrollTo('hero') }}>
-            <div className="lp-navbar-logo-mark" aria-hidden="true">
-              <Dna size={25} style={{ color: '#34d399' }} />
+            <div className="lp-navbar-logo-mark" aria-hidden="true" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <img
+                src="/branding/greensynth-mark.png"
+                alt="GreenSynth Logo"
+                style={{ width: '26px', height: '26px', objectFit: 'contain' }}
+              />
             </div>
             <div className="lp-navbar-brand-text">
               <span className="lp-navbar-brand-name">GreenSynth</span>

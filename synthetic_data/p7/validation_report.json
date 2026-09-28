@@ -1,0 +1,14 @@
+{
+  "status": "SUCCESS",
+  "verified_at": "2026-09-28T04:32:53.652586+00:00",
+  "project_id": "268fa4a4-a396-4749-9621-39f1a9129684",
+  "project_code": "P7",
+  "database_counts": {
+    "total_p7_experiments": 407,
+    "total_p7_samples": 416,
+    "total_p7_characterizations": 1390,
+    "total_p7_raw_files": 1390,
+    "total_p7_calculated_properties": 1890,
+    "electrical_conductivity_records": 395
+  }
+}

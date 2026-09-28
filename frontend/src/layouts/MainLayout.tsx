@@ -161,7 +161,11 @@ export default function MainLayout() {
             {mobileDrawerOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
           <div className="mobile-brand-title">
-            <Dna className="w-5 h-5 text-emerald-400" />
+            <img
+              src="/branding/greensynth-mark.png"
+              alt="GreenSynth Logo"
+              style={{ width: '24px', height: '24px', objectFit: 'contain' }}
+            />
             <span className="mobile-brand-name">GreenSynth</span>
           </div>
         </div>
@@ -211,7 +215,11 @@ export default function MainLayout() {
         {/* Logo / Brand Header */}
         <div className="sidebar-brand">
           <div className="brand-icon">
-            <Dna className="w-6 h-6 text-emerald-400" />
+            <img
+              src="/branding/greensynth-mark.png"
+              alt="GreenSynth Logo"
+              style={{ width: '28px', height: '28px', objectFit: 'contain' }}
+            />
           </div>
           {(sidebarOpen || mobileDrawerOpen) && (
             <div className="brand-text">

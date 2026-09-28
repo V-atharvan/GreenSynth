@@ -14,8 +14,10 @@ import {
 } from 'lucide-react'
 import { mlService, MLPrediction } from '@/services/mlService'
 import { validationService, ProspectiveExperiment, ValidationResult, ValidationCriterion } from '@/services/validationService'
+import { useProjectContext } from '@/context/ProjectContext'
 
 export default function ExperimentalValidation() {
+  const { projectId } = useProjectContext()
   const [predictions, setPredictions] = useState<MLPrediction[]>([])
   const [selectedPredId, setSelectedPredId] = useState<string>('')
   const [criteria, setCriteria] = useState<ValidationCriterion[]>([])
@@ -58,10 +60,11 @@ export default function ExperimentalValidation() {
     setError(null)
 
     try {
+      const targetProjectId = projectId || (selectedPred as any).project_id || '268fa4a4-a396-4749-9621-39f1a9129684'
       const prosp = await validationService.createProspective({
         prediction_id: selectedPred.id,
-        project_id: '00000000-0000-0000-0000-000000000000',
-        researcher: 'Dr. Validation Engineer',
+        project_id: targetProjectId,
+        researcher: 'Dr. Atharvan Vaddepalli',
         notes: 'Approved prediction for physical synthesis',
       })
       setProspectiveExp(prosp)
@@ -231,9 +234,18 @@ export default function ExperimentalValidation() {
           </div>
 
           <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <div className="alert alert-success">
-              <CheckCircle className="w-5 h-5 shrink-0" />
-              <span>Prospective Experiment Approved (ID: {prospectiveExp.id.slice(0, 8)}...). Enter laboratory execution details.</span>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: -10 }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setLabExpId('d1a9e68c-a825-44cd-bf4f-4c016cd1f68c')
+                  setSampleId('9ad2bd41-ae97-44c2-a6bb-dbc413550b0e')
+                }}
+                className="btn btn-secondary"
+                style={{ fontSize: '0.75rem', padding: '4px 10px' }}
+              >
+                ⚡ Autofill Lab Experiment (P7-SYNTH-001)
+              </button>
             </div>
 
             <div className="form-grid">

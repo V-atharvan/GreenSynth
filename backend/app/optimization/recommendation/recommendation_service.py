@@ -317,6 +317,23 @@ class RecommendationService:
         )
         return cand
 
+    async def reject_candidate(self, candidate_id: uuid.UUID, researcher: str | None = None) -> RecommendationCandidate:
+        res = await self.db.execute(select(RecommendationCandidate).where(RecommendationCandidate.id == candidate_id))
+        cand = res.scalar_one_or_none()
+        if not cand:
+            raise ValueError(f"Recommendation Candidate {candidate_id} not found.")
+
+        cand.status = "REJECTED"
+        await self.db.flush()
+
+        await self.audit.log(
+            entity_type="RecommendationCandidate",
+            entity_id=cand.id,
+            action="REJECT_RECOMMENDATION_CANDIDATE",
+            changes={"status": "REJECTED"},
+        )
+        return cand
+
     async def modify_candidate(
         self, candidate_id: uuid.UUID, payload: CandidateModifyInput
     ) -> RecommendationCandidate:

@@ -71,5 +71,10 @@ backend/data/exports/*
 *.joblib
 *.h5
 
+# ── Scratch & Temporary ───────────────────────────────────
+scratch/
+*.lnk
+
 # ── Alembic (keep versions tracked) ──────────────────────
 # alembic/versions/ is intentionally tracked
+

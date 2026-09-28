@@ -100,6 +100,7 @@ export interface MLModel {
     }
   }
   feature_importance?: Record<string, number>
+  feature_ranges_json?: Record<string, { min: number; max: number; mean: number; std: number }>
   library_versions: Record<string, string>
   status: string
   approval_notes?: string
@@ -157,18 +158,19 @@ export const mlService = {
     return res.data
   },
 
-  getModels: async (datasetId?: string, status?: string): Promise<MLModel[]> => {
+  getModels: async (datasetId?: string, status?: string, projectId?: string): Promise<MLModel[]> => {
     let url = '/ml/models'
     const params = new URLSearchParams()
     if (datasetId) params.append('dataset_id', datasetId)
     if (status) params.append('status', status)
+    if (projectId) params.append('project_id', projectId)
     if (params.toString()) url += `?${params.toString()}`
     const res = await apiClient.get<MLModel[]>(url)
     return res.data
   },
 
-  listModels: async (datasetId?: string, status?: string): Promise<MLModel[]> => {
-    return mlService.getModels(datasetId, status)
+  listModels: async (datasetId?: string, status?: string, projectId?: string): Promise<MLModel[]> => {
+    return mlService.getModels(datasetId, status, projectId)
   },
 
   getModel: async (modelId: string): Promise<MLModel> => {

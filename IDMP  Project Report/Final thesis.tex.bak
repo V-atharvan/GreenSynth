@@ -1,0 +1,1466 @@
+\documentclass[12pt,a4paper,oneside]{report}
+\usepackage{amsmath}
+\usepackage{graphics}
+\usepackage{color}
+\usepackage{verbatim}
+\usepackage{graphicx,amsmath,latexsym,amssymb,amsthm}
+\usepackage{fancyhdr}
+\usepackage[tmargin=1in,bmargin=1in,lmargin=1.25in,rmargin=0.9in]{geometry}
+\usepackage{titlesec}
+\titleformat{\chapter}[display]
+{\normalfont\huge\bfseries}{\chaptertitlename\ \thechapter}{20pt}{\Huge}
+\titlespacing*{\chapter}{0pt}{-20pt}{20pt}
+
+\begin{document}
+\thispagestyle{empty}
+
+\newpage
+\begin{center}
+{\large{\textbf{A \\ \vspace*{0.1cm}Dissertation Report \\ \vspace*{0.1cm}on}}}
+\end{center}
+\vspace*{0.1cm}
+\begin{center}
+{\large{\textbf{``\textcolor[rgb]{1.00,0.11,0.11}{Throughput-Aware Probabilistic Rebroadcasting Method to Reduce Routing Overhead in Mobile Ad Hoc Network}''}}}\\
+\vspace*{0.1cm}
+\end{center}
+\begin{center}
+{\small{{\textcolor[rgb]{0.50,0.00,0.25}{SUBMITTED TO THE SOLAPUR UNIVERSITY, SOLAPUR IN PARTIAL FULFILLMENT OF THE REQUIREMENTS FOR THE AWARD OF }}}}
+\end{center}
+\begin{center}
+{\textbf{\textcolor[rgb]{1.00,0.00,0.00}{\\MASTER DEGREE IN\\COMPUTER SCIENCE AND ENGINEERING}\\ \vspace*{0.5cm} SUBMITTED BY}}\\
+\vspace*{0.3cm}{\textbf{\textcolor[rgb]{0.00,0.25,0.00}{Mr. Gurme Harish Tukaram}}}
+\end{center}
+\vspace*{0.2cm}
+\begin{center}
+{\textbf{\textcolor[rgb]{0.00,0.00,0.00}{UNDER THE GUIDANCE OF \\ \vspace*{0.1cm} \large{\textcolor[rgb]{0.00,0.25,0.00}{Prof. B. R. Solunke}}}}}\\
+\end{center}
+\begin{center}
+
+\includegraphics[scale=0.4]{logo2.jpg}\\[0.1cm]
+
+\end{center}
+
+\begin{center}
+{\textbf{\textcolor[rgb]{0.00,0.00,1.00}{DEPARTMENT OF COMPUTER SCIENCE \& ENGINEERING \\ \vspace*{0.1cm} N B NAVALE SINHGAD COLLEGE OF ENGINEERING, \\\vspace*{0.1cm} SOLAPUR - 413 255 \\ \vspace{0.1cm} 2014-15}}}
+\end{center}
+\begin{center}
+{\textbf{AFFILIATED TO}}\\[0.3cm]
+\includegraphics[scale=0.2]{slogo}\\[0.2cm]
+{\textbf{SOLAPUR UNIVERSITY }}
+\end{center}
+\newpage
+\thispagestyle{empty}
+\begin{center}
+{\large{\textbf{DECLARATION\\}}}
+\end{center}
+\vspace*{0.5cm}
+ I hereby declare that the dissertation entitled \textbf{``Throughput-Aware Probabilistic Rebroadcasting Method to Reduce Routing Overhead in Mobile Ad Hoc Network''} is completed and written by me has not previously formed the basis for the award of any Degree or Diploma in this or any other University or examining body.
+
+\vspace{3cm}
+\begin{flushright}
+{\textbf{Mr. Gurme Harish Tukaram}}
+\end{flushright}
+
+\begin{flushleft}
+\textbf{Place: Solapur \\}
+\textbf{Date:\hspace*{0.5cm}/ \hspace*{0.4cm}/}
+\end{flushleft}
+
+\newpage
+\thispagestyle{empty}
+\begin{figure}[h]
+\begin{center}
+\scalebox{0.4}{\includegraphics{logo2.jpg}}
+\end{center}
+\end{figure}
+\begin{center}
+{\large{\textbf{CERTIFICATE\\}}}
+\end{center}
+\begin{center}
+This is to certify that the dissertation report entitles
+\end{center}
+\begin{center}
+{\large{\textbf{``Throughput-Aware Probabilistic Rebroadcasting Method to Reduce Routing Overhead in Mobile Ad Hoc Network''}}}
+\end{center}
+\begin{center}
+submitted by\\
+\vspace*{0.5cm}{\textbf{Mr. Gurme Harish Tukaram }}
+\end{center}
+\vspace{0.1cm}
+
+is a bonafide work carried out by above student under the supervision of Prof. B. R. Solunke and it is submitted towards the fulfillment of the requirement of Solapur University, Solapur for the award of the degree of Master of Engineering (Computer Science and Engineering) during  academic year 2014-15.
+
+\vspace{1cm}
+\begin{center}
+{\textbf{Prof. B. R. Solunke \hspace*{4cm} Prof. A. A. Phatak \\  Guide and ME Coordinator\hspace*{3cm}Head of Department\\ Department of CSE \hspace*{4cm} Department of CSE}}
+\end{center}
+\vspace{1cm}
+\begin{center}
+{\textbf{Dr. S. D. Nawale \\Principal, \\N B Navale Sinhgad College of Engineering, Solapur.}}
+\end{center}
+\vspace{0.6cm}
+\begin{flushleft}
+{\textbf{External Examiner Name \& Sign :}} \\
+{\textbf{Place: Solapur}} \\
+{\textbf{Date:\hspace*{0.5cm} / \hspace*{0.4cm}  /    }}
+\end{flushleft}
+
+
+\newpage
+\begin{center}
+{\large{\textbf{ACKNOWLEDGEMENT}}}
+\end{center}
+\vspace{0.5cm}
+
+ I feel profound happiness in forwarding this project report as an image of sincere efforts.  The successful project reflects my work effort of my guide in giving me good information.\\
+
+ My sincere thanks to respected \textbf{Prof. B. R. Solunke}, my guide and ME Coordinator who has been a constant source of inspiration and guiding star in achieving my goal \& for giving valuable guidelines for completing this project. I give my special thanks to respected H.O.D. \textbf{Prof. A. A. Phatak} for their constant interest and encouragement throughout the completion of my project.\\
+
+ I express my deep gratitude to all staff members who lend me their valuable support and cooperation to enable me to complete my project successfully.\\
+
+ Goal makes us to do work. Vision is more important than goal which makes us to do work in the best way to make work equally the best. Thanks to our Principal Sir, \textbf{Dr. S. D. Nawale} for his support and vision. \\
+
+ I also Thankfull to all friends for their extended support and valuable guidance. \\
+\\
+\vspace{3cm}
+\begin{flushright}
+{\textbf{Mr. Gurme Harish Tukaram}}
+\end{flushright}
+\pagenumbering{Roman}
+
+\newpage
+\begin{center}
+{\large{\textbf{ABSTRACT}}}
+\end{center}
+
+
+The concept of Mobile Ad Hoc Network (MANET) is nothing but collection of wireless devices without any physical infrastructure. All communications in MANET are done through the wireless media and hence do not required fixed lines or topology. MANET is temporary network as mobiles are changing their positions randomly. The communication in MANET is done by using routing protocols, whose task is to find out shortest path from source to destination, maintain route, rebuild path immediately during communication if nodes are moved. Routing is challenging task in MANET due to frequently mobile position changes in MANET.Hence this becomes interesting area of research for many researchers since from last two decades.  \\
+
+In this dissertation, we are presenting new method for MANET routing protocol with goal of improving routing performance in terms of network load, throughput, and delay. We are presenting hybrid routing protocol by using probabilistic rebroadcast protocol technique and neighbor knowledge technique. Probabilistic rebroadcast method is based on neighbor coverage in order to reduce the routing overhead. This neighbor coverage knowledge includes additional coverage ratio and connectivity factor. The simulation study of this protocol is done by using NS2, and its performance is compared against AODV routing protocol.
+
+
+
+
+
+\newpage
+\begin{center}
+\textbf{Dissertation Outline}\\
+\end{center}
+ The dissertation is organized chronologically in terms of the objectives accomplished.\\
+ \begin{center}
+ \begin{itemize}
+   \item \textbf{Chapter One} gives information about Recommendation System.
+   \item \textbf{Chapter Two} gives literature review on the relevant areas required for the current research which contains approaches considered for network performance.
+   \item \textbf{Chapter Three} This chapter consists of description of current system, proposed system and requirements specifications.
+   \item \textbf{Chapter Four} this chapter describes problem statement for the system.
+   \item \textbf{Chapter Five} in this chapter focus is on system design with all types of diagram of Propose system.
+   \item \textbf{Chapter Six} shows the system demonstration with screenshots of the system.
+   \item \textbf{Chapter Seven} in this chapter discussion is on result and analysis of the system. Here discuss the performance comparison with help of NS2 method.
+   \item \textbf{Chapter Eight} summarizes the conclusion and future scope of propose system.
+   \item \textbf{A Appendix } lists of abbreviation used in the dissertation.
+   \item \textbf{B Appendix } lists of publication done on current work.
+   \item \textbf{C References} lists the bibliography for the system.
+ \end{itemize}
+ \end{center}
+
+
+
+
+
+\tableofcontents{}
+\thispagestyle{empty}
+\listoffigures{}
+\thispagestyle{empty}
+\listoftables{}
+\thispagestyle{empty}
+
+
+\pagestyle{fancyplain}
+\fancyhf{}
+\fancyhead[R]{\scriptsize{\textit{Throughput-Aware Probabilistic Rebroadcasting Method to Reduce Routing Overhead in MANET}}}
+\fancyfoot[L]{\scriptsize{DEPARTMENT OF CSE, NBNSCOE, SOLAPUR}}
+\fancyfoot[R]{\scriptsize{\thepage}}
+\renewcommand{\headrulewidth}{0.0pt}
+\renewcommand{\footrulewidth}{0.0pt}
+\chapter{INTRODUCTION}
+\pagenumbering{arabic}
+
+
+\section{Wireless Ad Hoc Network}
+Over the past decade, there has been a growing interest in wireless networks, as the cost of mobile devices such as PDAs, laptops, cellular phones, etc have reduced drastically. The latest trend in wireless networks is towards pervasive and ubiquitous computing - catering to both nomadic and fixed users, anytime and anywhere. Several standards for wireless networks have emerged in order to address the needs of both industrial and individual users.  One of the most prevalent forms of wireless networks in use today is the Wireless Local Area Network (WLAN). In such a network, a set of mobile nodes are connected to a fixed wired backbone. WLANs have a short range and are usually deployed in places such universities, companies, cafeterias, etc. \\
+
+However, there is still a need for communication in several scenarios of deployment where it is not feasible to deploy fixed wireless access points due to physical constraints of the medium. For example, consider communication amongst soldiers in a battlefield, involving troops spread out over a large area. In this case, it is not only feasible to deploy a fixed wireless access point, but also risky since an enemy attack would bring down the whole network. This problem has led to a growing interest among the research community in mobile ad hoc networks, wireless networks comprised of mobile computing devices communicating without any fixed infrastructure.\\
+
+Ad Hoc network is a collection of wireless mobile hosts forming a temporary network without the aid of any centralized administration, in which individual nodes cooperate by forwarding packets to each other to allow nodes to communicate beyond direct wireless transmission range as shown in figure \ref{fig1}. Routing is a process of exchanging information from one station to other stations of the network. Routing protocols of mobile ad-hoc network tend to need different approaches from existing Internet protocols because of dynamic topology, mobile host, distributed environment, less bandwidth, less battery power.\\
+
+
+
+\begin{figure}[h]
+\begin{center}
+\scalebox{0.7}{\includegraphics{Ad-Hoc-Network.jpg}}
+\caption{Ad-Hoc Network}\label{fig1}
+\end{center}
+\end{figure}
+
+
+\section{Mobile Ad Hoc Network}
+As Mobile Ad Hoc Network i.e. MANET is group of self-organizing wireless devices, the deployment of such wireless devices is done without requiring any physical equipment’s or infrastructure. We can call MANET as autonomous framework of mobile nodes connected via wireless links without using any existing network infrastructure. Every mobile device in this network acts as peer who can do the task of sending and receiving data, each node can be host or router. MANET does not have any fixed communication links like wired network, the communication is done by nodes by forwarding data in packets to each other still to the destination receives that packets. Figure \ref{fig2}  is showing the MANET communication example. The communication in MANET is done by routing protocols. Therefore the major challenge in design of MANET networks is the development of dynamic routing protocols those can efficiently find routes between the communicating nodes. \\
+
+Any MANET routing protocol should be able to keep up with highest degree of nodes mobility as nodes mobility frequently changes the MANET topology randomly and drastically. This is also called as link quality variations during MANET communication. Therefore combining the link-quality fluctuations with the broadcasting nature of Wireless channels has revealed a direction in the research of wireless networking, called, cooperative communication in MANET. \\
+
+\begin{figure}[h]
+\begin{center}
+\scalebox{0.7}{\includegraphics{manet.jpg}}
+\caption{Mobile Ad-Hoc Network}\label{fig2}
+\end{center}
+\end{figure}
+
+
+\section{Routing Protocols in MANET}
+
+The traditional routing protocols for MANETs undertakes set-up and maintain routes between nodes. Ad Hoc routing protocols can be divided into two categories [9]: table-driven (proactive schemes) and on-demand routing (reactive scheme) based on when and how the routes are discovered. In Table-driven routing protocols each node maintains one or more tables containing routing information about nodes in the network whereas in on-demand routing the routes are created as and when required. Some of the table driven routing protocols are Destination Sequenced Distance Vector Routing protocols (DSDV), Clusterhead Gateway Switching Routing Protocol (CGSR), Hierarchical State Routing (HSR), and Wireless Routing Protocol (WRP) etc. The on-demand routing protocols are Ad Hoc On-Demand Distance Vector Routing (AODV), Dynamic Source Routing (DSR), and Temporally Ordered Routing Algorithm (TORA). There are many others routing protocols available. Zone Routing Protocol (ZRP) is the hybrid routing protocol.\\
+
+
+\begin{figure}[h]
+\begin{center}
+\scalebox{0.7}{\includegraphics{rttype.jpg}}
+\caption{Routing Protocol Classification}\label{fig3}
+\end{center}
+\end{figure}
+
+
+In MANETs continuously changing network topology causes link breakage and termination of end-to-end route. The routing protocols need to resolve the link failure prediction. In conventional on-demand routing protocols use flooding to discover a route to a particular destination. They broadcast a Route REQuest (RREQ) packet to its immediate neighbours, and the broadcasting induces excessive redundant retransmissions of RREQ packet and causes the broadcast storm problem, which leads to a huge number of packet collisions, especially in dense networks. Therefore, it is essential to optimize this broadcasting mechanism.
+\newline
+\newline
+
+\section{Broadcasting Protocols}
+
+Broadcasting protocols are classified into following four classes[8]
+\begin{enumerate}
+\item Probability Based Methods
+\item Simple Flooding
+\item Neighbour Knowledge Based
+\item Area Based Methods
+\end{enumerate}
+
+The above four classes of broadcasting protocols, an increase in the number of nodes in a static network will degrade the performance of the probability based methods and area based methods. Kim et al. indicates that the performance of neighbour knowledge methods is better than the area based ones, and the performance of area based methods is better than that of probability based ones. These problems put in force to design a simple, scalable, robust and energy efficient routing protocol for multicast environment. A multicast Ad hoc on- demand Distance Vector routing protocol (MAODV) establishes and maintains a shared multicast routing tree to deliver data from a source to receivers of a multicast group. \\
+
+The interest in wireless ad hoc networks stems from of their well-known advantages for certain types of applications. Since, there is no fixed infrastructure; a wireless ad hoc network can be deployed quickly. Thus, such networks can be used in situations where either there is no other wireless communication infrastructure present or where such infrastructure cannot be used because of security, cost, or safety reasons. \\
+
+
+Ad-hoc networks were mainly used for military applications. Since then, they have become increasingly more popular within the computing industry. Applications include emergency search and rescue operations, deployment of sensors, conferences, exhibitions, virtual classrooms and operations in environments where construction of infrastructure is difficult or expensive. Ad-hoc networks can be rapidly deployed because of the lack of infrastructure.\\
+
+
+\section{Characteristics of MANET}
+
+\begin{enumerate}
+  \item \textbf{Dynamic Topologies: }Since nodes are free to move arbitrarily, the network topology may change randomly and rapidly at unpredictable times. The links may be unidirectional bidirectional.
+Bandwidth constrained, variable capacity links: Wireless links have significantly lower capacity than their hardwired counterparts. Also, due to multiple access, fading, noise, and interference conditions etc. the wireless links have low throughput.
+  \item \textbf{Energy constrained operation: }Some or all of the nodes in a MANET may rely on batteries. In this scenario, the most important system design criteria for optimization may be energy conservation.
+  \item
+\textbf{Limited physical security: }Mobile wireless networks are generally more prone to physical security threats than are fixed- cable nets. The increased possibility of eavesdropping, spoofing, and denial-of-service attacks should be carefully considered. Existing link security techniques are often applied within wireless networks to reduce security threats. As a benefit, the decentralized nature of network control in MANET provides additional robustness against the single points of failure of more centralized approaches.
+
+\end{enumerate}
+
+\section{Motivation of Study}
+The initial motivation of the protocol: Since limiting the number of rebroadcasts can effectively optimize the broadcasting and the neighbor knowledge methods perform better than the area-based ones and the probability-based ones. The node which has more common neighbors with the previous node has the lower delay. If this node rebroadcasts a packet, then more common neighbors will know this fact. This rebroadcast delay enables the information that the nodes have transmitted the packet spread to more neighbors, which is the success for the proposed system.
+A novel scheme is proposed to calculate the rebroadcast probability. It considers the information about the uncovered neighbors (UCN), connectivity metric and local node density to calculate the rebroadcast probability.
+\newline
+
+\begin{flushleft}
+  The rebroadcast probability is composed of two parts:
+
+\end{flushleft}
+
+\begin{itemize}
+\item Additional coverage ratio, which is the ratio of the number of nodes that should be covered by a single broadcast to the total number of neighbors 
+\item Connectivity factor, which reflects the relationship of network connectivity and the number of neighbors of a given node.
+\end{itemize}
+
+
+\section{Summary}
+
+
+
+
+\chapter{LITERATURE REVIEW}
+
+\section{Introduction}
+Literature survey is the most important step in software development process. Before developing the tool, it is necessary to determine the time factor, economy and company strength. Once these things are satisfied, then next steps are to determine which operating system and language can be used for developing the tool. Once the programmers start building the tool, the programmers need a lot of external support. This support can be obtained from senior programmers, books or websites. Before building the system, the above considerations are taken into account for developing the proposed system.\\
+
+\section{Existing Studies}
+
+Following are some existing studies and approaches related for optimization of broadcasting methods for improving the routing performance:\\
+
+Redundant retransmission of route request packets consumes much network resources and which is very costly [1]. This retransmission causes more overhead on routing, leads to problems like collisions, contentions. Thus to avoid routing overhead optimization of broadcasting is an effective solution. \\
+
+Where in the Gossip-Based Ad Hoc Routing [3] forwarding takes place with some probability at each node. This approach can save up to 35 percent overhead compare to the flooding of the packet. But, the improvement of this approach is limited, when the network density is high or the traffic load is heavy.\\
+
+Probabilistic broadcasting approach based on coverage area and neighbour confirmation [4] uses the covering area of node to set the rebroadcast probability using the neighbour confirmation to guarantee ability of reaching the packet to its neighbour. \\
+
+The Scalable Broadcast Algorithm (SBA) [11] scheme considers the fact of reaching packet to the more nodes according to that retransmit the received packet. \\
+
+In Dynamic Probabilistic Route Discovery (DPR) [5] scheme is based on neighbour covering knowledge. In which forwarding of packet is take place according to the probability which is determined by considering the number of neighbours covered already by the packet along with number of its neighbour. However in DPR it only considers the nodes which are previously covered by the broadcast but ignoring the nodes which will receive the duplicate packets. Hence further optimization of DPR is necessary to increase the performance.\\
+
+Also in the scheme [6] which combines AODV protocol with Directional Forward Routing (AODV-DFR) which takes the directional forwarding into AODV protocol used in geographic routing. When a route breaks, this protocol can automatically find the next-hop node for packet forwarding. \\
+
+Practically, these approaches show the improvement in conventional routing schemes. However, to investigate and improve the throughput by reducing routing overhead further required to work, this imposes the next research problem of optimizing the rebroadcasting method in mobile ad hoc network.
+
+
+\chapter{REQUIREMENT ANALYSIS}
+
+\section{Introduction}
+Requirements analysis, also called requirements engineering, is the process of determining user expectations for a new or modified product or system. These features, called requirements, must be quantifiable, relevant and detailed. A requirements specification states what software will be expected to do, and not how it needs to do it. It is started before software design and implementation can begin; indeed, it should be (nearly) completed, and should be reviewed and ``accepted'' before software design and implementation. However, if the software to be developed is large or complex, or is to be used or maintained for a long period of time, then the requirements specification probably will be changed at some point.
+
+\section{Project Management}
+The term project has wider meaning. A project is accomplished by performing the set of activities.
+\newline
+\newline
+
+
+\begin{description}
+  \item[-] \textbf{The Traditional Approach: }
+\newline
+\newline
+For project traditional phased approach identifies a sequence of steps to be completed.
+In the traditional approach, we can distinguish 5 components of a project (4 stages + control) in the development of a project
+
+
+\end{description}
+
+\begin{figure}[h]
+\begin{center}
+\scalebox{0.7}{\includegraphics{prjmgmt.jpg}}
+\caption{Typical/Traditional Approach for Project}\label{fig4}
+\end{center}
+\end{figure}
+
+\newpage
+\begin{flushleft}
+  Following are the steps or stages involved:
+\end{flushleft}
+
+
+\begin{enumerate}
+\item Project Initiation stage: Initial stage of project.
+\item Project Planning or Design stage: In this phase project is planned and is designed for execution.
+\item Project Execution or Production stage: Execution of project and actual coding of project takes place in this phase.
+\item Project Monitoring and controlling Systems: In this phase project stages are monitored and if needed control are used to complete the designed task in preplanned time.
+\item Project Completion stage: This is last phase where project completion and project deployment takes place.
+\end{enumerate}
+
+
+
+\subsection{Project Management Tools}
+
+The tools useful for project management are as follows:
+\begin{enumerate}
+  \item Cause and effect chart
+  \item Gantt chart
+  \item PERT chart
+  \item Event Chain Diagram
+  \item Project Cycle Optimization (PCO), etc.
+\end{enumerate}
+
+
+\begin{description}
+  \item[-] \textbf{Gantt Chart}
+
+Gantt charts like those used in modern project management software and control charts are the typical tools used for communicating project schedule status. The Gantt chart is the most favoured, used and understood project schedule. This kind of chart is commonly referred to as a tracking Gantt chart. Gantt chart gives overview of project status on the report date Chart. A Gantt chart is a type of bar chart that shows a project schedule. Gantt charts show the start and finish dates of tasks (called the terminal elements and summary elements) of a project. Terminal elements and summary elements make up the work breakdown structure of the project. Some Gantt charts also show the dependency (which is called, precedence network) relationships between activities. Gantt charts can be used to show current schedule status using percentage-finished shadings and a vertical "TODAY" line. It is a tool of project management invented by the engineer Henry L. Gantt.\\
+
+Gantt charts can be used for scheduling generic resources, so as well as their use in project management; they can also be used in scheduling production processes and employee roistering. There are many computer applications supporting the use of Gantt charts for employee scheduling. Gantt charts can be used to track shifts or tasks and also vacations or other types of out-of-office time. There are many dedicated Gantt chart software products (both paid and free) available on the internet. However, it is also possible to use common desktop programs (such as Microsoft Excel) to create simple Gantt charts.
+
+\end{description}
+
+\section{Requirement Specifications}
+
+\subsection{Functional Requirements}
+
+In software engineering, a functional requirement defines a function of a software system or its component. A function is described as a set of inputs, the behaviour and outputs. Functional requirements may be calculations, technical details, data manipulation and processing and other specific functionality that define what a system is supposed to accomplish. Behavioural requirements describing all the cases where the system uses the functional requirements are captured in use cases. \\
+
+Functional requirements are supported by non-functional requirements (also known as quality requirements), which impose constraints on the design or implementation (such as performance requirements, security, or reliability). How a system implements functional requirements is detailed in the system design. In some cases a requirements analyst generates use cases after gathering and validating a set of functional requirements. Each use case illustrates behavioural scenarios through one or more functional requirements. Often, though, an analyst will begin by eliciting a set of use cases, from which the analyst can derive the functional requirements that must be implemented to allow a user to perform each use case.
+\begin{enumerate}
+\item[-] Generate Neighbor coverage storage.
+\item[-] Create Mobile nodes by passing ID.
+\item[-] Generate MANET with n-mobile nodes.
+\item[-] Hello Packets Transmission done from Node to Node.
+\item[-] After transmission the data observe the Uncovered Neighbor nodes.
+\item[-] Calculate the Delay with Computational complexity.
+\item[-] Observe the Data transmission after re-broadcast.
+\end{enumerate}
+
+\subsection{Non Functional Requirements}
+In systems engineering and requirements engineering, a non-functional requirement is a requirement that specifies criteria that can be used to judge the operation of a system, rather than specific behaviors. This should be contrasted with functional requirements that define specific behavior or functions In general, functional requirements define what a system is supposed to do whereas non-functional requirements define how a system is supposed to be. Non-functional requirements are often called qualities of a system. Other terms for non-functional requirements are "constraints", "quality attributes", "quality goals" and "quality of service requirements," and "non-behavioral requirements”.\\
+
+Qualities, that is, non-functional requirements, can be divided into two main categories:
+\begin{enumerate}
+\item[-] Execution qualities, such as security and usability, which are observable at run time.
+\item[-] Evolution qualities, such as testability, maintainability, extensibility and scalability, which are embodied in the static structure of the software system.
+\end{enumerate}
+
+
+\begin{flushleft}
+  The major non-functional Requirements of the system are as follows
+\end{flushleft}
+
+\begin{enumerate}
+\item [-] \textbf{Usability:}
+The system is designed with completely automated process hence there is no or less user intervention.
+\item [-] \textbf{Reliability:}
+The system is more reliable because of the qualities that are inherited from the chosen platform java. The code built by using java is more reliable.
+\item [-] \textbf{Performance:}
+This system is developing in the high level languages and using  the advanced front-end and back-end technologies it will give response to the end user on client system with in very less time.
+\item [-] \textbf{Supportability:}
+The system is designed to be the cross platform supportable. The system is supported on a wide range of hardware and any software platform, which is having JVM, built into the system.
+Implementation\\
+
+\end{enumerate}
+
+
+
+
+
+
+
+
+
+\subsection{Hardware Requirement}
+
+\begin{table}[ht]
+\begin{center}
+\caption{Hardware Requirements}
+\vspace*{0.075cm}
+\label{t1}
+\renewcommand{\arraystretch}{0.01}
+\begin{tabular}{|p{2cm}|p{5cm}|p{5cm}|}
+\hline
+\textbf{\begin{center}Sr. No.\end{center}}&\textbf{\begin{center}Hardware\end{center}}&\textbf{\begin{center}Quantity\end{center}}\\
+\hline
+\begin{center}1\end{center}&\begin{center}Computer/Laptop\end{center}&\begin{center}1\end{center}\\
+\hline
+\begin{center}2\end{center}&\begin{center}Hard Disk (160GB)\end{center}&\begin{center}1\end{center}\\
+\hline
+\begin{center}3\end{center}&\begin{center}RAM ( 1GB)\end{center}&\begin{center}1\end{center}\\
+\hline
+\begin{center}4\end{center}&\begin{center}Monitor (17”VGA)\end{center}&\begin{center}1\end{center}\\
+\hline
+\begin{center}5\end{center}&\begin{center}Pentium Dual-core 2.10Ghz Processor\end{center}&\begin{center}1\end{center}\\
+
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\newpage
+\subsection{Software Requirement}
+
+\begin{table}[ht]
+\begin{center}
+\caption{Software Requirements}
+\vspace*{0.075cm}
+\label{t2}
+\renewcommand{\arraystretch}{0.075}
+\begin{tabular}{|p{2cm}|p{5cm}|p{5cm}|}
+\hline
+\textbf{\begin{center}Sr. No.\end{center}}&\textbf{\begin{center}Software\end{center}}&\textbf{\begin{center}Description\end{center}}\\
+\hline
+\begin{center}1\end{center}&\begin{center}Operating System\end{center}&\begin{center}Windows XP/7\end{center}\\
+\hline
+\begin{center}2\end{center}&\begin{center}Tools\end{center}&\begin{center}NS 2.30\end{center}\\
+\hline
+\begin{center}3\end{center}&\begin{center}Language\end{center}&\begin{center}TCL\end{center}\\
+\hline
+\begin{center}4\end{center}&\begin{center}Command Line Interface\end{center}&\begin{center}Cygwin (Windows XP)\end{center}\\
+\hline
+\begin{center}5\end{center}&\begin{center}Virtual Machine Player\end{center}&\begin{center}Vmware Workstation\end{center}\\
+
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+
+
+
+Software requirements deal with defining software resource requirements and prerequisites that need to be installed on a computer to provide optimal functioning of an application. These requirements or prerequisites are generally not included in the software installation package and need to be installed separately before the software is installed.
+
+\newpage
+\section{Tools}
+
+\subsection{Network Simulator 2.30}
+
+NS2 stands for Network Simulator Version 2. It is an open-source event-driven simulator designed specifically for research in computer communication networks.
+\newline
+
+\begin{flushleft}
+  \textbf{Features of NS2}
+\end{flushleft}
+
+\begin{enumerate}
+\item It is a discrete event simulator for networking research.
+\item It provides substantial support to simulate bunch of protocols like TCP, FTP, UDP, HTTP and DSR.
+\item It simulates wired and wireless network.
+\item It is primarily Unix based.
+\item Uses TCL as its scripting language.
+\item Otcl: Object oriented support
+\item Tcl: C++ and otcl linkage
+\item Discrete event scheduler\\
+
+\end{enumerate}
+
+\newpage
+
+\begin{flushleft}
+  \textbf{Basic Architecture of NS2:}
+\end{flushleft}
+
+NS2 consists of two key languages: C++ and Object-oriented Tool Command Language (OTcl). While the C++ defines the internal mechanism (i.e., a backend) of the simulation objects, the OTcl sets up simulation by assembling and configuring the objects as well as scheduling discrete events. The C++ and the OTcl are linked together using TclCL
+
+\begin{figure}[h]
+\begin{center}
+\scalebox{0.9}{\includegraphics{Architectureofns2.jpg}}
+\caption{Architecture of NS2}\label{fig5}
+\end{center}
+\end{figure}
+
+NS2 uses OTcl to create and configure a network, and uses C++ to run simulation. All C++ codes need to be compiled and linked to create an executable file.
+
+\begin{flushleft}
+  \textbf{Use of OTcl:}
+\end{flushleft}
+
+
+\begin{enumerate}
+\item [-] For configuration, setup, or one time simulation, or
+\item [-] To run simulation with existing NS2 modules.
+\end{enumerate}
+
+
+\begin{flushleft}
+\textbf{Use of C++:}
+\end{flushleft}
+
+
+When you are dealing with a packet, or when you need to modify existing NS2 modules.
+This option is preferable for most beginners, since it does not involve complicated internal mechanism of NS2. Unfortunately, existing NS2 modules are fairly limited. This option is perhaps not sufficient for most researchers.\\
+
+NS2 a very common and widely used tool to simulate small and large area networks. Tcl scripts are widely used in NS-2 simulation tool. Tcl scripts are used to set up a wired or wireless communication network, and then run these scripts via the NS-2 for getting the simulation results.\\
+
+\begin{flushleft}
+  \textbf{Trace Files Generated in NS2:}
+\end{flushleft}
+
+NS2 currently supports a number of different types of trace files. In addition to its own format, NS2 also has the Nam trace format, which contains the necessary information from the simulation to drive the Nam visualizer. Both of these trace formats are very specific when it comes to giving details about the events that occur during an NS2 simulation.\\
+
+Traces and monitors represent the only support for data collection in ns-2. Traces record events related to the generation, enqueueing, forwarding, and dropping of packets. Each event corresponds to a line of ASCII characters, which contains information on the event type and the information stored into the packet
+NS-2 provides three kinds of formats for wired networks: Tracing, Monitoring and NAM trace file.\\
+
+
+
+\begin{flushleft}
+  \textbf{Advantages:}\\
+\end{flushleft}
+\begin{enumerate}
+\item Cheap- Does not require costly equipment.
+\item Complex scenarios can be easily tested.
+\item Results can be quickly obtained – more ideas can be tested in a smaller time frame.
+\item Support various protocols.
+\item Support various platforms.
+\item Modularity.
+\item Popular.
+\end{enumerate}
+
+
+\begin{flushleft}
+  \textbf{Limitation:}
+\end{flushleft}
+\begin{enumerate}
+\item Real system too complex to model. i.e. complicated structure.
+\item Bugs are unreliable.
+\end{enumerate}
+
+
+
+\subsection{Language: TCL}
+
+TCL is a scripting programming language - similar to PERL or Python
+Tcl (originally from Tool Command Language, but conventionally spelled "Tcl" rather than "TCL"; pronounced as "tickle" or "tee-see-ell") is a scripting language created by John Ousterhout. Originally "born out of frustration", according to the author, with programmers devising their own languages intended to be embedded into applications, Tcl gained acceptance on its own. It is commonly used for rapid prototyping, scripted applications, GUIs and testing. Tcl is used on embedded systems platforms, both in its full form and in several other small-footprint versions.\\
+
+Object TCL (OTCL) is an object oriented extension of TCL, OTcl is written in C++. OTCL's library of objects can be extended by adding object definitions in the C++ source code. The NS2 network simulator consists mainly of object extensions written in C++ that have been added to OTcl. A special simulator object is defined in NS2 that perform process-based simulation on the network objects. To write a network simulation program in NS2, the programmer simply write an OTcl program that creates network objects and one (special) simulator object.\\
+
+\subsection{Cygwin}
+Cygwin is a Unix-like environment and command-line interface for Microsoft Windows. Cygwin provides native integration of Windows-based applications, data, and other system resources with applications, software tools, and data of the Unix-like environment. Thus it is possible to launch Windows applications from the Cygwin environment, as well as to use Cygwin tools and applications within the Windows operating context.\\
+
+Cygwin consists of two parts: a dynamic-link library (DLL) as an API compatibility layer providing a substantial part of the POSIX API functionality, and an extensive collection of software tools and applications that provide a Unix-like look and feel. Cygwin was originally developed by Cygnus Solutions, which was later acquired by Red Hat. It is free and open source software, released under the GNU General Public License version 3. Today it is maintained by employees of Red Hat, NetApp and many other volunteers.
+
+
+\section{Summary}
+In summary we can state that there are main 4 requirements that are needed to run program effectively. These are User Software Requirements, and Hardware Requirements.Hardware Requirements are System, Processor etc. Software Requirements are NS2, Cygwin etc.
+
+
+
+\chapter{METHODOLOGY}
+
+\section{Introduction}
+The design of any research project requires considerable attention to the research methods and the proposed data analysis. Within this section, we have attempted to provide some information about how to produce a research design for a study. We offer a basic overview of the research methods portion of a research proposal and then some data analysis templates for different types of designs.
+
+\section{Problem Statement}
+In MANET due to node mobility frequent link breakages may lead to frequent path failures which results in flooding of route discoveries. This could increase the overhead of routing protocols and reduce the packet delivery ratio with increasing end-to-end delay. Thus, reducing the routing overhead in route discovery is an essential problem.
+
+\section{Objective}
+The main objective is to reduce the number of rebroadcasts which can effectively optimize the broadcasting in mobile ad-hoc network.
+
+\section{Proposed System}
+To address the research problem associated with existing AODV discussed in above section, in this paper we are presenting the extended method which is having goal of not only reducing the routing overhead but also improves the overall throughput of MANET.  The throughput of system is improved by using the throughput aware recent routing algorithm with existing method of rebroadcasting. Below diagram \ref{fig6}is showing proposed system architecture.
+
+\begin{figure}[h]
+\begin{center}
+\scalebox{0.9}{\includegraphics{psa.jpg}}
+\caption{Proposed System Architecture}\label{fig6}
+\end{center}
+\end{figure}
+
+
+\chapter{DETAILED DESIGN}
+
+\section{Introduction}
+
+The elements are like components which can be associated in different ways to make complete UML pictures which is known as diagram. So it is very important to understand the different diagrams to implement the knowledge in real life systems.\\
+
+Any complex system is best understood by making some kind of diagrams or pictures. These diagrams have a better impact on our understanding. So if we look around then we will realize that the diagrams are not a new concept but it is used widely in different form in different industries. We prepare UML diagrams to understand a system in better and simple way. A single diagram is not enough to cover all aspects of the system. So UML defines various kinds of diagrams to cover most of the aspects of a system.\\
+
+You can also create your own set of diagrams to meet your requirements. Diagrams are generally made in an incremental and iterative way.
+
+\section{Data Flow diagram}
+It is a graphical representation of the data. It identifies the path the data will take, what process will take place to it from one from to another.\\
+
+A DFD is a graphical representation of the flow of data through an information system. It can be used to provide a clear representation of any function. It doesn’t provide information about the timing of processes or about whether processes will operate in sequence. Therefore it is different from a flowchart.\\
+
+
+
+\newpage
+
+\begin{table}[ht]
+\begin{center}
+\caption{Data Flow Symbols}
+\label{t1}
+\renewcommand{\arraystretch}{0.01}
+\begin{tabular}{|p{1cm}|p{3cm}|p{9cm}|}
+\hline
+\textbf{\begin{center}Sr. No.\end{center}}&\textbf{\begin{center}Symbol\end{center}}&\textbf{\begin{center}Description\end{center}}\\
+\hline
+\begin{center}1\end{center}&\begin{center}\scalebox{0.6}{\includegraphics{dfdf.jpg}}\end{center}&\begin{center}A \textbf{function} is represented using a circle. This symbol is called a process or a bubble and performs some processing of input data.\end{center}\\
+\hline
+\begin{center}2\end{center}&\begin{center}\scalebox{0.6}{\includegraphics{dfds.jpg}}\end{center}&\begin{center}A \textbf{square} defines a source or destination of system data. External entities represent any entity that supplies or receives information from the system but is not a part of the system.\end{center}\\
+\hline
+\begin{center}3\end{center}&\begin{center}\scalebox{0.6}{\includegraphics{dfda.jpg}}\end{center}&\begin{center}A \textbf{directed arc or arrow} is used as a data-flow symbol. A data-flow symbol represents the data flow occurring between two processes or between an external entity and a process in the direction of the data flow arrow.\end{center}\\
+\hline
+\begin{center}4\end{center}&\begin{center}\scalebox{0.6}{\includegraphics{dfdq.jpg}}\end{center}&\begin{center}A \textbf{data-store} is represented using two parallel lines. A logical file can represent either a data-store symbol, which can represent either a data structure, or a physical file on disk. Each data store is connected to a process by means of a data-flow symbol. The direction of the data-flow arrow shows whether data is being read from or written into a data store.\end{center}\\
+\hline
+\begin{center}5\end{center}&\begin{center}\scalebox{0.6}{\includegraphics{dfdx.jpg}}\end{center}&\begin{center}An Output is used to represent data acquisition and production during human-computer interaction.\end{center}\\
+
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+
+
+There are different levels of a data-flow diagram. The initial level is called the context level or fundamental system model or a 0-level DFD. If the 0-level process is expanded then get the 1st-level DFD and if further expanding the 1st level processes then get the 2nd-level DFD and so on. Following level-wise Data Flow Diagrams for proposed approach:\\
+
+\newpage
+
+\begin{flushleft}
+
+
+   Following level-wise Data Flow Diagrams for: Throughput-Aware Probabilistic Rebroadcasting Method to Reduce Routing Overhead in MANET.
+
+\end{flushleft}
+
+
+
+
+\begin{figure}[h]
+\begin{center}
+\scalebox{0.5}{\includegraphics{dfd0.jpg}}
+\caption{Level 0 Data Flow Diagram}\label{fig7}
+\end{center}
+\end{figure}
+
+
+
+\begin{figure}[h]
+\begin{center}
+\scalebox{0.5}{\includegraphics{dfd1.jpg}}
+\caption{Level 1 Data Flow Diagram}\label{fig8}
+\end{center}
+\end{figure}
+
+
+\begin{figure}[h]
+\begin{center}
+\scalebox{0.5}{\includegraphics{dfd2.jpg}}
+\caption{Level 2 Data Flow Diagram}\label{fig9}
+\end{center}
+\end{figure}
+
+
+\newpage
+
+\section{UML Diagram}
+
+\subsection{General Introduction}
+
+The Object Management Group (OMG) specification states:\\
+
+The Unified Modelling Language (UML) is a graphical language for visualizing, specifying, constructing, and documenting the artefacts of a software-intensive system. The UML offers a standard way to write a system’s blueprints, including conceptual things such as business processes and system functions as well as concrete things such as programming language statements, database schemas, and reusable software components.
+\begin{itemize}
+\item The unified modelling language allows the software engineer to express an analysis model using the modelling notation that is governed by a set of syntactic semantic and pragmatic rules.
+\item A UML system is represented using five different views that describe the system from distinctly different perspective. UML is specifically constructed through two different domains they are
+\item UML Analysis modelling, this focuses on the user model and structural model views of the system.
+\item UML design modelling, which focuses on the behavioural modelling, implementation modelling and environmental model views.
+\end{itemize}
+
+\begin{flushleft}
+  These are divided into the following types.
+\end{flushleft}
+
+\begin{enumerate}
+\item Use case diagram
+\item Class diagram
+\item Sequence diagram
+\item Collaboration diagram
+\item Activity diagram
+\item State chart diagram
+\end{enumerate}
+
+
+\newpage
+\subsection{Use Case Diagram}
+Use case diagrams are usually referred to as behavior diagrams used to describe a set of actions (use cases) that some system or systems (subject) should or can perform in collaboration with one or more external users of the system (actors). Each use case should provide some observable and valuable result to the actors or other stake holders of the system.\\
+
+
+ The usage scenario describes a real-world example of how the users interact with a system. It describes the steps, events, and/or actions which occur during the interaction. Usage scenarios are applied in several development processes. The use case diagram of proposed system is described in above figures.\\
+
+ A use case is a description of a set of sequences of  actions, including variants, that a system performs to yield an observable result of value to an actor. Graphically, a use case is rendered as an ellipse. A use case describes what a system (or a subsystem, class, or interface) does but it does not specify how it does it.\\
+
+\begin{flushleft}
+  The primary goals of Use Case diagrams include:
+\end{flushleft}
+\begin{enumerate}
+\item[-]	Providing a high-level view of what the system does.
+\item[-]	Identifying the users ("actors") of the system.
+\item[-]	Determining areas needing human-computer interfaces.
+\end{enumerate}
+
+\newpage
+
+\begin{flushleft}
+  \textbf{Graphical Notation:}
+\end{flushleft}
+
+
+ The basic components of Use Case diagrams are the Actor, the Use Case and the Association.
+
+
+\begin{table}[ht]
+\begin{center}
+\caption{Basic Components of Use Case Diagram}
+\label{t1}
+\renewcommand{\arraystretch}{0.1}
+\begin{tabular}{|p{2cm}|p{8cm}|p{3.5cm}|}
+\hline
+\textbf{\begin{center}Name\end{center}}&\textbf{\begin{center}Description\end{center}}&\textbf{\begin{center}Representation\end{center}}\\
+\hline
+\begin{center}Actor\end{center}&\begin{center}An Actor is user of the system and is depicted using a stick figure. The role of the user is written beneath the icon. If a system communicates with another application and expects input or delivers output, then that application can also be considered an actor.\end{center}&\begin{center}\scalebox{0.6}{\includegraphics{actor.jpg}}\end{center}\\
+\hline
+\begin{center}Use Case\end{center}&\begin{center}A Use Case is functionality provided by the system, Use Cases are depicted with an ellipse. The name of the use case is written within the ellipse.\end{center}&\begin{center}\scalebox{0.6}{\includegraphics{uc.jpg}}\end{center}\\
+\hline
+\begin{center}Directed Association\end{center}&\begin{center}Are used to link Actors with Use Cases and indicate that an Actor participates in the Use Case in some form. Behind each Use Case is a series of actions to achieve the proper functionality, fails, or errors occur. These actions can be further defined in a Use Case description. Because this is not addressed in UML, there are no standards for Use Case descriptions. \end{center}&\begin{center}\scalebox{0.6}{\includegraphics{da.jpg}}\end{center}\\
+
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\newpage
+Use Case Diagram for NCPR
+
+\begin{figure}[h]
+\begin{center}
+\scalebox{0.6}{\includegraphics{ucd.png}}
+\caption{Use Case Diagram}\label{fig10}
+\end{center}
+\end{figure}
+
+The use case diagram describes the functionality of the system. The above   diagram shows the main function like network formation, finding uncover neighbor set etc and main roles involved in doing them.
+
+\newpage
+
+\subsection{Class Diagram}
+Class diagrams identify the class structure of a system, including the properties and methods of each class. Also depicted are the various relationships that can exist between classes, such as an inheritance relationship. The Class diagram is one of the most widely used diagrams from the UML specification. Part of the popularity of Class diagrams stems from the fact that many CASE tools, such as Rational XDE, will auto-generate code in a variety of languages, these tools can synchronize models and code, reducing the workload and can also generate Class diagrams from object-oriented code.\\
+
+\begin{flushleft}
+  \textbf{Graphical Notation:}
+\end{flushleft}
+The elements on a Class diagram are classes and the relationships between them.
+
+
+\begin{table}[ht]
+\begin{center}
+\caption{Basic Components Class Diagram}
+\label{t1}
+\renewcommand{\arraystretch}{0.5}
+\begin{tabular}{|p{2.2cm}|p{9cm}|p{3cm}|}
+\hline
+\textbf{\begin{center}Name\end{center}}&\textbf{\begin{center}Description\end{center}}&\textbf{\begin{center}Representation\end{center}}\\
+\hline
+\begin{center}Class\end{center}&\begin{center}Classes are the building blocks in object-oriented programming. A Class is depicted using a rectangle divided into three sections. The top section is the name of the Class. The middle section defines the properties of the Class. The bottom section lists the methods of the class.\end{center}&\begin{center}\scalebox{0.5}{\includegraphics{cd1.jpg}}\end{center}\\
+\hline
+\begin{center}Association\end{center}&\begin{center}An Association is a generic relationship between two classes and is modeled by a line connecting the two classes. This line can be qualified with the type of relationship and can also feature multiplicity rules (e.g. one-to-one, one-to-many, many-to-many) for the relationship. \end{center}&\begin{center}\scalebox{0.5}{\includegraphics{cd2.jpg}}\end{center}\\
+\hline
+\begin{center}Dependancy\end{center}&\begin{center}When a class uses another class, perhaps as a member variable or a parameter and so "depends" on that class, a Dependency relationship is formed. A Dependency relationship is indicated by a dotted arrow.\end{center}&\begin{center}\scalebox{0.5}{\includegraphics{cd3.jpg}}\end{center}\\
+\hline
+
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\newpage
+
+\begin{figure}[h]
+\begin{center}
+\scalebox{0.7}{\includegraphics{cd0.jpg}}
+\caption{Class Diagram}\label{fig11}
+\end{center}
+\end{figure}
+
+
+This class diagram describes relationship between set of classes and     interfaces. Class diagram describes the static view of the system. The above diagram contains one source node, node and its attributes and operations.\\
+
+\newpage
+
+
+\subsection{Sequence Diagram}
+Sequence diagrams document the interactions between classes to achieve a result, such as a use case. Because UML is designed for object-oriented programming, these communications between classes are known as messages. The Sequence diagram lists objects horizontally and time vertically and models these messages over time.\\
+
+Graphical Notation In a Sequence diagram, classes and actors are listed as columns, with vertical lifelines indicating the lifetime of the object over time.
+
+
+\begin{table}[ht]
+\begin{center}
+\caption{Basic Components of Sequence Diagram}
+\label{t1}
+\renewcommand{\arraystretch}{0.5}
+\begin{tabular}{|p{1.5cm}|p{8cm}|p{4cm}|}
+\hline
+\textbf{\begin{center}Name\end{center}}&\textbf{\begin{center}Description\end{center}}&\textbf{\begin{center}Representation\end{center}}\\
+\hline
+\begin{center}Object\end{center}&Objects are instances of classes and are arranged horizontally. The pictorial representation for an Object is a class (a rectangle) with the name prefixed by the object name (optional) and a semi-colon.&\begin{center}\scalebox{0.8}{\includegraphics{sd1.jpg}}\end{center}\\
+\hline
+\begin{center}Actor\end{center}&\begin{center}Actors can also communicate with objects, so they too can be listed as a column. An Actor is modeled using the ubiquitous symbol, the stick figure. \end{center}&\begin{center}\scalebox{0.8}{\includegraphics{sd2.jpg}}\end{center}\\
+\hline
+\begin{center}Lifeline\end{center}&\begin{center}The Lifeline identifies the existence of the object over time. The notation for a Lifeline is a vertical dotted line extending from an object.\end{center}&\begin{center}\scalebox{0.8}{\includegraphics{sd3.jpg}}\end{center}\\
+\hline
+\begin{center}Activation\end{center}&\begin{center}Activations, modeled as rectangular boxes on the lifeline, indicate when the object is performing an action.\end{center}&\begin{center}\scalebox{0.8}{\includegraphics{sd4.jpg}}\end{center}\\
+\hline
+
+\begin{center}Message\end{center}&\begin{center}Messages, modeled as horizontal arrows between Activations, indicate the communications between objects.\end{center}&\begin{center}\scalebox{0.8}{\includegraphics{sd5.jpg}}\end{center}\\
+
+
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\newpage
+\begin{flushleft}
+
+  \textbf{Sequence Diagram for NCPR:}
+\end{flushleft}
+
+\begin{figure}[h]
+\begin{center}
+\scalebox{0.8}{\includegraphics{sd0.jpg}}
+\caption{Sequence Diagram}\label{fig12}
+\end{center}
+\end{figure}
+
+
+The above sequence diagram describes the sender node sends the message to receiver node. The message is broadcast through the base station to the nodes.
+
+
+\newpage
+
+\subsection{Collaboration Diagram}
+ 	Like the other Behavioral diagrams, Collaboration diagrams model the interactions between objects. This type of diagram is a cross between an object diagram and a sequence diagram. Unlike the Sequence diagram, which models the interaction in a column and row type format, the Collaboration diagram uses the free-form arrangement of objects as found in an Object diagram. This makes it easier to see all interactions involving a particular object.\\
+
+
+\begin{flushleft}
+  \textbf{Graphical Notation}
+\end{flushleft}
+
+
+
+\begin{table}[ht]
+\begin{center}
+\caption{Basic Components of Collaboration Diagram}
+\label{t1}
+\renewcommand{\arraystretch}{0.5}
+\begin{tabular}{|p{1.5cm}|p{8cm}|p{4cm}|}
+\hline
+\textbf{\begin{center}Name\end{center}}&\textbf{\begin{center}Description\end{center}}&\textbf{\begin{center}Representation\end{center}}\\
+\hline
+\begin{center}Object\end{center}&Objects are instances of classes and are one of the entity types that can be involved in communications. An Object is drawn as a rectangular box, with the class name inside prefixed with the object name (optional) and a semi-colon.&\begin{center}\includegraphics{cld1.jpg}\end{center}\\
+\hline
+\begin{center}Message\end{center}&\begin{center}Messages, modeled as arrows between objects and labeled with an ordering number. Indicate the communications between objects. \end{center}&\begin{center}\includegraphics{cld2.jpg}\end{center}\\
+
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\newpage
+\begin{figure}[h]
+\begin{center}
+\scalebox{0.7}{\includegraphics{cld0.jpg}}
+\caption{Collaboration Diagram}\label{fig13}
+\end{center}
+\end{figure}
+
+
+
+The above collaboration diagram shows that sender node sends the message to the receiver node through the base station.
+
+\newpage
+\subsection{Activity Diagram}
+ 	This shows the flow of events within the system. The activities that occur within a use case or within an objects behavior typically occur in a sequence .an activity diagram is designed to be simplified look at what happens during an operations or a process. \\
+
+Each activity is represented by a rounded rectangle the processing within an activity goes to compilation and than an automatic transmission to the next activity occurs. An arrow represents the transition from one activity to the next. An activity diagram describes a system in terms of activities. Activities are the state that represents the execution of a set of operations. These are similar to flow chart diagram and dataflow.
+
+
+\begin{figure}[h]
+\begin{center}
+\scalebox{0.5}{\includegraphics{ad0.jpg}}
+\caption{Activity Diagram}\label{fig14}
+\end{center}
+\end{figure}
+
+The above Activity diagram shows the send the message to another node through base station .If the message is sent to all the nodes then it will terminate successfully. Otherwise it finds the uncovered neighbor set and calculates the delay time and probability value. Based upon probability value the message will be broadcast or discarded.
+
+\newpage
+\subsection{Deployment Diagram}
+
+ A deployment diagram is a diagram that shows the configuration of run time processing nodes and the components that live on them. Graphically, a deployment diagram is a collection of vertices and arcs.\\
+
+ Deployment diagrams commonly contain\\
+ \begin{itemize}
+   \item Nodes
+   \item Dependency and association relationships
+ \end{itemize}
+
+ Like all other diagrams, deployment diagrams may contain notes and constraints. Deployment diagrams may also contain components, each of which must live on some node. Deployment diagrams may also contain packages or subsystems, both of which are used to group elements of your model into larger chunks. Sometimes, you'll want to place instances  in your deployment diagrams, as well, especially when you want to visualize one instance of a family of hardware topologies.\\
+
+ Deployment diagrams are used to visualize the topology of the physical components of a system where the software components are deployed. Following figure shows Deployment Diagram of the proposed system.\\
+
+
+\begin{figure}[h]
+\begin{center}
+\scalebox{0.5}{\includegraphics{dd1.jpg}}
+\caption{Activity Diagram}\label{fig14}
+\end{center}
+\end{figure}
+
+\newpage
+
+\section{Summary}
+This gives a detail explanation of the architecture. A data flow diagram (DFD) gives a graphical representation of the “flow” of data through an information system, modeling its process aspects. It gives the overview of the system which is later elaborated. Each level gives a detail explanation about each module used at a specific level. A class diagram is a type of static structure diagram that describes the structure of a system by showing the system’s classes, their attributes, operations (or methods), and the relationships among the classes. Use case diagram gives description of a set of sequence of actions, including variants etc. that a system performs to yield an observable result of value to an actor. A single diagram is not enough to cover all aspects of the system. So UML defines various kinds of diagrams to cover most of the aspects of a system. You can also create your own set of diagrams to meet your requirements. Diagrams are generally made in an incremental and iterative way.
+
+
+\chapter{IMPLEMENTATION DETAILS}
+
+Source code of AODV routing protocol is modified in NS-2 (v2.30) to implement the proposed routing protocol. Note that the proposed NCPR protocol needs Hello packets to obtain the neighbor information, and also needs to carry the neighbor list in the RREQ packet. Therefore, in the implementation, some techniques are used to reduce the overhead of Hello packets.\\
+
+The approach is for probabilistic rebroadcasting by taking effectively advantage of the neighbor coverage knowledge, so rebroadcast delay and rebroadcast probability is calculated.\\
+
+
+
+
+\begin{flushleft}
+  \textbf{Rebroadcast delay:}
+\end{flushleft}
+
+The rebroadcast delay is to determine the forwarding order. The node    which has more
+common neighbors with the previous node has the lower delay, if this node rebroadcasts a packet, then more common neighbors will know this fact. Therefore, this rebroadcast delay enables the information that the nodes have transmitted the packet spread to more neighbors, which is the key to success for the implemented scheme.\\
+
+
+\begin{flushleft}
+  \textbf{Rebroadcast probability:}
+\end{flushleft}
+
+ The scheme considers the information about the uncovered neighbors (UCN), connectivity metric and local node density to calculate the rebroadcast probability.
+
+\begin{flushleft}
+  The rebroadcast probability is composed of two parts:
+\end{flushleft}
+
+
+\begin{itemize}
+
+\item Additional Coverage Ratio: Which is the ratio of the number of nodes that should be covered by a single broadcast to the total number of neighbors;
+
+\item Connectivity Factor: This reflects the relationship of network connectivity and the number of neighbors of a given node.
+
+\end{itemize}
+
+The approach combines the compensation of the neighbor coverage knowledge and the probabilistic mechanism, which appreciably decrease the number of retransmissions so reducing the routing overhead, and with improved the routing performance.
+
+\newpage
+
+\begin{flushleft}
+  The approach can be described as:
+\end{flushleft}
+
+\begin{enumerate}
+
+\item When node receives an RREQ packet from its previous node, it can use the neighbor list in the RREQ packet to estimate how many its neighbors have not been covered by the RREQ packet from its previous node.
+
+\item If node has more neighbors uncovered by the RREQ packet from previous node, which means that if node rebroadcasts the RREQ packet, the RREQ packet can reach more additional neighbor nodes.
+
+\item When a neighbor receives an RREQ packet, it could calculate the rebroadcast delay according to the neighbor list in the RREQ packet and its own neighbor list.
+
+\item After determining the rebroadcast delay, the node can set its own timer.
+
+\item If node receives a duplicate RREQ packet from its neighbor node, it knows that how many its neighbors have been covered by the RREQ packet from neighbor node. Thus, node could further adjust its UCN set according to the neighbor list in the RREQ packet from neighbor node.
+
+\item After adjusting the Uncovered Neighbors set, the RREQ packet received from node is discarded.
+
+\item When the timer of the rebroadcast delay of node expires, the node obtains the final UCN set. The nodes belonging to the final UCN set are the nodes that need to receive and process the RREQ packet.
+
+\item Calculate the additional coverage ratio which is the ratio of the number of nodes that are additionally covered by this rebroadcast to the total number of neighbors of node.
+
+\item Calculate connectivity factor which is the ratio of the number of nodes that need to receive the RREQ packet to the total number of neighbors of node.
+
+\item Combining the additional coverage ratio and connectivity factor, the rebroadcast probability of node can be obtained to forward the packets.
+
+\end{enumerate}
+
+\newpage
+
+The figure \ref{fig15} shows the sample flowchart of work for optimizing the broadcasting by taking the advantage neighbor coverage technique.\\
+
+\begin{figure}[h]
+\begin{center}
+\scalebox{0.7}{\includegraphics{fc.jpg}}
+\caption{Flow Chart for NCPR Routing Protocol Algorithm}\label{fig15}
+\end{center}
+\end{figure}
+
+
+
+\section{Algorithm Steps}
+
+
+\subsection{Network Formation}
+
+\begin{enumerate}
+\item The network contains number of nodes.
+\item In this module, can construct a topology to provide communication paths for wireless network.
+\item Here the node will give the own details  such as Node ID and port number through which the transmission is done and similarly give the known nodes details such as Node ID, IP address and port number which are neighbors to given node.
+
+\end{enumerate}
+
+
+\subsection{Rebroadcast Delay determination}
+
+\begin{enumerate}
+
+\item This module is to calculate the rebroadcast by using a novel scheme .
+\item The rebroadcast delay is to determine the forwarding order.
+\item The node which has the more common neighbors with the previous one has the lower delay.
+\item In order to reduce the collisions in the network for each node maintains a delay time.
+
+\end{enumerate}
+
+
+\subsection{Rebroadcast Probability Determination}
+
+In this module novel scheme is use to calculate rebroadcast probability. The scheme considers the information about the uncovered neighbors. The Rebroadcast Probability composed of  two parts ,they  are
+
+\begin{enumerate}
+\item Additional coverage ratio
+\item Connectivity factor
+\end{enumerate}
+
+
+\subsection{Neighbor Coverage-Based Probabilistic Rebroadcast}
+
+\begin{enumerate}
+
+\item The proposed NCPR protocol needs Hello packets to obtain the neighbor information and also needs to carry the neighbor list in the RREQ packet.\\
+\item Therefore, some techniques are used to reduce the overhead of Hello packets and neighbor list in the RREQ packet.\\
+\item Since a node sending any broadcasting packets can inform its neighbors of its existence, the broadcasting packets such as RREQ and route error (RERR) can play a role of Hello packets. only when the time elapsed from the last broadcasting packet is greater than the value of HelloInterval, the node needs to send a Hello packet.\\
+\item In order to reduce the overhead of neighbor list in the RREQ packet, each node needs to monitor the variation of its neighbor table and maintain a cache of the neighbor list in the received RREQ packet.\\
+\end{enumerate}
+
+
+\newpage
+
+\section{Algorithm Description}
+Below algorithm 1 is showing neighbor coverage based probabilistic rebroadcast approach for reducing the network routing overhead.
+
+\subsection{Algorithm 1}
+
+
+\begin{flushleft}
+ Definitions:
+\textbf{RREQv:} RREQ packet received from node v.\\
+\textbf{Rv.id:} the unique identifier (id) of RREQv.\\
+\textbf{N (u):} Neighbour set of node u.\\
+\textbf{U (u, x):} Uncovered neighbours set of node u for RREQ whose id is x.\\
+\textbf{Timer (u, x):} Timer of node u for RREQ packet whose id isx.\\
+\end{flushleft}
+
+{Note that, in the actual implementation of NCPR protocol, every different RREQ needs a
+    UCN set and a Timer.}
+
+
+
+
+ \begin{enumerate}
+
+\item if ni receives a new RREQs from s then
+\item {Compute initial uncovered neighbours set U(ni,Rs.id) forRREQs:}
+\item U(ni,Rs.id) = N(ni) − [N(ni) ∩ N(s)] − {s}
+\item {Compute the rebroadcast delay Td(ni):}
+\item Tp(ni) = 1 − [|N(s)∩ N(ni)| / |N(s)|]
+\item Td (ni) = MaxDelay × Tp(ni)
+\item Set a Timer (ni,Rs.id) according to Td(ni)
+\item end if
+\item
+\item while ni receives a duplicate RREQj from nj beforeTimer (ni,Rs.id) expires do
+\item {Adjust U(ni,Rs.id):}
+\item U(ni,Rs.id)=(ni,Rs.id)−[U(ni,Rs.id)∩N(nj )]
+\item discard (RREQj );
+\item end while
+\item
+\item if Timer (ni,Rs.id) expires then
+\item {Compute the rebroadcast probability Pre(ni):}
+\item Ra (ni) = |U(ni,Rs.id)|/ |N(ni)|
+\item Fc (ni) = Nc/ |N(ni)|
+\item Pre (ni) = Fc(ni) • Ra(ni)
+\item if Random (0,1) ≤ Pre(ni) then
+\item broadcast (RREQs)
+\item else
+\item discard (RREQs)
+\item end if
+
+\end{enumerate}
+
+\section{Simulation Environment}
+	
+In order to evaluate the performance of the proposed NCPR protocol, compare it with some other protocols using the NS-2 simulator. Broadcasting is a fundamental and effective data dissemination mechanism for many applications in MANETs. In this project, only one of the applications is considered: route request in route discovery. In order to compare the routing performance of the proposed NCPR protocol have to compare with other routing protocol i.e. AODV protocol which is an optimization scheme for reducing the overhead of RREQ packet incurred in route discovery in the recent literature.\\
+	
+	Simulation parameters are as follows: The Distributed Coordination Function (DCF) of the IEEE 802.11 protocol is used as the MAC layer protocol. The radio channel model follows a Lucent’s WaveLAN with a bit rate of 2 Mbps, and the transmission range is 250 meters. We consider constant bit rate (CBR) data traffic and randomly choose different source-destination connections. Every source sends four CBR packets whose size is 512 bytes per second. The mobility model is based on the random waypoint model in a field of 1000m X 1000m. In this mobility model, each node moves to a random selected destination with a random speed from a uniform distribution [1, max-speed].\\
+
+	After the node reaches its destination, it stops for a pause-time interval and chooses a new destination and speed. In order to reflect the network mobility, we set the max-speed to 5 m/s and set the pause time to 0. The MaxDelay used to determine the rebroadcast delay is set to 0.01 s, which is equal to the upper limit of the random jitter time of sending broadcast packets in the default implementation of AODV in NS-2. Thus, it could not induce extra delay in the route discovery. The simulation time for each simulation scenario is set to 100 seconds.
+
+\newpage
+
+\begin{table}[ht]
+\begin{center}
+\caption{Simulation Parameters}
+\vspace*{0.02cm}
+\label{t5}
+\renewcommand{\arraystretch}{0.02}
+\begin{tabular}{|p{1.5cm}|p{8cm}|p{4cm}|}
+\hline
+\textbf{\begin{center}Sr. No.\end{center}}&\textbf{\begin{center}Simulation Parameter\end{center}}&\textbf{\begin{center}Value\end{center}}\\
+\hline
+\begin{center}1\end{center}&\begin{center}Simulator\end{center}&\begin{center}NS-2 (V2.30)\end{center}\\
+\hline
+\begin{center}2\end{center}&\begin{center}Topology Size\end{center}&\begin{center}1000m X 1000m\end{center}\\
+
+\hline
+\begin{center}3\end{center}&\begin{center}Number of Nodes\end{center}&\begin{center}50,100,....,300\end{center}\\
+
+\hline
+\begin{center}4\end{center}&\begin{center}Transmission Range\end{center}&\begin{center}250m\end{center}\\
+
+\hline
+\begin{center}5\end{center}&\begin{center}Bandwidth\end{center}&\begin{center}2Mbps\end{center}\\
+
+\hline
+\begin{center}7\end{center}&\begin{center}Interface Queue Length\end{center}&\begin{center}50\end{center}\\
+
+\hline
+\begin{center}8\end{center}&\begin{center}Traffic Type\end{center}&\begin{center}CBR\end{center}\\
+\hline
+\begin{center}9\end{center}&\begin{center}Packet Size\end{center}&\begin{center}512 Bytes\end{center}\\
+\hline
+\begin{center}10\end{center}&\begin{center}Packet Rate\end{center}&\begin{center}4 Packets/Sec\end{center}\\
+\hline
+\begin{center}11\end{center}&\begin{center}Pause Time\end{center}&\begin{center}0\end{center}\\
+\hline
+\begin{center}12\end{center}&\begin{center}Min Speed\end{center}&\begin{center}1 m/s\end{center}\\
+\hline
+\begin{center}13\end{center}&\begin{center}Max Speed\end{center}&\begin{center}5 m/s\end{center}\\
+\hline
+
+\end{tabular}
+\end{center}
+\end{table}
+
+
+
+
+
+\newpage
+
+\section{Execution}
+
+
+\begin{flushleft}
+  \textbf{Topology Formation:}
+\end{flushleft}
+
+
+
+\begin{figure}[h]
+\begin{center}
+\scalebox{0.3}{\includegraphics{e50tcl.jpg}}
+\caption{Execution of 50.tcl }\label{fig16}
+\end{center}
+\end{figure}
+
+\begin{flushleft}
+  \textbf{Forwarding RREQ to Neighbours:}
+\end{flushleft}
+
+
+\begin{figure}[h]
+\begin{center}
+\scalebox{0.3}{\includegraphics{e2.jpg}}
+\caption{Node Topology for 50 nodes}\label{fig17}
+\end{center}
+\end{figure}
+
+
+
+In above figure it is clearly displayed that node\_0 and its neighbours receiving the RReq packet sent by node\_0. Node\_0 neighboures list is searched by node\_0 by considering its transmission range. If the distance between the node\_0 and other node is less than 250m then that node is in transmission range of node\_0 and it is its neighbor.\\
+
+
+\newpage
+
+\begin{flushleft}
+  \textbf{Communication:}
+\end{flushleft}
+
+\begin{figure}[h]
+\begin{center}
+\scalebox{0.3}{\includegraphics{e3.jpg}}
+\caption{Nodes Sending the data to its destination}\label{fig18}
+\end{center}
+\end{figure}
+
+After the Root formation node\_0 is sending the data packets to destination node\_18 through the intermediate nodes.
+
+
+\newpage
+\section{Calculation of the metrics:}
+
+\begin{enumerate}
+\item Using AODV protocol and for 50 number of nodes
+
+\begin{figure}[h]
+\begin{center}
+\scalebox{0.4}{\includegraphics{e4.jpg}}
+\caption{Metrics calculation using AODV protocol}\label{fig19}
+\end{center}
+\end{figure}
+
+\item Using NCPR protocol and for 50 number of nodes
+
+\begin{figure}[h]
+\begin{center}
+\scalebox{0.4}{\includegraphics{e5.jpg}}
+\caption{Metrics calculation using NCPR protocol}\label{fig20}
+\end{center}
+\end{figure}
+
+\end{enumerate}
+
+\chapter{RESULT AND ANALYSIS}
+
+
+We evaluate the performance of routing protocols using the following performance metrics:\\
+
+\begin{enumerate}
+
+\item \textbf{Packet Delivery Ratio:}  It is the calculation of the ratio of packet received by the    destinations which are sent by the various sources of the CBR.
+
+\item \textbf{Normalized routing load:} This metrics is used to calculate the number of routing packets which are transmitting with the original data packet over the network. This metrics indicates the efficiency of routing protocol in the MANET.
+
+\item \textbf{End to end packet delay:} This metrics calculates the time between the packet origination time at the source and the packet reaching time at the destination. Here if any data packet is lost or dropped during the transmission, then it will not consider for the same. Sometimes delay occurs because of discovery of route, queuing, intermediate link failure, packet retransmissions etc are considered while calculating the delay. Such kind of metrics we have to measure against the different number of nodes, different traffic patterns and data connections.
+
+\item \textbf{Throughput:} This metrics calculates the total number of packets delivered per second, means the total number of messages which are delivered per second.
+
+\end{enumerate}
+
+\section{Performance with Varied Number of Nodes}
+
+
+In the IEEE 802.11 protocol, the data and control packets share the same physical channel. In the conventional AODV protocol, the massive redundant rebroadcast incurs many collisions and interference, which leads to excessive packets drop. This phenomenon will be more severe with an increase in the number of nodes. The packet drops in MAC layer not only affect the number of retransmissions in MAC layer, but also affect the packet delivery ratio of CBR packets in the application layer. It is very important to reduce the redundant rebroadcast and packet drops caused by collisions to improve the routing performance. \\
+
+\newpage
+Figure \ref{fig21} shows the normalized routing overhead with different network density. The NCPR protocol can significantly reduce the routing overhead incurred during the route discovery, especially in dense network. Although the NCPR protocol increases the packet size of RREQ packets, it reduces the number of RREQ packets more significantly. Then, the RREQ traffic is still reduced. In addition, for fairness, the statistics of normalized routing overhead includes Hello traffic. Even so, the NCPR protocol still yields the best performance, so that the improvement of normalized routing overhead is considerable. This result indicates that the NCPR protocol is the most efficient among the three protocols.
+
+
+\begin{figure}[h]
+\begin{center}
+\scalebox{0.3}{\includegraphics{r1.jpg}}
+\caption{Normalized routing overhead with varied number of nodes}\label{fig21}
+\end{center}
+\end{figure}
+
+
+
+
+Figure \ref{fig22} shows the packet delivery ratio with increasing network density. The NCPR protocol can increase the packet delivery ratio because it significantly reduces the number of collisions, which is shown in Fig. 2, so that it reduces the number of packet drops caused by collisions. On average, the packet delivery ratio is improved in the NCPR protocol when compared with the conventional AODV protocol. And in the same situation, the NCPR protocol improves the packet delivery ratio when compared with the DPR protocol.
+
+
+\begin{figure}[h]
+\begin{center}
+\scalebox{0.3}{\includegraphics{r2.jpg}}
+\caption{Packet delivery ratio with varied number of nodes}\label{fig22}
+\end{center}
+\end{figure}
+
+\newpage
+
+Figure \ref{fig23} measures the average end-to-end delay of CBR packets received at the destinations with increasing network density. The NCPR protocol decreases the average end-to-end delay due to a decrease in the number of redundant rebroadcasting packets. The redundant rebroadcast increases delay because 1) it incurs too many collisions and interference, which not only leads to excessive packet drops, but also increases the number of retransmissions in MAC layer so as to increase the delay; 2) it incurs too many channel contentions, which increases the backoff timer in MAC layer, so as to increase the delay. Thus, reducing the redundant rebroadcast can decrease the delay.
+
+\begin{figure}[h]
+\begin{center}
+\scalebox{0.3}{\includegraphics{r3.jpg}}
+\caption{Average end-to-end delay with varied number of nodes}\label{fig23}
+\end{center}
+\end{figure}
+
+
+Figure \ref{fig24} shows the throughput performance with increasing network density. The NCPR protocol has increased the  throughput because it significantly reduces the number of collisions and routing load, so that it reduces the number of packet drops caused by collisions.
+
+\begin{figure}[h]
+\begin{center}
+\scalebox{0.3}{\includegraphics{r4.jpg}}
+\caption{Average Throughput with varied number of nodes}\label{fig24}
+\end{center}
+\end{figure}
+
+\section{Summary}
+
+\chapter{CONCLUSION AND FUTURE \newline ENHANCEMENT}
+
+In the MANET proposed work introduces a probabilistic rebroadcast protocol based on neighbor coverage technique to reduce the routing overhead in MANETs. This neighbor coverage knowledge includes additional coverage ratio and connectivity factor. This scheme introduces broadcast delay used to determine the forwarding order by effectively exploiting the neighbor coverage knowledge.\\
+
+Simulation results show that the proposed protocol generates less rebroadcast traffic than the flooding and some other optimized scheme in literatures. Because of less redundant rebroadcast, the proposed protocol mitigates the network collision and contention, so as to increase the packet delivery ratio and decrease the average end-to-end delay. The simulation results also show that the proposed protocol has good performance when the network is in high density or the traffic is in heavy load.\\
+
+By adding channel awareness mechanism the uncovered neighbor set with higher signal strength can be selected for easier and fast transmission of RREQ message and to improve the Quality of Service.\\
+
+
+
+
+
+
+\thispagestyle{empty}
+\appendix
+\chapter{Appendix : List of Abbreviation}
+
+\begin{table}[h]
+\begin{flushleft}
+\begin{tabular}{l l}
+
+ABBREVIATIONS&ILLUSTRATION\\
+\\MANET&Mobile Ad Hoc Network\\
+\\AODV&Ad Hoc On Demand Routing Protocol\\
+\\DPR&Dynamic Probabilistic Rebroadcasting Protocol\\
+\\RREQ&Route Request\\
+\\DSDV&Destination Sequenced Distance Vector Routing protocols\\
+\\DSR&Dynamic Source Routing\\
+\\WRP&Wireless Routing Protocol\\
+\\NS2&Network Simulator 2.30\\
+
+\end{tabular}
+\end{flushleft}
+\end{table}
+
+\newpage
+
+\chapter{Appendix :List of Publication}
+
+
+
+
+
+
+
+
+
+
+
+
+\begin{thebibliography}{}
+\bibitem{R1}
+A Neighbour Coverage based Probabilistic Rebroadcast for Reducing Routing Overhead in Mobile Ad hoc Networks Xin Ming Zhang, Member, IEEE, En Bo Wang, Jing Jing Xia,and Dan Keun Sung, Senior Member, IEEE TRANSACTIONS ON MOBILE COMPUTING, VOL. 12, NO. 3., MARCH 2013.
+
+\bibitem{R2}
+S.Y. Ni, Y.C. Tseng, Y.S. Chen, and J.P. Sheu, “The Broadcast Storm Problem in a Mobile Ad Hoc Network,” Proc. ACM/IEEE MobiCom, pp. 151-162, 1999.
+
+\bibitem{R3}
+Z. Haas, J.Y. Halpern, and L. Li, “Gossip-Based Ad Hoc Routing,”Proc. IEEE INFOCOM, vol. 21, pp. 1707-1716, 2002.
+
+\bibitem{R4}
+J. Kim, Q. Zhang, and D.P. Agrawal, “Probabilistic Broadcasting Based on Coverage Area and Neighbor Confirmation in Mobile Ad Hoc Networks,” Proc. IEEE GlobeCom, 2004.
+
+\bibitem{R5}
+J.D. Abdulai, M. Ould-Khaoua, L.M. Mackenzie, and A. Mohammed, “Neighbour Coverage: A Dynamic Probabilistic Route Discovery for Mobile Ad Hoc Networks,” Proc. Int’l Symp. Performance Evaluation of Computer and Telecomm. Systems (SPECTS ’08), pp. 165-172, 2008.
+
+\bibitem{R6}
+J. Chen, Y.Z. Lee, H. Zhou, M. Gerla, and Y. Shu, “Robust Ad Hoc Routing for Lossy Wireless Environment,” Proc. IEEE Conf. Military Comm. (MILCOM ’06), pp. 1-7, 2006.
+
+\bibitem{R7}
+Ashish Shrestha, Firat Tekiner, “On MANET Routing Protocols for Mobility and Scalability” Proc. IEEE Conf. Parallel and Distributed Computing, Applications and Technologies, pp. 451-456,2009
+
+\bibitem{R8}
+B. Williams and T. Camp, “Comparison of Broadcasting Techniques for Mobile Ad Hoc Networks,” Proc. ACM MobiHoc, pp. 194-205, 2002.
+
+\bibitem{R9}
+M. Naserian,  K.E. Tepe,  M. Tarique, “Routing overhead analysis for reactive routing protocols in wireless ad hoc networks” Proc. IEEE MobiCom Vol. 3, PP. 87 – 92, 2005
+
+\bibitem{R10}
+J.D. Abdulai, M. Ould-Khaoua, L.M. Mackenzie, and A. Mohammed, “Neighbour Coverage: A Dynamic Probabilistic Route Discovery for Mobile Ad Hoc Networks,” Proc. Int’l Symp. Performance Evaluation of Computer and Telecomm. Systems (SPECTS ’08), pp. 165-172, 2008.
+
+\bibitem{R11}
+W. Peng and X. Lu, “On the Reduction of Broadcast Redundancy in Mobile Ad Hoc Networks,” Proc. ACM MobiHoc, pp. 129-130, 2000.
+
+\end{thebibliography}
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

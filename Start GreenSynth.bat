@@ -135,7 +135,7 @@ if %errorlevel% equ 0 (
         echo       [NOTE] Port 8000 is active. Proceeding with existing process.
     )
 ) else (
-    start "GreenSynth Backend" cmd /k "title GreenSynth Backend && cd /d ""%BACKEND_DIR%"" && echo ============================================================ && echo   GREENSYNTH BACKEND [FastAPI on port 8000] && echo ============================================================ && ""%PYTHON_EXE%"" -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload"
+    start "GreenSynth Backend" cmd /k "title GreenSynth Backend && cd /d ""%BACKEND_DIR%"" && echo ============================================================ && echo   GREENSYNTH BACKEND [FastAPI on port 8000] && echo ============================================================ && ""%PYTHON_EXE%"" -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
     
     echo       Waiting for backend to initialize...
     powershell -NoProfile -ExecutionPolicy Bypass -Command "for ($i=0; $i -lt 20; $i++) { Start-Sleep -Seconds 1; try { $r = Invoke-RestMethod -Uri 'http://127.0.0.1:8000/health' -TimeoutSec 2; if ($r.status -eq 'healthy') { exit 0 } } catch {} }; exit 1" >nul 2>nul
@@ -154,7 +154,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command "if (Get-NetTCPConnection
 if %errorlevel% equ 0 (
     echo       GreenSynth Frontend is already running on port 5173.
 ) else (
-    start "GreenSynth Frontend" cmd /k "title GreenSynth Frontend && cd /d ""%FRONTEND_DIR%"" && echo ============================================================ && echo   GREENSYNTH FRONTEND [Vite + React on port 5173] && echo ============================================================ && npm run dev -- --host 127.0.0.1 --port 5173"
+    start "GreenSynth Frontend" cmd /k "title GreenSynth Frontend && cd /d ""%FRONTEND_DIR%"" && echo ============================================================ && echo   GREENSYNTH FRONTEND [Vite + React on port 5173] && echo ============================================================ && npm run dev -- --host 0.0.0.0 --port 5173"
     
     echo       Waiting for frontend to initialize...
     powershell -NoProfile -ExecutionPolicy Bypass -Command "for ($i=0; $i -lt 15; $i++) { Start-Sleep -Seconds 1; if (Get-NetTCPConnection -LocalPort 5173 -State Listen -ErrorAction SilentlyContinue) { exit 0 } }; exit 0" >nul 2>nul

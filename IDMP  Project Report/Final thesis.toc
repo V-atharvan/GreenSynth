@@ -1,0 +1,59 @@
+\contentsline {chapter}{\numberline {1}INTRODUCTION}{1}{}%
+\contentsline {section}{\numberline {1.1}Introduction to Project}{1}{}%
+\contentsline {section}{\numberline {1.2}Problem Statement}{2}{}%
+\contentsline {section}{\numberline {1.3}Scope and Objectives}{3}{}%
+\contentsline {subsection}{\numberline {1.3.1}Scope}{3}{}%
+\contentsline {subsection}{\numberline {1.3.2}Objective}{4}{}%
+\contentsline {section}{\numberline {1.4}Identification of Need}{5}{}%
+\contentsline {section}{\numberline {1.5}Motivation}{6}{}%
+\contentsline {section}{\numberline {1.6}Relevance to Inter Disciplinary Approach}{7}{}%
+\contentsline {chapter}{\numberline {2}LITERATURE REVIEW}{9}{}%
+\contentsline {section}{\numberline {2.1}Existing Systems}{9}{}%
+\contentsline {section}{\numberline {2.2}Limitations of Existing Systems}{10}{}%
+\contentsline {section}{\numberline {2.3}Research Gap}{11}{}%
+\contentsline {section}{\numberline {2.4}Proposed System}{11}{}%
+\contentsline {section}{\numberline {2.5}SDLC Model}{12}{}%
+\contentsline {chapter}{\numberline {3}REQUIREMENT SPECIFICATION}{14}{}%
+\contentsline {section}{\numberline {3.1}Functional Requirements}{14}{}%
+\contentsline {section}{\numberline {3.2}Non Functional Requirements}{16}{}%
+\contentsline {section}{\numberline {3.3}Hardware Requirements}{17}{}%
+\contentsline {section}{\numberline {3.4}Software Requirements}{17}{}%
+\contentsline {section}{\numberline {3.5}System Environment}{17}{}%
+\contentsline {chapter}{\numberline {4}SYSTEM DESIGN}{19}{}%
+\contentsline {section}{\numberline {4.1}System Architecture}{19}{}%
+\contentsline {section}{\numberline {4.2}Analysis model}{20}{}%
+\contentsline {subsection}{\numberline {4.2.1}ER Diagram}{22}{}%
+\contentsline {subsection}{\numberline {4.2.2}DFD Level 0}{22}{}%
+\contentsline {subsection}{\numberline {4.2.3}DFD Level 1}{22}{}%
+\contentsline {subsection}{\numberline {4.2.4}DFD Level 2}{23}{}%
+\contentsline {section}{\numberline {4.3}UML Diagrams}{23}{}%
+\contentsline {subsection}{\numberline {4.3.1}Use Case Diagram}{23}{}%
+\contentsline {subsection}{\numberline {4.3.2}Class Diagram}{23}{}%
+\contentsline {subsection}{\numberline {4.3.3}Sequence Diagram}{24}{}%
+\contentsline {section}{\numberline {4.4}Data Dictionary}{25}{}%
+\contentsline {chapter}{\numberline {5}IMPLEMENTATION}{27}{}%
+\contentsline {section}{\numberline {5.1}Technologies Used}{27}{}%
+\contentsline {section}{\numberline {5.2}Algorithm}{28}{}%
+\contentsline {subsection}{\numberline {5.2.1}Workflow}{28}{}%
+\contentsline {section}{\numberline {5.3}Database Design}{30}{}%
+\contentsline {section}{\numberline {5.4}Modules Description}{30}{}%
+\contentsline {subsection}{\numberline {5.4.1}Module 1: Characterization Analysis Engine}{30}{}%
+\contentsline {subsection}{\numberline {5.4.2}Module 2: Statistical Analysis Engine}{31}{}%
+\contentsline {subsection}{\numberline {5.4.3}Module 3: Machine Learning Pipeline}{31}{}%
+\contentsline {section}{\numberline {5.5}Screenshots}{32}{}%
+\contentsline {chapter}{\numberline {6}TESTING AND VALIDATION}{33}{}%
+\contentsline {section}{\numberline {6.1}Testing Strategy}{33}{}%
+\contentsline {section}{\numberline {6.2}Test Cases}{33}{}%
+\contentsline {section}{\numberline {6.3}Performance Evaluation}{33}{}%
+\contentsline {chapter}{\numberline {7}RESULTS AND DISCUSSION}{37}{}%
+\contentsline {section}{\numberline {7.1}Output of the System}{37}{}%
+\contentsline {section}{\numberline {7.2}Comparison with Existing System}{38}{}%
+\contentsline {section}{\numberline {7.3}Industrial benefits and impact}{38}{}%
+\contentsline {chapter}{\numberline {8}CONCLUSION AND FUTURE SCOPE}{41}{}%
+\contentsline {section}{\numberline {8.1}Summary of work}{41}{}%
+\contentsline {section}{\numberline {8.2}Achievements}{42}{}%
+\contentsline {section}{\numberline {8.3}Industrial usefulness}{42}{}%
+\contentsline {section}{\numberline {8.4}Future enhancements}{43}{}%
+\contentsline {chapter}{\numberline {A}Appendix : List of Abbreviations}{45}{}%
+\contentsline {chapter}{\numberline {B}Appendix : List of Publications}{47}{}%
+\contentsline {chapter}{\numberline {C}References}{48}{}%

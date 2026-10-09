@@ -2,7 +2,7 @@
  * GreenSynth Analytics — Characterization & Raw File Service
  */
 
-import apiClient from './api'
+import { apiClient, AUTH_TOKEN_KEY } from './api'
 import type {
   Characterization,
   CharacterizationCreate,
@@ -76,11 +76,14 @@ export const characterizationService = {
   },
 
   /**
-   * Return original file download URL.
+   * Return original file download URL with auth token for direct browser downloads.
    */
   getDownloadUrl(fileId: string): string {
     const baseUrl = apiClient.defaults.baseURL || '/api/v1'
-    return `${baseUrl}/files/${fileId}/download`
+    const token = typeof window !== 'undefined' ? localStorage.getItem(AUTH_TOKEN_KEY) : null
+    return token
+      ? `${baseUrl}/files/${fileId}/download?token=${encodeURIComponent(token)}`
+      : `${baseUrl}/files/${fileId}/download`
   },
 
   /**

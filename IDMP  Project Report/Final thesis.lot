@@ -1,20 +1,30 @@
 \addvspace {10\p@ }
+\contentsline {table}{\numberline {1.1}{\ignorespaces Multi-Dimensional Comparison of Hardware and Software Project Tracks}}{3}{}%
+\contentsline {table}{\numberline {1.2}{\ignorespaces Interdisciplinary Co-Design Matrix: Physical Synthesis to Computational Informatics Mapping}}{10}{}%
 \addvspace {10\p@ }
-\contentsline {table}{\numberline {2.1}{\ignorespaces GreenSynth SDLC Phase Summary}}{13}{}%
+\contentsline {table}{\numberline {2.1}{\ignorespaces Comparison of Existing Materials Research and Informatics Approaches}}{16}{}%
 \addvspace {10\p@ }
-\contentsline {table}{\numberline {3.1}{\ignorespaces Hardware Requirements for GreenSynth Analytics}}{17}{}%
-\contentsline {table}{\numberline {3.2}{\ignorespaces Software Requirements for GreenSynth Analytics}}{17}{}%
+\contentsline {table}{\numberline {3.1}{\ignorespaces Computing and Server Hardware Requirements}}{22}{}%
+\contentsline {table}{\numberline {3.2}{\ignorespaces Laboratory Experimental Apparatus and Analytical Instrumentation}}{23}{}%
+\contentsline {table}{\numberline {3.3}{\ignorespaces Software Technology Stack and Environment Requirements}}{24}{}%
 \addvspace {10\p@ }
-\contentsline {table}{\numberline {4.1}{\ignorespaces Data Flow Symbols}}{20}{}%
-\contentsline {table}{\numberline {4.2}{\ignorespaces Data Dictionary --- Core Entities}}{26}{}%
-\addvspace {10\p@ }
-\addvspace {10\p@ }
-\contentsline {table}{\numberline {6.1}{\ignorespaces Key Unit Test Cases}}{35}{}%
-\contentsline {table}{\numberline {6.2}{\ignorespaces API Endpoint Performance Benchmarks}}{36}{}%
-\addvspace {10\p@ }
-\contentsline {table}{\numberline {7.1}{\ignorespaces 5-Fold Cross-Validated ML Model Performance Comparison}}{38}{}%
-\contentsline {table}{\numberline {7.2}{\ignorespaces GreenSynth Analytics vs. Existing Systems}}{39}{}%
+\contentsline {table}{\numberline {4.1}{\ignorespaces Data Flow Symbols}}{27}{}%
+\contentsline {table}{\numberline {4.2}{\ignorespaces Data Dictionary: Research Projects and Experimental Setup Tables}}{41}{}%
+\contentsline {table}{\numberline {4.3}{\ignorespaces Data Dictionary: Experimental Parameters, Samples, and Raw Instrument Files}}{42}{}%
+\contentsline {table}{\numberline {4.4}{\ignorespaces Data Dictionary: Scientific Derivations and Machine Learning Model Registry}}{43}{}%
 \addvspace {10\p@ }
 \addvspace {10\p@ }
+\contentsline {table}{\numberline {6.1}{\ignorespaces Core System, Security, and Data Ingestion Test Cases}}{65}{}%
+\contentsline {table}{\numberline {6.2}{\ignorespaces Scientific Property Derivation and Machine Learning Test Cases}}{66}{}%
+\contentsline {table}{\numberline {6.3}{\ignorespaces Scientific Derivation Accuracy: GreenSynth Analytics vs.\ OriginLab Benchmark}}{67}{}%
+\contentsline {table}{\numberline {6.4}{\ignorespaces Computational Execution Latency and Throughput Benchmarks}}{68}{}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {7.1}{\ignorespaces Machine Learning Model Performance on the Synthetic P7 Dataset}}{72}{}%
+\contentsline {table}{\numberline {7.2}{\ignorespaces Central Composite Design (CCD) 29-Run Exploration Envelope for P7 $\text {CuO}$ Synthesis}}{73}{}%
+\contentsline {table}{\numberline {7.3}{\ignorespaces Comparative Workflow Evaluation: Conventional Manual Practice vs.\ GreenSynth Analytics}}{74}{}%
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {A.1}{\ignorespaces Abbreviations: Materials Science and Physical Characterization}}{81}{}%
+\contentsline {table}{\numberline {A.2}{\ignorespaces Abbreviations: Software Engineering, Database, and Machine Learning}}{81}{}%
 \addvspace {10\p@ }
 \addvspace {10\p@ }

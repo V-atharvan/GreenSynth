@@ -2,7 +2,24 @@
 \addvspace {10\p@ }
 \addvspace {10\p@ }
 \addvspace {10\p@ }
+\contentsline {figure}{\numberline {4.1}{\ignorespaces GreenSynth Analytics High-Level Domain Conceptual Architecture}}{25}{}%
+\contentsline {figure}{\numberline {4.2}{\ignorespaces Detailed Relational Entity-Relationship Diagram of GreenSynth Analytics}}{28}{}%
+\contentsline {figure}{\numberline {4.3}{\ignorespaces DFD Level 0 (Context Level Diagram) of GreenSynth Analytics}}{30}{}%
+\contentsline {figure}{\numberline {4.4}{\ignorespaces DFD Level 1 Diagram of GreenSynth Analytics}}{31}{}%
+\contentsline {figure}{\numberline {4.5}{\ignorespaces DFD Level 2: Subsystem 3.0 (Characterization \& Scientific Derivation Engine)}}{33}{}%
+\contentsline {figure}{\numberline {4.6}{\ignorespaces DFD Level 2: Subsystem 4.0 (Machine Learning Pipeline \& Design of Experiments)}}{35}{}%
+\contentsline {figure}{\numberline {4.7}{\ignorespaces UML Use Case Diagram of GreenSynth Analytics}}{36}{}%
+\contentsline {figure}{\numberline {4.8}{\ignorespaces UML Class Diagram of GreenSynth Analytics}}{38}{}%
+\contentsline {figure}{\numberline {4.9}{\ignorespaces UML Sequence Diagram Illustrating End-to-End Analysis and Inference Execution}}{39}{}%
 \addvspace {10\p@ }
+\contentsline {figure}{\numberline {5.1}{\ignorespaces Entity-Relationship (ER) Architecture of GreenSynth Analytics: Detailed relational model illustrating core tables, primary/foreign key mappings, and cascading integrity constraints.}}{52}{}%
+\contentsline {figure}{\numberline {5.2}{\ignorespaces Executive Dashboard: Overview of active research initiatives, synthesis experiment counts, sample inventories, and recent characterization events.}}{57}{}%
+\contentsline {figure}{\numberline {5.3}{\ignorespaces Experiment and Sample Management Interface: Logging synthesis run parameters, solution concentrations, substrate temperatures, and tracking sample lifecycles.}}{58}{}%
+\contentsline {figure}{\numberline {5.4}{\ignorespaces XRD Diffractogram Analysis View: Interactive diffraction pattern visualization, background subtraction, peak identification, and automated Scherrer crystallite size calculation.}}{59}{}%
+\contentsline {figure}{\numberline {5.5}{\ignorespaces UV-Vis Absorption and Automated Tauc Plot Extraction: Numerical first-derivative inflection search and linear tangent regression for direct optical bandgap ($E_g$) derivation.}}{60}{}%
+\contentsline {figure}{\numberline {5.6}{\ignorespaces Scanning Electron Microscopy (SEM) Morphological Module: High-resolution surface imaging, grain boundary contrast adjustment, and automated grain size evaluation.}}{61}{}%
+\contentsline {figure}{\numberline {5.7}{\ignorespaces Machine Learning Regressor Leaderboard: Comparative model evaluation benchmarking Random Forest and XGBoost predictive performance ($R^2$, RMSE, MAE) for material property forecasting.}}{62}{}%
+\contentsline {figure}{\numberline {5.8}{\ignorespaces Laboratory Precursor Extraction and Synthesis Realization: (a) Solid-liquid Soxhlet reflux apparatus for mulberry leaf extraction, (b) Hot plate magnetic stirrer during precursor compounding, (c) High-temperature muffle furnace for thermal processing, and (d) Digital conductivity meter for electrolyte solution monitoring.}}{63}{}%
 \addvspace {10\p@ }
 \addvspace {10\p@ }
 \addvspace {10\p@ }

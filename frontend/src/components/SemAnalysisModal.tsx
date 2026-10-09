@@ -39,6 +39,11 @@ export function SemAnalysisModal({ characterization, file, onClose }: SemAnalysi
   const [savingMeta, setSavingMeta] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Authenticated Micrograph Image State
+  const [imageBlobUrl, setImageBlobUrl] = useState<string | null>(null)
+  const [imageLoading, setImageLoading] = useState(true)
+  const [imageError, setImageError] = useState<string | null>(null)
+
   // Scale Calibration Form State
   const [metaForm, setMetaForm] = useState<SEMMetadataUpdate>({
     magnification: undefined,
@@ -89,6 +94,40 @@ export function SemAnalysisModal({ characterization, file, onClose }: SemAnalysi
 
   useEffect(() => {
     loadAll()
+  }, [file.id])
+
+  // Fetch authenticated image blob with Authorization headers
+  useEffect(() => {
+    let isMounted = true
+    let objectUrl: string | null = null
+
+    const fetchImage = async () => {
+      setImageLoading(true)
+      setImageError(null)
+      try {
+        const response = await apiClient.get(`/files/${file.id}/download`, {
+          responseType: 'blob',
+        })
+        if (!isMounted) return
+        objectUrl = URL.createObjectURL(response.data)
+        setImageBlobUrl(objectUrl)
+      } catch (err: unknown) {
+        if (!isMounted) return
+        console.error('Failed to load micrograph image:', err)
+        setImageError((err as ApiError)?.message || 'Failed to load micrograph image from server.')
+      } finally {
+        if (isMounted) setImageLoading(false)
+      }
+    }
+
+    fetchImage()
+
+    return () => {
+      isMounted = false
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl)
+      }
+    }
   }, [file.id])
 
   const handleUpdateMetadata = async (e: React.FormEvent) => {
@@ -180,15 +219,25 @@ export function SemAnalysisModal({ characterization, file, onClose }: SemAnalysi
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}>
-                  <img
-                    src={imageUrl}
-                    alt={file.original_filename}
-                    style={{ maxWidth: '100%', maxHeight: 420, objectFit: 'contain', borderRadius: 4 }}
-                    onError={(e) => {
-                      // Fallback preview box if blob is not loaded
-                      e.currentTarget.style.display = 'none'
-                    }}
-                  />
+                  {imageLoading ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, color: '#94a3b8' }}>
+                      <InlineSpinner />
+                      <span style={{ fontSize: '0.85rem' }}>Loading micrograph image...</span>
+                    </div>
+                  ) : imageError || !imageBlobUrl ? (
+                    <div style={{ color: '#ef4444', textAlign: 'center', padding: 24 }}>
+                      <p style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: 6 }}>Micrograph Image Preview Unavailable</p>
+                      <p style={{ fontSize: '0.8rem', color: '#94a3b8', maxWidth: 360, margin: '0 auto' }}>
+                        {imageError || 'Could not load image file from storage.'}
+                      </p>
+                    </div>
+                  ) : (
+                    <img
+                      src={imageBlobUrl}
+                      alt={file.original_filename}
+                      style={{ maxWidth: '100%', maxHeight: 420, objectFit: 'contain', borderRadius: 4 }}
+                    />
+                  )}
                   <div style={{
                     position: 'absolute',
                     bottom: 16,

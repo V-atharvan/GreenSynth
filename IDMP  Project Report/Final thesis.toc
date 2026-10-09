@@ -1,59 +1,130 @@
 \contentsline {chapter}{\numberline {1}INTRODUCTION}{1}{}%
 \contentsline {section}{\numberline {1.1}Introduction to Project}{1}{}%
-\contentsline {section}{\numberline {1.2}Problem Statement}{2}{}%
-\contentsline {section}{\numberline {1.3}Scope and Objectives}{3}{}%
-\contentsline {subsection}{\numberline {1.3.1}Scope}{3}{}%
-\contentsline {subsection}{\numberline {1.3.2}Objective}{4}{}%
-\contentsline {section}{\numberline {1.4}Identification of Need}{5}{}%
-\contentsline {section}{\numberline {1.5}Motivation}{6}{}%
-\contentsline {section}{\numberline {1.6}Relevance to Inter Disciplinary Approach}{7}{}%
-\contentsline {chapter}{\numberline {2}LITERATURE REVIEW}{9}{}%
-\contentsline {section}{\numberline {2.1}Existing Systems}{9}{}%
-\contentsline {section}{\numberline {2.2}Limitations of Existing Systems}{10}{}%
-\contentsline {section}{\numberline {2.3}Research Gap}{11}{}%
-\contentsline {section}{\numberline {2.4}Proposed System}{11}{}%
-\contentsline {section}{\numberline {2.5}SDLC Model}{12}{}%
-\contentsline {chapter}{\numberline {3}REQUIREMENT SPECIFICATION}{14}{}%
-\contentsline {section}{\numberline {3.1}Functional Requirements}{14}{}%
-\contentsline {section}{\numberline {3.2}Non Functional Requirements}{16}{}%
-\contentsline {section}{\numberline {3.3}Hardware Requirements}{17}{}%
-\contentsline {section}{\numberline {3.4}Software Requirements}{17}{}%
-\contentsline {section}{\numberline {3.5}System Environment}{17}{}%
-\contentsline {chapter}{\numberline {4}SYSTEM DESIGN}{19}{}%
-\contentsline {section}{\numberline {4.1}System Architecture}{19}{}%
-\contentsline {section}{\numberline {4.2}Analysis model}{20}{}%
-\contentsline {subsection}{\numberline {4.2.1}ER Diagram}{22}{}%
-\contentsline {subsection}{\numberline {4.2.2}DFD Level 0}{22}{}%
-\contentsline {subsection}{\numberline {4.2.3}DFD Level 1}{22}{}%
-\contentsline {subsection}{\numberline {4.2.4}DFD Level 2}{23}{}%
-\contentsline {section}{\numberline {4.3}UML Diagrams}{23}{}%
-\contentsline {subsection}{\numberline {4.3.1}Use Case Diagram}{23}{}%
-\contentsline {subsection}{\numberline {4.3.2}Class Diagram}{23}{}%
-\contentsline {subsection}{\numberline {4.3.3}Sequence Diagram}{24}{}%
-\contentsline {section}{\numberline {4.4}Data Dictionary}{25}{}%
-\contentsline {chapter}{\numberline {5}IMPLEMENTATION}{27}{}%
-\contentsline {section}{\numberline {5.1}Technologies Used}{27}{}%
-\contentsline {section}{\numberline {5.2}Algorithm}{28}{}%
-\contentsline {subsection}{\numberline {5.2.1}Workflow}{28}{}%
-\contentsline {section}{\numberline {5.3}Database Design}{30}{}%
-\contentsline {section}{\numberline {5.4}Modules Description}{30}{}%
-\contentsline {subsection}{\numberline {5.4.1}Module 1: Characterization Analysis Engine}{30}{}%
-\contentsline {subsection}{\numberline {5.4.2}Module 2: Statistical Analysis Engine}{31}{}%
-\contentsline {subsection}{\numberline {5.4.3}Module 3: Machine Learning Pipeline}{31}{}%
-\contentsline {section}{\numberline {5.5}Screenshots}{32}{}%
-\contentsline {chapter}{\numberline {6}TESTING AND VALIDATION}{33}{}%
-\contentsline {section}{\numberline {6.1}Testing Strategy}{33}{}%
-\contentsline {section}{\numberline {6.2}Test Cases}{33}{}%
-\contentsline {section}{\numberline {6.3}Performance Evaluation}{33}{}%
-\contentsline {chapter}{\numberline {7}RESULTS AND DISCUSSION}{37}{}%
-\contentsline {section}{\numberline {7.1}Output of the System}{37}{}%
-\contentsline {section}{\numberline {7.2}Comparison with Existing System}{38}{}%
-\contentsline {section}{\numberline {7.3}Industrial benefits and impact}{38}{}%
-\contentsline {chapter}{\numberline {8}CONCLUSION AND FUTURE SCOPE}{41}{}%
-\contentsline {section}{\numberline {8.1}Summary of work}{41}{}%
-\contentsline {section}{\numberline {8.2}Achievements}{42}{}%
-\contentsline {section}{\numberline {8.3}Industrial usefulness}{42}{}%
-\contentsline {section}{\numberline {8.4}Future enhancements}{43}{}%
-\contentsline {chapter}{\numberline {A}Appendix : List of Abbreviations}{45}{}%
-\contentsline {chapter}{\numberline {B}Appendix : List of Publications}{47}{}%
-\contentsline {chapter}{\numberline {C}References}{48}{}%
+\contentsline {subsection}{\numberline {1.1.1}Part A: Phytochemical Synthesis and Spray Pyrolysis of CuO Thin Films}{1}{}%
+\contentsline {subsection}{\numberline {1.1.2}Part B: GreenSynth Materials Informatics Platform}{2}{}%
+\contentsline {section}{\numberline {1.2}Problem Statement}{3}{}%
+\contentsline {section}{\numberline {1.3}Scope and Objectives}{4}{}%
+\contentsline {subsection}{\numberline {1.3.1}Scope}{4}{}%
+\contentsline {subsection}{\numberline {1.3.2}Objectives}{5}{}%
+\contentsline {section}{\numberline {1.4}Identification of Need}{6}{}%
+\contentsline {section}{\numberline {1.5}Motivation}{7}{}%
+\contentsline {section}{\numberline {1.6}Relevance to Interdisciplinary Approach}{8}{}%
+\contentsline {chapter}{\numberline {2}LITERATURE REVIEW}{11}{}%
+\contentsline {section}{\numberline {2.1}Existing Systems}{11}{}%
+\contentsline {subsection}{\numberline {2.1.1}Existing Approaches to Phytochemical-Assisted CuO Synthesis}{11}{}%
+\contentsline {subsection}{\numberline {2.1.2}Existing Synthesis and Characterization Techniques}{12}{}%
+\contentsline {subsection}{\numberline {2.1.3}Existing Materials Data and Informatics Platforms}{12}{}%
+\contentsline {subsection}{\numberline {2.1.4}Existing Data Analysis and Visualization Approaches}{13}{}%
+\contentsline {section}{\numberline {2.2}Limitations of Existing Systems}{13}{}%
+\contentsline {subsection}{\numberline {2.2.1}Limitations in Phytochemical-Assisted Synthesis}{14}{}%
+\contentsline {subsection}{\numberline {2.2.2}Limitations in Experimental Data Management}{14}{}%
+\contentsline {subsection}{\numberline {2.2.3}Limitations in Existing Materials Informatics Platforms}{14}{}%
+\contentsline {subsection}{\numberline {2.2.4}Limitations in Data-Driven Analysis}{15}{}%
+\contentsline {subsection}{\numberline {2.2.5}Limitations in Research Visualization and Reporting}{15}{}%
+\contentsline {section}{\numberline {2.3}Research Gap}{15}{}%
+\contentsline {section}{\numberline {2.4}Proposed System}{17}{}%
+\contentsline {subsection}{\numberline {2.4.1}Research Project and Experiment Management}{17}{}%
+\contentsline {subsection}{\numberline {2.4.2}Sample and Characterization Management}{17}{}%
+\contentsline {subsection}{\numberline {2.4.3}Scientific Data Processing}{17}{}%
+\contentsline {subsection}{\numberline {2.4.4}Visualization and Comparative Analysis}{17}{}%
+\contentsline {subsection}{\numberline {2.4.5}Statistical Analysis and Machine Learning}{18}{}%
+\contentsline {subsection}{\numberline {2.4.6}Experimental Design and Research Support}{18}{}%
+\contentsline {subsection}{\numberline {2.4.7}Data Integrity and Reproducibility}{18}{}%
+\contentsline {section}{\numberline {2.5}SDLC Model}{18}{}%
+\contentsline {subsection}{\numberline {2.5.1}Requirements Analysis}{18}{}%
+\contentsline {subsection}{\numberline {2.5.2}System and Database Design}{19}{}%
+\contentsline {subsection}{\numberline {2.5.3}Incremental Implementation}{19}{}%
+\contentsline {subsection}{\numberline {2.5.4}Testing and Verification}{19}{}%
+\contentsline {subsection}{\numberline {2.5.5}Integration and Deployment}{19}{}%
+\contentsline {subsection}{\numberline {2.5.6}Evaluation and Maintenance}{19}{}%
+\contentsline {subsection}{\numberline {2.5.7}Suitability of the Iterative and Incremental Model}{19}{}%
+\contentsline {chapter}{\numberline {3}REQUIREMENT SPECIFICATION}{20}{}%
+\contentsline {section}{\numberline {3.1}Functional Requirements}{20}{}%
+\contentsline {section}{\numberline {3.2}Non Functional Requirements}{21}{}%
+\contentsline {section}{\numberline {3.3}Hardware Requirements}{22}{}%
+\contentsline {subsection}{\numberline {3.3.1}Computing and Server Hardware Specifications}{22}{}%
+\contentsline {subsection}{\numberline {3.3.2}Laboratory Synthesis and Characterization Instrumentation}{22}{}%
+\contentsline {section}{\numberline {3.4}Software Requirements}{22}{}%
+\contentsline {section}{\numberline {3.5}System Environment}{22}{}%
+\contentsline {chapter}{\numberline {4}SYSTEM DESIGN}{25}{}%
+\contentsline {section}{\numberline {4.1}System Architecture}{25}{}%
+\contentsline {section}{\numberline {4.2}Analysis model}{27}{}%
+\contentsline {subsection}{\numberline {4.2.1}ER Diagram}{27}{}%
+\contentsline {subsection}{\numberline {4.2.2}DFD Level 0}{29}{}%
+\contentsline {subsection}{\numberline {4.2.3}DFD Level 1}{30}{}%
+\contentsline {subsection}{\numberline {4.2.4}DFD Level 2}{32}{}%
+\contentsline {subsubsection}{DFD Level 2: Subsystem 3.0 (Characterization \& Scientific Engine)}{32}{}%
+\contentsline {subsubsection}{DFD Level 2: Subsystem 4.0 (Machine Learning \& DOE Optimization)}{34}{}%
+\contentsline {section}{\numberline {4.3}UML Diagrams}{36}{}%
+\contentsline {subsection}{\numberline {4.3.1}Use Case Diagram}{36}{}%
+\contentsline {subsection}{\numberline {4.3.2}Class Diagram}{37}{}%
+\contentsline {subsection}{\numberline {4.3.3}Sequence Diagram}{39}{}%
+\contentsline {section}{\numberline {4.4}Data Dictionary}{41}{}%
+\contentsline {chapter}{\numberline {5}IMPLEMENTATION}{44}{}%
+\contentsline {section}{\numberline {5.1}Technologies Used}{44}{}%
+\contentsline {subsection}{\numberline {5.1.1}Frontend Architecture Stack}{44}{}%
+\contentsline {subsection}{\numberline {5.1.2}Backend Architecture Stack}{45}{}%
+\contentsline {subsection}{\numberline {5.1.3}Database Infrastructure}{46}{}%
+\contentsline {subsection}{\numberline {5.1.4}Scientific Computing, Analytics, and Machine Learning Stack}{46}{}%
+\contentsline {subsection}{\numberline {5.1.5}Database Migration Framework}{47}{}%
+\contentsline {subsection}{\numberline {5.1.6}Deployment, Hosting, and Supporting Infrastructure}{47}{}%
+\contentsline {section}{\numberline {5.2}Algorithm}{48}{}%
+\contentsline {subsection}{\numberline {5.2.1}Data Management, Validation, and Transformation Procedures}{48}{}%
+\contentsline {subsection}{\numberline {5.2.2}Core Scientific Derivation Algorithms}{48}{}%
+\contentsline {subsubsection}{Algorithm 1: Cryptographic Ingestion and Tabular Stream Parsing}{48}{}%
+\contentsline {subsubsection}{Algorithm 2: Automated XRD Scherrer Crystallite Size Derivation}{49}{}%
+\contentsline {subsubsection}{Algorithm 3: Automated UV-Vis Tauc Optical Bandgap Extraction}{49}{}%
+\contentsline {subsubsection}{Algorithm 4: Steady-State Electrical I--V Ohmic Regression and Conductivity Derivation}{50}{}%
+\contentsline {subsubsection}{Algorithm 5: Machine Learning Predictive Modeling \& Cross-Validation}{50}{}%
+\contentsline {subsection}{\numberline {5.2.3}Physical Materials Synthesis Implementation}{50}{}%
+\contentsline {subsubsection}{Precursor Chemistry and Stoichiometric Calculations}{50}{}%
+\contentsline {subsubsection}{Chemical Spray Pyrolysis Deposition Envelope}{51}{}%
+\contentsline {subsection}{\numberline {5.2.4}Workflow}{51}{}%
+\contentsline {section}{\numberline {5.3}Database Design}{52}{}%
+\contentsline {subsection}{\numberline {5.3.1}Database Architecture and Entity-Relationship Model}{52}{}%
+\contentsline {subsection}{\numberline {5.3.2}Entities, Schemas, and Relational Structure}{52}{}%
+\contentsline {subsubsection}{1. User Accounts, Roles, and Research Group Membership}{52}{}%
+\contentsline {subsubsection}{2. Research Projects and Configuration Catalogs}{53}{}%
+\contentsline {subsubsection}{3. Experiments, Parameters, and Samples}{53}{}%
+\contentsline {subsubsection}{4. Characterization Records and Raw Files}{53}{}%
+\contentsline {subsubsection}{5. Analysis Runs, Processed Files, and Extracted Features}{54}{}%
+\contentsline {subsubsection}{6. Calculated Material Properties}{54}{}%
+\contentsline {subsubsection}{7. Machine Learning Datasets, Models, and Predictions}{54}{}%
+\contentsline {subsubsection}{8. Experimental Design (DOE) and Recommendations}{54}{}%
+\contentsline {subsection}{\numberline {5.3.3}Constraints, Data Integrity, and Access Security}{55}{}%
+\contentsline {section}{\numberline {5.4}Modules Description}{55}{}%
+\contentsline {subsection}{\numberline {5.4.1}User Authentication and Research Access Module}{55}{}%
+\contentsline {subsection}{\numberline {5.4.2}Experimental Data and Characterization Management Module}{55}{}%
+\contentsline {subsection}{\numberline {5.4.3}Scientific Analytics and Machine-Learning Module}{56}{}%
+\contentsline {section}{\numberline {5.5}Screenshots}{57}{}%
+\contentsline {chapter}{\numberline {6}TESTING AND VALIDATION}{64}{}%
+\contentsline {section}{\numberline {6.1}Testing Strategy}{64}{}%
+\contentsline {section}{\numberline {6.2}Test Cases}{65}{}%
+\contentsline {section}{\numberline {6.3}Performance Evaluation}{67}{}%
+\contentsline {subsection}{\numberline {6.3.1}Scientific Derivation Accuracy and Benchmark Comparison}{67}{}%
+\contentsline {subsection}{\numberline {6.3.2}Computational Execution Speed and System Throughput}{67}{}%
+\contentsline {chapter}{\numberline {7}RESULTS AND DISCUSSION}{69}{}%
+\contentsline {section}{\numberline {7.1}Output of the System}{69}{}%
+\contentsline {subsection}{\numberline {7.1.1}User Interface and Research Management}{69}{}%
+\contentsline {subsection}{\numberline {7.1.2}Experimental Data Management and Scientific Traceability}{69}{}%
+\contentsline {subsection}{\numberline {7.1.3}Characterization Data and Scientific Visualization}{70}{}%
+\contentsline {subsection}{\numberline {7.1.4}Machine-Learning Results}{71}{}%
+\contentsline {subsubsection}{Analysis and Discussion of Model Performance}{72}{}%
+\contentsline {subsection}{\numberline {7.1.5}Experimental Design and Recommendations}{72}{}%
+\contentsline {section}{\numberline {7.2}Comparison with Existing System}{74}{}%
+\contentsline {subsection}{\numberline {7.2.1}Discussion of Workflow Consolidation}{74}{}%
+\contentsline {section}{\numberline {7.3}Industrial Benefits and Impact}{76}{}%
+\contentsline {subsection}{\numberline {7.3.1}Improved Research Data Management}{76}{}%
+\contentsline {subsection}{\numberline {7.3.2}Support for Materials Research}{76}{}%
+\contentsline {subsection}{\numberline {7.3.3}Data-Driven Experimental Planning}{76}{}%
+\contentsline {subsection}{\numberline {7.3.4}Reproducibility and Collaboration}{76}{}%
+\contentsline {subsection}{\numberline {7.3.5}Potential Industrial Applications}{76}{}%
+\contentsline {subsection}{\numberline {7.3.6}Limitations and Future Validation}{77}{}%
+\contentsline {chapter}{\numberline {8}CONCLUSION AND FUTURE SCOPE}{78}{}%
+\contentsline {section}{\numberline {8.1}Summary of work}{78}{}%
+\contentsline {section}{\numberline {8.2}Achievements}{79}{}%
+\contentsline {section}{\numberline {8.3}Industrial usefulness}{79}{}%
+\contentsline {section}{\numberline {8.4}Future enhancements}{80}{}%
+\contentsline {chapter}{\numberline {A}Appendix : List of Abbreviations}{81}{}%
+\contentsline {chapter}{\numberline {B}Appendix : List of Publications}{82}{}%
+\contentsline {chapter}{\numberline {C}References}{83}{}%

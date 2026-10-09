@@ -10,7 +10,7 @@ from __future__ import annotations
 import uuid
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import case, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -104,9 +104,13 @@ class ExperimentReportDataBuilder:
         proj = exp.project
 
         # Fetch ProjectDefinition for config version & biomass
-        pdef_stmt = select(ProjectDefinition).where(ProjectDefinition.project_id == proj.id)
+        pdef_stmt = (
+            select(ProjectDefinition)
+            .where(ProjectDefinition.project_id == proj.id)
+            .order_by(ProjectDefinition.created_at.desc())
+        )
         pdef_res = await db.execute(pdef_stmt)
-        pdef = pdef_res.scalar_one_or_none()
+        pdef = pdef_res.scalars().first()
         config_ver = pdef.current_version if pdef else "v1.0"
         biomass_val = "Rice husk" if proj.project_code in ("P5", "P6") else None
 
@@ -182,12 +186,20 @@ class ExperimentReportDataBuilder:
             for c in chars:
                 technique = c.technique.value if hasattr(c.technique, "value") else str(c.technique)
                 sample_code = c.sample.sample_code if c.sample else "Sample"
-
                 for rf in c.raw_files:
-                    # Query analysis run & calculated properties
-                    ar_stmt = select(AnalysisRun).where(AnalysisRun.input_file_id == rf.id)
+                    # Query analysis run & calculated properties (prioritizing technique match, COMPLETED status, and latest timestamp)
+                    ar_stmt = (
+                        select(AnalysisRun)
+                        .where(AnalysisRun.input_file_id == rf.id)
+                        .order_by(
+                            case((AnalysisRun.analysis_type == technique, 1), else_=2),
+                            case((AnalysisRun.status == "COMPLETED", 1), else_=2),
+                            AnalysisRun.completed_at.desc().nullslast(),
+                            AnalysisRun.started_at.desc().nullslast(),
+                        )
+                    )
                     ar_res = await db.execute(ar_stmt)
-                    ar = ar_res.scalar_one_or_none()
+                    ar = ar_res.scalars().first()
 
                     calc_props: list[dict[str, Any]] = []
                     if ar:
@@ -341,7 +353,6 @@ class ExperimentReportDataBuilder:
         from app.models.ml import MLDataset, MLDatasetRecord, MLModel, MLPrediction
         from app.ml.services.prediction_service import MLPredictionService
         from app.ml.schemas import MLPredictInput
-        from sqlalchemy import case
 
         ml_section = MLPredictionReportSectionSchema()
 

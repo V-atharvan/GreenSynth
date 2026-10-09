@@ -87,8 +87,12 @@ This is to certify that the project report entitled
 \end{center}
 \begin{center}
 {\large{\textbf{``PART A: PHYTOCHEMICAL SYNTHESIS OF SEMICONDUCTING COPPER OXIDE (CuO) USING MULBERRY EXTRACT IN ETHANOL BY SPRAY PYROLYSIS METHOD\\ \vspace*{0.15cm} \& \\ \vspace*{0.15cm} PART B: GREENSYNTH: A DATA-DRIVEN RESEARCH AND ANALYTICS PLATFORM FOR GREEN SYNTHESIS OF SEMICONDUCTOR MATERIALS''}}}
+
 \end{center}
 \begin{center}
+
+
+
 submitted by\\
 \end{center}
 \begin{flushleft}
@@ -104,10 +108,10 @@ submitted by\\
 {\textbf{Mr. Shantesh Dilip Bhakare \hspace*{6.3cm} Roll No. 66}}
 \end{flushleft}
 \vspace{0.1cm}
-
+\newpage
 \hspace*{1cm}is a bonafide work carried out by above students under the supervision of Prof. Harish T. Gurme and it is submitted towards the partial fulfillment of the requirement of Punyashlok Ahilyadevi Holkar Solapur University, Solapur for the award of the degree of Bachelor in Technology (Computer Science and Engineering) during  academic year 2026-27.
 
-\vspace{1.5cm}
+\vspace{4.5cm}
 \begin{center}
 {\textbf{(Prof. S. S. Shakhapure) \hspace*{4.5cm} (Prof. V. V. Palmur) \\ \hspace*{1cm} Project Guide\hspace*{5.5cm} Project Co-ordinator}}
 \end{center}
@@ -1605,7 +1609,7 @@ The database architecture is structured across eight functional relational domai
 \clearpage
 \section{Screenshots}
 
-This section presents graphical interfaces of the implemented GreenSynth Analytics platform alongside physical laboratory apparatus utilized for experimental synthesis.
+This section presents authentic graphical interfaces of the implemented GreenSynth Analytics platform across its laboratory management and automated characterization analysis modules, alongside physical laboratory apparatus utilized for experimental synthesis.
 
 \begin{figure}[!htbp]
 \centering
@@ -1623,44 +1627,72 @@ This section presents graphical interfaces of the implemented GreenSynth Analyti
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.88\textwidth]{fig_xrd_fit.jpeg}
-\caption{XRD Diffractogram Analysis View: Interactive diffraction pattern visualization, background subtraction, peak identification, and automated Scherrer crystallite size calculation.}
+\includegraphics[width=0.88\textwidth]{ui_xrd_pattern.jpeg}
+\caption{X-Ray Diffraction (XRD) Diffractogram Analysis Interface: Interactive $2\theta$ vs.\ Intensity pattern visualization showing raw background trace, Savitzky-Golay smoothed curve, and automated detection of 12 Bragg reflection peaks ($32.50^\circ$, $35.58^\circ$, $38.74^\circ$, $48.78^\circ$, $53.44^\circ$, $58.30^\circ$, $61.52^\circ$, $66.14^\circ$, $67.96^\circ$, $71.46^\circ$).}
 \label{fig:ss_xrd}
 \end{figure}
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.88\textwidth]{fig_tauc_plot.jpeg}
-\caption{UV-Vis Absorption and Automated Tauc Plot Extraction: Numerical first-derivative inflection search and linear tangent regression for direct optical bandgap ($E_g$) derivation.}
+\includegraphics[width=0.88\textwidth]{ui_uvvis_absorbance.jpeg}
+\caption{UV-Visible Optical Absorbance Spectrum Interface: Experimental absorbance curve ($A$ vs.\ $\lambda$) across $300\text{ nm} \text{--} 800\text{ nm}$ revealing the fundamental interband electronic absorption edge onset of synthesized nanostructured copper oxide.}
+\label{fig:ss_uvvis_abs}
+\end{figure}
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.88\textwidth]{ui_tauc_plot.jpeg}
+\caption{Automated Tauc Plot Optical Bandgap Extrapolation Interface: Direct allowed transition ($n=2$) $(A \cdot h\nu)^2$ vs.\ photon energy $h\nu$ curve with linear regression tangent extrapolation yielding an optical bandgap $E_g = 1.359\text{ eV}$ ($R^2 = 0.9947$).}
 \label{fig:ss_tauc}
 \end{figure}
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.88\textwidth]{fig_sem_analysis.jpeg}
-\caption{Scanning Electron Microscopy (SEM) Morphological Module: High-resolution surface imaging, grain boundary contrast adjustment, and automated grain size evaluation.}
+\includegraphics[width=0.88\textwidth]{ui_ftir_analysis.jpeg}
+\caption{Fourier-Transform Infrared (FTIR) Spectroscopic Analysis Interface: Transmittance spectrum ($T\%$ vs.\ wavenumber $\nu$ from $400\text{ to }4000\text{ cm}^{-1}$) with automated detection of 4 characteristic vibrational peaks ($536.0\text{ cm}^{-1}$ $\text{Cu--O}$ lattice vibration, $1106.0\text{ cm}^{-1}$, $1634.0\text{ cm}^{-1}$, and $3408.0\text{ cm}^{-1}$ hydroxyl stretching) alongside the researcher functional group annotation panel.}
+\label{fig:ss_ftir}
+\end{figure}
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.88\textwidth]{ui_sem_analysis.jpeg}
+\caption{Scanning Electron Microscopy (SEM) Micrograph Viewer and Scale Calibration Interface: Micrograph inspection of cauliflower-like nanostructured morphology at $50,000\times$ magnification ($15\text{ kV}$ accelerating voltage, $8.5\text{ mm}$ working distance, SE detector) with $500\text{ nm}$ scale bar calibration and interactive digital caliper measurement tool.}
 \label{fig:ss_sem}
 \end{figure}
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.88\textwidth]{fig_ml_leaderboard.jpeg}
-\caption{Machine Learning Regressor Leaderboard: Comparative model evaluation benchmarking Random Forest and XGBoost predictive performance ($R^2$, RMSE, MAE) for material property forecasting.}
-\label{fig:ss_ml}
+\includegraphics[width=0.88\textwidth]{ui_electrical_iv.jpeg}
+\caption{Electrical Property and Current-Voltage ($I\text{--}V$) Transport Analysis Interface: Experimental $I\text{--}V$ characteristic curve exhibiting Ohmic linearity, linear regression slope ($R = 2.50\,\Omega$), and automated resistance ($2.4991\,\Omega$) and conductivity calculation.}
+\label{fig:ss_electrical}
 \end{figure}
 
 \begin{figure}[!htbp]
 \centering
 \begin{tabular}{cc}
-\includegraphics[width=0.36\textwidth,height=4.2cm,keepaspectratio]{fig_soxhlet.jpeg} &
-\includegraphics[width=0.36\textwidth,height=4.2cm,keepaspectratio]{fig_stirrer.jpeg} \\
-{\footnotesize (a) Soxhlet Extraction Setup} & {\footnotesize (b) Magnetic Stirrer with Hot Plate} \\[4pt]
-\includegraphics[width=0.36\textwidth,height=4.2cm,keepaspectratio]{fig_furnace.jpeg} &
-\includegraphics[width=0.36\textwidth,height=4.2cm,keepaspectratio]{fig_cond_meter.jpeg} \\
+\includegraphics[width=0.45\textwidth,height=5cm,keepaspectratio]{fig_soxhlet.jpeg} &
+\includegraphics[width=0.45\textwidth,height=5cm,keepaspectratio]{fig_stirrer.jpeg} \\
+{\footnotesize (a) Soxhlet Extraction Setup} & {\footnotesize (b) Magnetic Stirrer with Hot Plate} \\[6pt]
+\includegraphics[width=0.45\textwidth,height=5cm,keepaspectratio]{fig_furnace.jpeg} &
+\includegraphics[width=0.45\textwidth,height=5cm,keepaspectratio]{fig_cond_meter.jpeg} \\
 {\footnotesize (c) Muffle Furnace Chamber} & {\footnotesize (d) Digital Conductivity Meter} \\
 \end{tabular}
 \caption{Laboratory Precursor Extraction and Synthesis Realization: (a) Solid-liquid Soxhlet reflux apparatus for mulberry leaf extraction, (b) Hot plate magnetic stirrer during precursor compounding, (c) High-temperature muffle furnace for thermal processing, and (d) Digital conductivity meter for electrolyte solution monitoring.}
 \label{fig:ss_apparatus}
+\end{figure}
+
+\begin{figure}[!htbp]
+\centering
+\begin{tabular}{cc}
+\includegraphics[width=0.45\textwidth,height=5cm,keepaspectratio]{fig_xrd_fit.jpeg} &
+\includegraphics[width=0.45\textwidth,height=5cm,keepaspectratio]{fig_tauc_plot.jpeg} \\
+{\footnotesize (a) Digital Spectrophotometer} & {\footnotesize (b) UV Fluorescence Cabinet} \\[6pt]
+\includegraphics[width=0.45\textwidth,height=5cm,keepaspectratio]{fig_sem_analysis.jpeg} &
+\includegraphics[width=0.45\textwidth,height=5cm,keepaspectratio]{fig_ml_leaderboard.jpeg} \\
+{\footnotesize (c) Synthesis Glassware and Analytical Balance} & {\footnotesize (d) Spray Pyrolysis Compressor and Hot Plate} \\
+\end{tabular}
+\caption{Analytical Characterization and Deposition Facilities: (a) Digital spectrophotometer instrumentation, (b) Ultraviolet fluorescence inspection cabinet, (c) Chemical precursor preparation table with precision analytical balance, and (d) Spray pyrolysis pneumatic compressor with substrate hot plate assembly.}
+\label{fig:ss_apparatus2}
 \end{figure}
 
 
@@ -1895,7 +1927,7 @@ Random Forest Regressor & $\mathbf{0.6685}$ & $\mathbf{0.1501}$ & $\mathbf{0.121
 \begin{itemize}
     \item \textbf{Comparison with Mean Baseline:} The dummy mean baseline model predicts the global training mean for all queries, yielding an expected $R^2 \approx 0$ ($R^2 = -0.0050$) and high error ($\text{RMSE} = 0.2625\text{ S/cm}$). All trained models substantially outperform the baseline, confirming that the pipeline captures non-trivial correlations between synthesis parameters and target properties.
     \item \textbf{Non-Linear vs.\ Linear Regressors:} Standard Linear and Ridge Regression achieve modest predictive fidelity ($R^2 \approx 0.302$). This limitation arises because thin-film pyrolytic growth kinetics exhibit complex, non-linear dependencies (e.g., thermal activation thresholds and extract-induced complexation saturation). In contrast, ensemble tree-based architectures—Gradient Boosting ($R^2 = 0.6360$) and Random Forest ($R^2 = 0.6685$)—effectively capture multi-variable interactions and non-monotonic trends.
-    \item \textbf{Top-Performing Model:} The Random Forest Regressor achieved the highest cross-validation coefficient of determination ($R^2 = 0.6685$) and lowest predictive errors ($\text{RMSE} = 0.1501\text{ S/cm}$, $\text{MAE} = 0.1214\text{ S/cm}$). As shown in the model leaderboard (Figure \ref{fig:ss_ml}), bagging mitigates overfitting on smaller materials informatics sample sizes.
+    \item \textbf{Top-Performing Model:} The Random Forest Regressor achieved the highest cross-validation coefficient of determination ($R^2 = 0.6685$) and lowest predictive errors ($\text{RMSE} = 0.1501\text{ S/cm}$, $\text{MAE} = 0.1214\text{ S/cm}$). As shown in the model benchmark summary (Table \ref{tab:ml_benchmark}), bagging mitigates overfitting on smaller materials informatics sample sizes.
     \item \textbf{Methodological Limitations of Synthetic Data:} It is essential to emphasize that these benchmark metrics demonstrate the functional correctness and numerical behavior of the implemented ML pipeline on simulated benchmark data. They do not claim physical predictive fidelity for unmeasured laboratory specimens. True material forecasting accuracy requires future model retraining on large, independently collected physical datasets.
 \end{itemize}
 

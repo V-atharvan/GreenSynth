@@ -36,6 +36,8 @@ export function XrdAnalysisModal({ characterization, onClose }: XrdAnalysisModal
   const [currentRun, setCurrentRun] = useState<XRDAnalysisRun | null>(null)
   const [curveData, setCurveData] = useState<XRDDataPoint[]>([])
   const [loading, setLoading] = useState(true)
+  const [curveLoading, setCurveLoading] = useState(false)
+  const [curveError, setCurveError] = useState<string | null>(null)
   const [analyzing, setAnalyzing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showConfig, setShowConfig] = useState(false)
@@ -80,11 +82,16 @@ export function XrdAnalysisModal({ characterization, onClose }: XrdAnalysisModal
 
   const selectRun = async (run: XRDAnalysisRun) => {
     setCurrentRun(run)
+    setCurveLoading(true)
+    setCurveError(null)
     try {
       const ptsRes = await analysisService.getProcessedData(run.id)
       setCurveData(ptsRes.data_points)
     } catch (e) {
       setCurveData([])
+      setCurveError((e as ApiError)?.message ?? 'Unable to retrieve XRD pattern data points.')
+    } finally {
+      setCurveLoading(false)
     }
   }
 
@@ -376,8 +383,25 @@ export function XrdAnalysisModal({ characterization, onClose }: XrdAnalysisModal
             <LoadingSpinner message="Loading XRD pattern data..." />
           ) : currentRun ? (
             <div>
-              {/* Pattern Chart */}
-              <XrdPlotChart dataPoints={curveData} peaks={currentRun.peaks ?? []} />
+              {/* Pattern Chart or State Indicator */}
+              {curveLoading ? (
+                <LoadingSpinner message="Loading XRD pattern curve points..." />
+              ) : curveError ? (
+                <div style={{
+                  background: '#fef2f2',
+                  border: '1px solid #fecaca',
+                  borderRadius: 6,
+                  padding: 16,
+                  textAlign: 'center',
+                  color: '#991b1b',
+                  marginBottom: 16,
+                }}>
+                  <p style={{ fontWeight: 600, marginBottom: 4 }}>Curve Data Temporarily Unavailable</p>
+                  <p style={{ fontSize: '0.8125rem' }}>{curveError}</p>
+                </div>
+              ) : (
+                <XrdPlotChart dataPoints={curveData} peaks={currentRun.peaks ?? []} />
+              )}
 
               {/* Calculated Properties (Scherrer Crystallite Size) */}
               {currentRun.calculated_properties && currentRun.calculated_properties.length > 0 && (

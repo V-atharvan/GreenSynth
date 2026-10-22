@@ -45,9 +45,15 @@ async def lifespan(app: FastAPI):
     from app.database.session import async_engine, AsyncSessionLocal
     from app.database.seed import seed_demo_project
 
-    # Ensure tables exist
+    # Ensure tables exist (fast-path inspection to prevent redundant cloud round-trips)
+    def _create_tables_if_needed(sync_conn):
+        from sqlalchemy import inspect
+        insp = inspect(sync_conn)
+        if not insp.has_table("projects"):
+            Base.metadata.create_all(sync_conn)
+
     async with async_engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+        await conn.run_sync(_create_tables_if_needed)
 
     # Seed demo project configurations
     async with AsyncSessionLocal() as session:

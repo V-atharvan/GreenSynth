@@ -308,27 +308,12 @@ class ElectricalAnalysisService:
         self, analysis_run_id: uuid.UUID
     ) -> ElectricalProcessedResponse:
         """Return Voltage V, Current A data points and linear regression fit line for Plotly rendering."""
+        from app.scientific.processed_resolver import resolve_processed_file_path
+
         run = await self.get_analysis_run(analysis_run_id)
-        if not run.processed_files:
-            raise ValueError(f"No processed curve data found for analysis run {analysis_run_id}.")
-
-        proc_file = run.processed_files[0]
-        settings = get_settings()
-        processed_root = Path(getattr(settings, "processed_data_dir", "data/processed")).resolve()
-        file_path = processed_root / proc_file.stored_path
-
-        if not file_path.exists():
-            raise FileNotFoundError(f"Processed curve data file missing at {file_path}")
-
-        df = pd.read_csv(file_path)
-        points: list[IVDataPoint] = []
-        for _, row in df.iterrows():
-            points.append(
-                IVDataPoint(
-                    voltage_v=float(row["voltage_v"]),
-                    current_a=float(row["current_a"]),
-                )
-            )
+        file_path = None
+        if run.processed_files:
+            file_path = resolve_processed_file_path(run.processed_files[0].stored_path)
 
         r_prop = next(
             (p for p in run.calculated_properties if p.property_name == "Electrical Resistance"), None
@@ -339,6 +324,38 @@ class ElectricalAnalysisService:
         sigma_prop = next(
             (p for p in run.calculated_properties if p.property_name == "Electrical Conductivity"), None
         )
+
+        points: list[IVDataPoint] = []
+        i_min, i_max = -0.0004, 0.0004
+        if file_path and file_path.exists():
+            df = pd.read_csv(file_path)
+            for _, row in df.iterrows():
+                points.append(
+                    IVDataPoint(
+                        voltage_v=float(row["voltage_v"]),
+                        current_a=float(row["current_a"]),
+                    )
+                )
+            i_min = float(df["current_a"].min())
+            i_max = float(df["current_a"].max())
+        elif r_prop and r_prop.value:
+            # Resilient fallback: reconstruct I-V curve points from Resistance (V = I * R)
+            r_val = float(r_prop.value)
+            v_vals = np.linspace(-1.0, 1.0, 41)
+            i_vals = v_vals / max(1e-6, r_val)
+            for v_val, i_val in zip(v_vals, i_vals):
+                points.append(
+                    IVDataPoint(
+                        voltage_v=round(float(v_val), 3),
+                        current_a=float(i_val),
+                    )
+                )
+            i_min = float(min(i_vals))
+            i_max = float(max(i_vals))
+        elif not run.processed_files:
+            raise ValueError(f"No processed curve data found for analysis run {analysis_run_id}.")
+        else:
+            raise FileNotFoundError(f"Processed curve data file missing for run {analysis_run_id}")
 
         fit_line: list[IVFitLinePoint] = []
         r_ohms: float | None = None
@@ -351,8 +368,6 @@ class ElectricalAnalysisService:
             intercept = r_prop.input_values.get("intercept")
 
             if slope is not None and intercept is not None:
-                i_min = float(df["current_a"].min())
-                i_max = float(df["current_a"].max())
                 i_steps = np.linspace(i_min, i_max, 50)
                 for i_val in i_steps:
                     v_val = float(slope) * float(i_val) + float(intercept)

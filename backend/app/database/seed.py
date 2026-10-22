@@ -14,7 +14,7 @@ from __future__ import annotations
 import logging
 import os
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import hash_password
@@ -650,6 +650,15 @@ async def seed_demo_project(db: AsyncSession) -> None:
     """
     Seed all eight projects (P1 through P8) and their method-specific parameter schemas.
     """
+    # Fast path: check if projects are already seeded to avoid 100+ cloud network round-trips on startup
+    count_res = await db.execute(select(func.count(Project.id)))
+    project_count = count_res.scalar_one_or_none() or 0
+    if project_count >= len(ALL_PROJECT_SPECS):
+        await seed_admin_user(db)
+        await db.commit()
+        logger.info("Database projects (P1-P8) already present (%d found). Verified admin user.", project_count)
+        return
+
     await seed_catalogs(db)
 
     for spec in ALL_PROJECT_SPECS:

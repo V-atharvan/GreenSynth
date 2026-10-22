@@ -36,6 +36,8 @@ export function UvVisAnalysisModal({ characterization, onClose }: UvVisAnalysisM
   const [currentRun, setCurrentRun] = useState<XRDAnalysisRun | null>(null)
   const [taucRes, setTaucRes] = useState<TaucProcessedResponse | null>(null)
   const [loading, setLoading] = useState(true)
+  const [curveLoading, setCurveLoading] = useState(false)
+  const [curveError, setCurveError] = useState<string | null>(null)
   const [analyzing, setAnalyzing] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -75,11 +77,16 @@ export function UvVisAnalysisModal({ characterization, onClose }: UvVisAnalysisM
 
   const selectRun = async (run: XRDAnalysisRun) => {
     setCurrentRun(run)
+    setCurveLoading(true)
+    setCurveError(null)
     try {
       const taucData = await analysisService.getTaucData(run.id)
       setTaucRes(taucData)
     } catch (e) {
       setTaucRes(null)
+      setCurveError((e as ApiError)?.message ?? 'Unable to retrieve UV-Vis Tauc curve data.')
+    } finally {
+      setCurveLoading(false)
     }
   }
 
@@ -255,10 +262,10 @@ export function UvVisAnalysisModal({ characterization, onClose }: UvVisAnalysisM
           {/* Results Display */}
           {loading ? (
             <LoadingSpinner message="Loading UV-Vis spectrum data..." />
-          ) : currentRun && taucRes ? (
+          ) : currentRun ? (
             <div>
               {/* Thickness Warning Banner if applicable */}
-              {taucRes.warning_msg && (
+              {taucRes?.warning_msg && (
                 <div style={{
                   fontSize: '0.8125rem',
                   color: '#92400e',
@@ -272,14 +279,31 @@ export function UvVisAnalysisModal({ characterization, onClose }: UvVisAnalysisM
                 </div>
               )}
 
-              {/* Tauc Plot Chart */}
-              <UvVisPlotChart
-                dataPoints={taucRes.data_points}
-                fitLine={taucRes.fit_line}
-                bandGapEv={taucRes.band_gap_ev}
-                transitionType={taucRes.transition_type}
-                usingAlpha={taucRes.using_alpha}
-              />
+              {/* Tauc Plot Chart or State Indicator */}
+              {curveLoading ? (
+                <LoadingSpinner message="Loading UV-Vis Tauc curve points..." />
+              ) : taucRes ? (
+                <UvVisPlotChart
+                  dataPoints={taucRes.data_points}
+                  fitLine={taucRes.fit_line}
+                  bandGapEv={taucRes.band_gap_ev}
+                  transitionType={taucRes.transition_type}
+                  usingAlpha={taucRes.using_alpha}
+                />
+              ) : curveError ? (
+                <div style={{
+                  background: '#fef2f2',
+                  border: '1px solid #fecaca',
+                  borderRadius: 6,
+                  padding: 16,
+                  textAlign: 'center',
+                  color: '#991b1b',
+                  marginBottom: 16,
+                }}>
+                  <p style={{ fontWeight: 600, marginBottom: 4 }}>Curve Data Temporarily Unavailable</p>
+                  <p style={{ fontSize: '0.8125rem' }}>{curveError}</p>
+                </div>
+              ) : null}
 
               {/* Calculated Properties (Optical Band Gap) */}
               {currentRun.calculated_properties && currentRun.calculated_properties.length > 0 && (

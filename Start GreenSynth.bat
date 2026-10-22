@@ -128,23 +128,28 @@ echo [5/7] Starting GreenSynth Backend [FastAPI on port 8000]...
 powershell -NoProfile -ExecutionPolicy Bypass -Command "if (Get-NetTCPConnection -LocalPort 8000 -State Listen -ErrorAction SilentlyContinue) { exit 0 } else { exit 1 }" >nul 2>nul
 if %errorlevel% equ 0 (
     echo       Backend port 8000 is already active. Checking health endpoint...
-    powershell -NoProfile -ExecutionPolicy Bypass -Command "try { $r = Invoke-RestMethod -Uri 'http://127.0.0.1:8000/health' -TimeoutSec 3; if ($r.status -eq 'healthy') { exit 0 } else { exit 1 } } catch { exit 1 }" >nul 2>nul
+    powershell -NoProfile -ExecutionPolicy Bypass -Command "try { $r = Invoke-RestMethod -Uri 'http://127.0.0.1:8000/health' -TimeoutSec 5; if ($r.status -eq 'healthy') { exit 0 } else { exit 1 } } catch { exit 1 }" >nul 2>nul
     if !errorlevel! equ 0 (
         echo       GreenSynth Backend is already running and healthy.
+        goto :backend_ready
     ) else (
-        echo       [NOTE] Port 8000 is active. Proceeding with existing process.
-    )
-) else (
-    start "GreenSynth Backend" cmd /k "title GreenSynth Backend && cd /d ""%BACKEND_DIR%"" && echo ============================================================ && echo   GREENSYNTH BACKEND [FastAPI on port 8000] && echo ============================================================ && ""%PYTHON_EXE%"" -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
-    
-    echo       Waiting for backend to initialize...
-    powershell -NoProfile -ExecutionPolicy Bypass -Command "for ($i=0; $i -lt 20; $i++) { Start-Sleep -Seconds 1; try { $r = Invoke-RestMethod -Uri 'http://127.0.0.1:8000/health' -TimeoutSec 2; if ($r.status -eq 'healthy') { exit 0 } } catch {} }; exit 1" >nul 2>nul
-    if !errorlevel! equ 0 (
-        echo       Backend started successfully [Healthy].
-    ) else (
-        echo       Backend start initiated.
+        echo       [WARNING] Port 8000 is active but unresponsive. Terminating stale process...
+        powershell -NoProfile -ExecutionPolicy Bypass -Command "$p = (Get-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyContinue).OwningProcess; if ($p) { Stop-Process -Id $p -Force -ErrorAction SilentlyContinue }" >nul 2>nul
+        timeout /t 2 /nobreak >nul
     )
 )
+
+start "GreenSynth Backend" cmd /k "title GreenSynth Backend && cd /d ""%BACKEND_DIR%"" && echo ============================================================ && echo   GREENSYNTH BACKEND [FastAPI on port 8000] && echo ============================================================ && ""%PYTHON_EXE%"" -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+
+echo       Waiting for backend to initialize...
+powershell -NoProfile -ExecutionPolicy Bypass -Command "for ($i=0; $i -lt 30; $i++) { Start-Sleep -Seconds 1; try { $r = Invoke-RestMethod -Uri 'http://127.0.0.1:8000/health' -TimeoutSec 3; if ($r.status -eq 'healthy') { exit 0 } } catch {} }; exit 1" >nul 2>nul
+if !errorlevel! equ 0 (
+    echo       Backend started successfully [Healthy].
+) else (
+    echo       Backend start initiated.
+)
+
+:backend_ready
 echo.
 
 :: [7/7] Start Frontend Server & Open Browser

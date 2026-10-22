@@ -42,6 +42,8 @@ export function ElectricalAnalysisModal({ characterization, onClose }: Electrica
   const [currentRun, setCurrentRun] = useState<XRDAnalysisRun | null>(null)
   const [elecRes, setElecRes] = useState<ElectricalProcessedResponse | null>(null)
   const [loading, setLoading] = useState(true)
+  const [curveLoading, setCurveLoading] = useState(false)
+  const [curveError, setCurveError] = useState<string | null>(null)
   const [analyzing, setAnalyzing] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -83,11 +85,16 @@ export function ElectricalAnalysisModal({ characterization, onClose }: Electrica
 
   const selectRun = async (run: XRDAnalysisRun) => {
     setCurrentRun(run)
+    setCurveLoading(true)
+    setCurveError(null)
     try {
       const data = await analysisService.getElectricalData(run.id)
       setElecRes(data)
     } catch (e) {
       setElecRes(null)
+      setCurveError((e as ApiError)?.message ?? 'Unable to retrieve I-V curve points.')
+    } finally {
+      setCurveLoading(false)
     }
   }
 
@@ -311,10 +318,10 @@ export function ElectricalAnalysisModal({ characterization, onClose }: Electrica
           {/* Results Display */}
           {loading ? (
             <LoadingSpinner message="Loading I-V measurement data..." />
-          ) : currentRun && elecRes ? (
+          ) : currentRun ? (
             <div>
               {/* Dimension Warning Banner if applicable */}
-              {elecRes.warning_msg && (
+              {elecRes?.warning_msg && (
                 <div style={{
                   fontSize: '0.8125rem',
                   color: '#92400e',
@@ -328,14 +335,31 @@ export function ElectricalAnalysisModal({ characterization, onClose }: Electrica
                 </div>
               )}
 
-              {/* I-V Plot Chart */}
-              <ElectricalPlotChart
-                dataPoints={elecRes.data_points}
-                fitLine={elecRes.fit_line}
-                resistanceOhms={elecRes.resistance_ohms}
-                voltageUnit={elecRes.voltage_unit}
-                currentUnit={elecRes.current_unit}
-              />
+              {/* I-V Plot Chart or State Indicator */}
+              {curveLoading ? (
+                <LoadingSpinner message="Loading I-V curve points..." />
+              ) : elecRes ? (
+                <ElectricalPlotChart
+                  dataPoints={elecRes.data_points}
+                  fitLine={elecRes.fit_line}
+                  resistanceOhms={elecRes.resistance_ohms}
+                  voltageUnit={elecRes.voltage_unit}
+                  currentUnit={elecRes.current_unit}
+                />
+              ) : curveError ? (
+                <div style={{
+                  background: '#fef2f2',
+                  border: '1px solid #fecaca',
+                  borderRadius: 6,
+                  padding: 16,
+                  textAlign: 'center',
+                  color: '#991b1b',
+                  marginBottom: 16,
+                }}>
+                  <p style={{ fontWeight: 600, marginBottom: 4 }}>Curve Data Temporarily Unavailable</p>
+                  <p style={{ fontSize: '0.8125rem' }}>{curveError}</p>
+                </div>
+              ) : null}
 
               {/* Calculated Properties Cards */}
               {currentRun.calculated_properties && currentRun.calculated_properties.length > 0 && (

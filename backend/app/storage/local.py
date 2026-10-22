@@ -122,10 +122,46 @@ class LocalFileStorage(FileStorageBackend):
             content_type=mime,
         )
 
+    def _find_fallback_path(self, stored_path: str) -> Path | None:
+        """Attempt to locate file across project data directories and path formatting variations."""
+        settings = get_settings()
+        clean_rel = os.path.normpath(stored_path).lstrip("/\\")
+
+        # Candidate base directories
+        candidate_bases = [
+            self.base_dir,
+            Path(getattr(settings, "raw_data_dir", "data/raw")).resolve(),
+            (self.base_dir.parent / "backend" / "data" / "raw").resolve(),
+            (self.base_dir.parent.parent / "data" / "raw").resolve()
+            if self.base_dir.parent.name == "backend"
+            else (self.base_dir / "backend" / "data" / "raw").resolve(),
+        ]
+
+        # Candidate relative paths (space variations, projects/ prefix variations)
+        candidate_rels = {
+            clean_rel,
+            clean_rel.replace("projects/", "", 1) if clean_rel.startswith("projects/") else "projects/" + clean_rel,
+            clean_rel.replace("P7 S1", "P7S1"),
+            clean_rel.replace("P7S1", "P7 S1"),
+        }
+
+        for base in candidate_bases:
+            if not base.exists():
+                continue
+            for rel in candidate_rels:
+                cand = (base / rel).resolve()
+                if cand.exists() and cand.is_file():
+                    return cand
+        return None
+
     async def retrieve(self, stored_path: str) -> bytes:
         """Return raw file bytes from disk."""
         target_path = self._resolve_safe_path(stored_path)
         if not target_path.exists() or not target_path.is_file():
+            fallback = self._find_fallback_path(stored_path)
+            if fallback:
+                with open(fallback, "rb") as f:
+                    return f.read()
             raise FileNotFoundError(f"Raw file not found at {stored_path}")
         with open(target_path, "rb") as f:
             return f.read()
@@ -134,7 +170,9 @@ class LocalFileStorage(FileStorageBackend):
         """Return True if a file exists at stored_path."""
         try:
             target_path = self._resolve_safe_path(stored_path)
-            return target_path.exists() and target_path.is_file()
+            if target_path.exists() and target_path.is_file():
+                return True
+            return self._find_fallback_path(stored_path) is not None
         except PathTraversalError:
             return False
 
@@ -156,7 +194,11 @@ class LocalFileStorage(FileStorageBackend):
         """Return metadata for local file."""
         target_path = self._resolve_safe_path(stored_path)
         if not target_path.exists() or not target_path.is_file():
-            raise FileNotFoundError(f"Raw file not found at {stored_path}")
+            fallback = self._find_fallback_path(stored_path)
+            if fallback:
+                target_path = fallback
+            else:
+                raise FileNotFoundError(f"Raw file not found at {stored_path}")
 
         stat = target_path.stat()
         return {

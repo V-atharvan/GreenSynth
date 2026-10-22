@@ -35,6 +35,8 @@ export function FtirAnalysisModal({ characterization, onClose }: FtirAnalysisMod
   const [ftirRes, setFtirRes] = useState<FTIRProcessedResponse | null>(null)
   const [annotations, setAnnotations] = useState<FTIRAnnotationResponse[]>([])
   const [loading, setLoading] = useState(true)
+  const [curveLoading, setCurveLoading] = useState(false)
+  const [curveError, setCurveError] = useState<string | null>(null)
   const [analyzing, setAnalyzing] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -76,6 +78,8 @@ export function FtirAnalysisModal({ characterization, onClose }: FtirAnalysisMod
 
   const selectRun = async (r: XRDAnalysisRun) => {
     setCurrentRun(r)
+    setCurveLoading(true)
+    setCurveError(null)
     try {
       const data = await analysisService.getFtirData(r.id)
       setFtirRes(data)
@@ -94,6 +98,9 @@ export function FtirAnalysisModal({ characterization, onClose }: FtirAnalysisMod
       }
     } catch (e) {
       setFtirRes(null)
+      setCurveError((e as ApiError)?.message ?? 'Unable to retrieve FTIR spectrum curve data.')
+    } finally {
+      setCurveLoading(false)
     }
   }
 
@@ -271,15 +278,32 @@ export function FtirAnalysisModal({ characterization, onClose }: FtirAnalysisMod
           {/* Results Display */}
           {loading ? (
             <LoadingSpinner message="Loading FTIR spectrum data..." />
-          ) : currentRun && ftirRes ? (
+          ) : currentRun ? (
             <div>
-              {/* FTIR Plot Chart */}
-              <FtirPlotChart
-                dataPoints={ftirRes.data_points}
-                detectedPeaks={ftirRes.detected_peaks}
-                annotations={annotations}
-                signalType={ftirRes.signal_type}
-              />
+              {/* FTIR Plot Chart or State Indicator */}
+              {curveLoading ? (
+                <LoadingSpinner message="Loading FTIR spectrum points..." />
+              ) : ftirRes ? (
+                <FtirPlotChart
+                  dataPoints={ftirRes.data_points}
+                  detectedPeaks={ftirRes.detected_peaks}
+                  annotations={annotations}
+                  signalType={ftirRes.signal_type}
+                />
+              ) : curveError ? (
+                <div style={{
+                  background: '#fef2f2',
+                  border: '1px solid #fecaca',
+                  borderRadius: 6,
+                  padding: 16,
+                  textAlign: 'center',
+                  color: '#991b1b',
+                  marginBottom: 16,
+                }}>
+                  <p style={{ fontWeight: 600, marginBottom: 4 }}>Curve Data Temporarily Unavailable</p>
+                  <p style={{ fontSize: '0.8125rem' }}>{curveError}</p>
+                </div>
+              ) : null}
 
               {/* Add Researcher Annotation Form */}
               <div style={{ marginTop: 16, background: '#fcfeff', padding: 12, borderRadius: 6, border: '1px solid #dbeafe' }}>
@@ -339,52 +363,54 @@ export function FtirAnalysisModal({ characterization, onClose }: FtirAnalysisMod
               </div>
 
               {/* Detected Peaks & Annotations Table */}
-              <div style={{ marginTop: 16 }}>
-                <h3 style={{ fontSize: '0.9375rem', fontWeight: 700, marginBottom: 8 }}>
-                  Detected Peaks & Researcher Annotations ({ftirRes.detected_peaks.length})
-                </h3>
-                <div style={{ overflowX: 'auto', maxHeight: 240, overflowY: 'auto' }}>
-                  <table className="table">
-                    <thead>
-                      <tr>
-                        <th>Wavenumber (cm⁻¹)</th>
-                        <th>Signal Height</th>
-                        <th>Prominence</th>
-                        <th>Width (cm⁻¹)</th>
-                        <th>Researcher Annotation</th>
-                        <th>Confidence</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {ftirRes.detected_peaks.map((p, i) => {
-                        const matchedAnn = annotations.find(
-                          (a) => Math.abs(a.wavenumber_cm1 - p.wavenumber_cm1) < 15.0
-                        )
-                        return (
-                          <tr key={i}>
-                            <td style={{ fontWeight: 600 }}>{p.wavenumber_cm1.toFixed(1)}</td>
-                            <td>{p.signal_value.toFixed(2)}</td>
-                            <td>{p.prominence.toFixed(2)}</td>
-                            <td>{p.width_cm1.toFixed(1)}</td>
-                            <td>
-                              {matchedAnn ? (
-                                <span style={{ color: '#b91c1c', fontWeight: 600 }}>
-                                  {matchedAnn.label} ({matchedAnn.interpretation || 'Annotated'})
-                                </span>
-                              ) : (
-                                <span style={{ color: 'var(--color-text-muted)', fontSize: '0.75rem' }}>
-                                  Unannotated
-                                </span>
-                              )}
-                            </td>
-                            <td>{matchedAnn?.confidence || 'N/A'}</td>
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
+              {ftirRes && ftirRes.detected_peaks && (
+                <div style={{ marginTop: 16 }}>
+                  <h3 style={{ fontSize: '0.9375rem', fontWeight: 700, marginBottom: 8 }}>
+                    Detected Peaks & Researcher Annotations ({ftirRes.detected_peaks.length})
+                  </h3>
+                  <div style={{ overflowX: 'auto', maxHeight: 240, overflowY: 'auto' }}>
+                    <table className="table">
+                      <thead>
+                        <tr>
+                          <th>Wavenumber (cm⁻¹)</th>
+                          <th>Signal Height</th>
+                          <th>Prominence</th>
+                          <th>Width (cm⁻¹)</th>
+                          <th>Researcher Annotation</th>
+                          <th>Confidence</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {ftirRes.detected_peaks.map((p, i) => {
+                          const matchedAnn = annotations.find(
+                            (a) => Math.abs(a.wavenumber_cm1 - p.wavenumber_cm1) < 15.0
+                          )
+                          return (
+                            <tr key={i}>
+                              <td style={{ fontWeight: 600 }}>{p.wavenumber_cm1.toFixed(1)}</td>
+                              <td>{p.signal_value.toFixed(2)}</td>
+                              <td>{p.prominence.toFixed(2)}</td>
+                              <td>{p.width_cm1.toFixed(1)}</td>
+                              <td>
+                                {matchedAnn ? (
+                                  <span style={{ color: '#b91c1c', fontWeight: 600 }}>
+                                    {matchedAnn.label} ({matchedAnn.interpretation || 'Annotated'})
+                                  </span>
+                                ) : (
+                                  <span style={{ color: 'var(--color-text-muted)', fontSize: '0.75rem' }}>
+                                    Unannotated
+                                  </span>
+                                )}
+                              </td>
+                              <td>{matchedAnn?.confidence || 'N/A'}</td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           ) : (
             <div style={{ textAlign: 'center', padding: 30, color: 'var(--color-text-muted)' }}>

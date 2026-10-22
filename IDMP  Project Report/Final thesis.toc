@@ -1,7 +1,7 @@
 \contentsline {chapter}{\numberline {1}INTRODUCTION}{1}{}%
 \contentsline {section}{\numberline {1.1}Introduction to Project}{1}{}%
 \contentsline {subsection}{\numberline {1.1.1}Part A: Phytochemical Synthesis and Spray Pyrolysis of CuO Thin Films}{1}{}%
-\contentsline {subsection}{\numberline {1.1.2}Part B: GreenSynth Materials Informatics Platform}{2}{}%
+\contentsline {subsection}{\numberline {1.1.2}Part B: GreenSynth Analytics}{2}{}%
 \contentsline {section}{\numberline {1.2}Problem Statement}{3}{}%
 \contentsline {section}{\numberline {1.3}Scope and Objectives}{4}{}%
 \contentsline {subsection}{\numberline {1.3.1}Scope}{4}{}%
@@ -97,34 +97,34 @@
 \contentsline {subsection}{\numberline {5.4.2}Experimental Data and Characterization Management Module}{55}{}%
 \contentsline {subsection}{\numberline {5.4.3}Scientific Analytics and Machine-Learning Module}{56}{}%
 \contentsline {section}{\numberline {5.5}Screenshots}{57}{}%
-\contentsline {chapter}{\numberline {6}TESTING AND VALIDATION}{64}{}%
-\contentsline {section}{\numberline {6.1}Testing Strategy}{64}{}%
-\contentsline {section}{\numberline {6.2}Test Cases}{65}{}%
-\contentsline {section}{\numberline {6.3}Performance Evaluation}{67}{}%
-\contentsline {subsection}{\numberline {6.3.1}Scientific Derivation Accuracy and Benchmark Comparison}{67}{}%
-\contentsline {subsection}{\numberline {6.3.2}Computational Execution Speed and System Throughput}{67}{}%
-\contentsline {chapter}{\numberline {7}RESULTS AND DISCUSSION}{69}{}%
-\contentsline {section}{\numberline {7.1}Output of the System}{69}{}%
-\contentsline {subsection}{\numberline {7.1.1}User Interface and Research Management}{69}{}%
-\contentsline {subsection}{\numberline {7.1.2}Experimental Data Management and Scientific Traceability}{69}{}%
-\contentsline {subsection}{\numberline {7.1.3}Characterization Data and Scientific Visualization}{70}{}%
-\contentsline {subsection}{\numberline {7.1.4}Machine-Learning Results}{71}{}%
-\contentsline {subsubsection}{Analysis and Discussion of Model Performance}{72}{}%
-\contentsline {subsection}{\numberline {7.1.5}Experimental Design and Recommendations}{72}{}%
-\contentsline {section}{\numberline {7.2}Comparison with Existing System}{74}{}%
-\contentsline {subsection}{\numberline {7.2.1}Discussion of Workflow Consolidation}{74}{}%
-\contentsline {section}{\numberline {7.3}Industrial Benefits and Impact}{76}{}%
-\contentsline {subsection}{\numberline {7.3.1}Improved Research Data Management}{76}{}%
-\contentsline {subsection}{\numberline {7.3.2}Support for Materials Research}{76}{}%
-\contentsline {subsection}{\numberline {7.3.3}Data-Driven Experimental Planning}{76}{}%
-\contentsline {subsection}{\numberline {7.3.4}Reproducibility and Collaboration}{76}{}%
-\contentsline {subsection}{\numberline {7.3.5}Potential Industrial Applications}{76}{}%
-\contentsline {subsection}{\numberline {7.3.6}Limitations and Future Validation}{77}{}%
-\contentsline {chapter}{\numberline {8}CONCLUSION AND FUTURE SCOPE}{78}{}%
-\contentsline {section}{\numberline {8.1}Summary of work}{78}{}%
-\contentsline {section}{\numberline {8.2}Achievements}{79}{}%
-\contentsline {section}{\numberline {8.3}Industrial usefulness}{79}{}%
-\contentsline {section}{\numberline {8.4}Future enhancements}{80}{}%
-\contentsline {chapter}{\numberline {A}Appendix : List of Abbreviations}{81}{}%
-\contentsline {chapter}{\numberline {B}Appendix : List of Publications}{82}{}%
-\contentsline {chapter}{\numberline {C}References}{83}{}%
+\contentsline {chapter}{\numberline {6}TESTING AND VALIDATION}{65}{}%
+\contentsline {section}{\numberline {6.1}Testing Strategy}{65}{}%
+\contentsline {section}{\numberline {6.2}Test Cases}{66}{}%
+\contentsline {section}{\numberline {6.3}Performance Evaluation}{68}{}%
+\contentsline {subsection}{\numberline {6.3.1}Scientific Derivation Accuracy and Benchmark Comparison}{68}{}%
+\contentsline {subsection}{\numberline {6.3.2}Computational Execution Speed and System Throughput}{68}{}%
+\contentsline {chapter}{\numberline {7}RESULTS AND DISCUSSION}{70}{}%
+\contentsline {section}{\numberline {7.1}Output of the System}{70}{}%
+\contentsline {subsection}{\numberline {7.1.1}User Interface and Research Management}{70}{}%
+\contentsline {subsection}{\numberline {7.1.2}Experimental Data Management and Scientific Traceability}{70}{}%
+\contentsline {subsection}{\numberline {7.1.3}Characterization Data and Scientific Visualization}{71}{}%
+\contentsline {subsection}{\numberline {7.1.4}Machine-Learning Results}{72}{}%
+\contentsline {subsubsection}{Analysis and Discussion of Model Performance}{73}{}%
+\contentsline {subsection}{\numberline {7.1.5}Experimental Design and Recommendations}{73}{}%
+\contentsline {section}{\numberline {7.2}Comparison with Existing System}{75}{}%
+\contentsline {subsection}{\numberline {7.2.1}Discussion of Workflow Consolidation}{75}{}%
+\contentsline {section}{\numberline {7.3}Industrial Benefits and Impact}{77}{}%
+\contentsline {subsection}{\numberline {7.3.1}Improved Research Data Management}{77}{}%
+\contentsline {subsection}{\numberline {7.3.2}Support for Materials Research}{77}{}%
+\contentsline {subsection}{\numberline {7.3.3}Data-Driven Experimental Planning}{77}{}%
+\contentsline {subsection}{\numberline {7.3.4}Reproducibility and Collaboration}{77}{}%
+\contentsline {subsection}{\numberline {7.3.5}Potential Industrial Applications}{77}{}%
+\contentsline {subsection}{\numberline {7.3.6}Limitations and Future Validation}{78}{}%
+\contentsline {chapter}{\numberline {8}CONCLUSION AND FUTURE SCOPE}{79}{}%
+\contentsline {section}{\numberline {8.1}Summary of work}{79}{}%
+\contentsline {section}{\numberline {8.2}Achievements}{80}{}%
+\contentsline {section}{\numberline {8.3}Industrial usefulness}{80}{}%
+\contentsline {section}{\numberline {8.4}Future enhancements}{81}{}%
+\contentsline {chapter}{\numberline {A}Appendix : List of Abbreviations}{82}{}%
+\contentsline {chapter}{\numberline {B}Appendix : List of Publications}{83}{}%
+\contentsline {chapter}{\numberline {C}References}{84}{}%

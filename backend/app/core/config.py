@@ -14,8 +14,9 @@ from typing import Literal
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-# Resolve to the project root .env (two levels up from this file: backend/app/core/ -> root)
-_ENV_FILE = str(Path(__file__).resolve().parent.parent.parent.parent / ".env")
+# Resolve to the project root
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+_ENV_FILE = str(_PROJECT_ROOT / ".env")
 
 
 class Settings(BaseSettings):
@@ -220,13 +221,28 @@ class Settings(BaseSettings):
         description="Storage provider backend: 'local' for filesystem, 's3' for cloud object storage",
     )
     storage_path: str = Field(
-        default="./data",
+        default=str(_PROJECT_ROOT / "data"),
         description="Root path for file storage",
     )
     raw_data_dir: str = Field(
-        default="./data/raw",
+        default=str(_PROJECT_ROOT / "data" / "raw"),
         description="Local root directory for raw files",
     )
+    processed_data_dir: str = Field(
+        default=str(_PROJECT_ROOT / "data" / "processed"),
+        description="Local root directory for processed files",
+    )
+
+    @field_validator("storage_path", "raw_data_dir", "processed_data_dir", mode="before")
+    @classmethod
+    def resolve_storage_paths(cls, v: str | None) -> str:
+        if not v:
+            return str(_PROJECT_ROOT / "data")
+        p = Path(v)
+        if not p.is_absolute():
+            return str((_PROJECT_ROOT / p).resolve())
+        return str(p.resolve())
+
     s3_endpoint_url: str | None = Field(
         default=None,
         description="Custom S3 endpoint URL (e.g. MinIO or Cloudflare R2)",

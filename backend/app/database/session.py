@@ -17,6 +17,20 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
+import socket
+
+# Force IPv4 for remote cloud databases (Neon, AWS) where Windows IPv6 routing may stall
+_orig_getaddrinfo = socket.getaddrinfo
+
+
+def _ipv4_forced_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
+    if isinstance(host, str) and ("neon.tech" in host or "aws" in host):
+        family = socket.AF_INET
+    return _orig_getaddrinfo(host, port, family, type, proto, flags)
+
+
+socket.getaddrinfo = _ipv4_forced_getaddrinfo
+
 from app.core.config import get_settings
 
 settings = get_settings()
@@ -31,10 +45,16 @@ _engine_kwargs: dict = {
 if settings.database_url.startswith("sqlite"):
     _engine_kwargs["connect_args"] = {"check_same_thread": False}
 else:
-    # PostgreSQL (QueuePool)
+    # PostgreSQL (QueuePool with PgBouncer / Neon compatibility)
     _engine_kwargs["pool_pre_ping"] = True
-    _engine_kwargs["pool_size"] = 10
-    _engine_kwargs["max_overflow"] = 20
+    _engine_kwargs["pool_size"] = 5
+    _engine_kwargs["max_overflow"] = 10
+    _engine_kwargs["pool_timeout"] = 30
+    _engine_kwargs["pool_recycle"] = 300
+    _engine_kwargs["connect_args"] = {
+        "statement_cache_size": 0,  # Required for PgBouncer transaction pooling
+        "timeout": 30,
+    }
 
 async_engine = create_async_engine(
     settings.database_url,

@@ -4,9 +4,9 @@
 \@writefile{lot}{\addvspace {10\p@ }}
 \@writefile{toc}{\contentsline {section}{\numberline {1.1}Introduction to Project}{1}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {1.1.1}Part A: Phytochemical Synthesis and Spray Pyrolysis of CuO Thin Films}{1}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {1.1.2}Part B: GreenSynth Materials Informatics Platform}{2}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.1.2}Part B: GreenSynth Analytics}{2}{}\protected@file@percent }
 \@writefile{lot}{\contentsline {table}{\numberline {1.1}{\ignorespaces Multi-Dimensional Comparison of Hardware and Software Project Tracks}}{3}{}\protected@file@percent }
-\newlabel{tab:track_comparison}{{1.1}{3}{Part B: GreenSynth Materials Informatics Platform}{table.1.1}{}}
+\newlabel{tab:track_comparison}{{1.1}{3}{Part B: GreenSynth Analytics}{table.1.1}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {1.2}Problem Statement}{3}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {1.3}Scope and Objectives}{4}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {1.3.1}Scope}{4}{}\protected@file@percent }
@@ -154,72 +154,78 @@
 \newlabel{fig:ss_dashboard}{{5.2}{57}{Screenshots}{figure.5.2}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {5.3}{\ignorespaces Experiment and Sample Management Interface: Logging synthesis run parameters, solution concentrations, substrate temperatures, and tracking sample lifecycles.}}{58}{}\protected@file@percent }
 \newlabel{fig:ss_experiments}{{5.3}{58}{Screenshots}{figure.5.3}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {5.4}{\ignorespaces XRD Diffractogram Analysis View: Interactive diffraction pattern visualization, background subtraction, peak identification, and automated Scherrer crystallite size calculation.}}{59}{}\protected@file@percent }
-\newlabel{fig:ss_xrd}{{5.4}{59}{Screenshots}{figure.5.4}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {5.5}{\ignorespaces UV-Vis Absorption and Automated Tauc Plot Extraction: Numerical first-derivative inflection search and linear tangent regression for direct optical bandgap ($E_g$) derivation.}}{60}{}\protected@file@percent }
-\newlabel{fig:ss_tauc}{{5.5}{60}{Screenshots}{figure.5.5}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {5.6}{\ignorespaces Scanning Electron Microscopy (SEM) Morphological Module: High-resolution surface imaging, grain boundary contrast adjustment, and automated grain size evaluation.}}{61}{}\protected@file@percent }
-\newlabel{fig:ss_sem}{{5.6}{61}{Screenshots}{figure.5.6}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {5.7}{\ignorespaces Machine Learning Regressor Leaderboard: Comparative model evaluation benchmarking Random Forest and XGBoost predictive performance ($R^2$, RMSE, MAE) for material property forecasting.}}{62}{}\protected@file@percent }
-\newlabel{fig:ss_ml}{{5.7}{62}{Screenshots}{figure.5.7}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {5.8}{\ignorespaces Laboratory Precursor Extraction and Synthesis Realization: (a) Solid-liquid Soxhlet reflux apparatus for mulberry leaf extraction, (b) Hot plate magnetic stirrer during precursor compounding, (c) High-temperature muffle furnace for thermal processing, and (d) Digital conductivity meter for electrolyte solution monitoring.}}{63}{}\protected@file@percent }
-\newlabel{fig:ss_apparatus}{{5.8}{63}{Screenshots}{figure.5.8}{}}
-\@writefile{toc}{\contentsline {chapter}{\numberline {6}TESTING AND VALIDATION}{64}{}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {5.4}{\ignorespaces X-Ray Diffraction (XRD) Diffractogram Analysis Interface: Interactive $2\theta $ vs.\ Intensity pattern visualization showing raw background trace, Savitzky-Golay smoothed curve, and automated detection of 12 Bragg reflection peaks ($32.50^\circ $, $35.58^\circ $, $38.74^\circ $, $48.78^\circ $, $53.44^\circ $, $58.30^\circ $, $61.52^\circ $, $66.14^\circ $, $67.96^\circ $, $71.46^\circ $).}}{58}{}\protected@file@percent }
+\newlabel{fig:ss_xrd}{{5.4}{58}{Screenshots}{figure.5.4}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.5}{\ignorespaces UV-Visible Optical Absorbance Spectrum Interface: Experimental absorbance curve ($A$ vs.\ $\lambda $) across $300\text  { nm} \text  {--} 800\text  { nm}$ revealing the fundamental interband electronic absorption edge onset of synthesized nanostructured copper oxide.}}{59}{}\protected@file@percent }
+\newlabel{fig:ss_uvvis_abs}{{5.5}{59}{Screenshots}{figure.5.5}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.6}{\ignorespaces Automated Tauc Plot Optical Bandgap Extrapolation Interface: Direct allowed transition ($n=2$) $(A \cdot h\nu )^2$ vs.\ photon energy $h\nu $ curve with linear regression tangent extrapolation yielding an optical bandgap $E_g = 1.359\text  { eV}$ ($R^2 = 0.9947$).}}{59}{}\protected@file@percent }
+\newlabel{fig:ss_tauc}{{5.6}{59}{Screenshots}{figure.5.6}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.7}{\ignorespaces Fourier-Transform Infrared (FTIR) Spectroscopic Analysis Interface: Transmittance spectrum ($T\%$ vs.\ wavenumber $\nu $ from $400\text  { to }4000\text  { cm}^{-1}$) with automated detection of 4 characteristic vibrational peaks ($536.0\text  { cm}^{-1}$ $\text  {Cu--O}$ lattice vibration, $1106.0\text  { cm}^{-1}$, $1634.0\text  { cm}^{-1}$, and $3408.0\text  { cm}^{-1}$ hydroxyl stretching) alongside the researcher functional group annotation panel.}}{60}{}\protected@file@percent }
+\newlabel{fig:ss_ftir}{{5.7}{60}{Screenshots}{figure.5.7}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.8}{\ignorespaces Scanning Electron Microscopy (SEM) Micrograph Viewer and Scale Calibration Interface: Micrograph inspection of cauliflower-like nanostructured morphology at $50,000\times $ magnification ($15\text  { kV}$ accelerating voltage, $8.5\text  { mm}$ working distance, SE detector) with $500\text  { nm}$ scale bar calibration and interactive digital caliper measurement tool.}}{61}{}\protected@file@percent }
+\newlabel{fig:ss_sem}{{5.8}{61}{Screenshots}{figure.5.8}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.9}{\ignorespaces Electrical Property and Current-Voltage ($I\text  {--}V$) Transport Analysis Interface: Experimental $I\text  {--}V$ characteristic curve exhibiting Ohmic linearity, linear regression slope ($R = 2.50\,\Omega $), and automated resistance ($2.4991\,\Omega $) and conductivity calculation.}}{62}{}\protected@file@percent }
+\newlabel{fig:ss_electrical}{{5.9}{62}{Screenshots}{figure.5.9}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.10}{\ignorespaces Laboratory Precursor Extraction and Synthesis Realization: (a) Solid-liquid Soxhlet reflux apparatus for mulberry leaf extraction, (b) Hot plate magnetic stirrer during precursor compounding, (c) High-temperature muffle furnace for thermal processing, and (d) Digital conductivity meter for electrolyte solution monitoring.}}{63}{}\protected@file@percent }
+\newlabel{fig:ss_apparatus}{{5.10}{63}{Screenshots}{figure.5.10}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.11}{\ignorespaces Analytical Characterization and Deposition Facilities: (a) Digital spectrophotometer instrumentation, (b) Ultraviolet fluorescence inspection cabinet, (c) Chemical precursor preparation table with precision analytical balance, and (d) Spray pyrolysis pneumatic compressor with substrate hot plate assembly.}}{64}{}\protected@file@percent }
+\newlabel{fig:ss_apparatus2}{{5.11}{64}{Screenshots}{figure.5.11}{}}
+\@writefile{toc}{\contentsline {chapter}{\numberline {6}TESTING AND VALIDATION}{65}{}\protected@file@percent }
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
-\@writefile{toc}{\contentsline {section}{\numberline {6.1}Testing Strategy}{64}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {6.2}Test Cases}{65}{}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {6.1}{\ignorespaces Core System, Security, and Data Ingestion Test Cases}}{65}{}\protected@file@percent }
-\newlabel{tab:tc_core}{{6.1}{65}{Test Cases}{table.6.1}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {6.2}{\ignorespaces Scientific Property Derivation and Machine Learning Test Cases}}{66}{}\protected@file@percent }
-\newlabel{tab:tc_scientific}{{6.2}{66}{Test Cases}{table.6.2}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {6.3}Performance Evaluation}{67}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.3.1}Scientific Derivation Accuracy and Benchmark Comparison}{67}{}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {6.3}{\ignorespaces Scientific Derivation Accuracy: GreenSynth Analytics vs.\ OriginLab Benchmark}}{67}{}\protected@file@percent }
-\newlabel{tab:perf_accuracy}{{6.3}{67}{Scientific Derivation Accuracy and Benchmark Comparison}{table.6.3}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.3.2}Computational Execution Speed and System Throughput}{67}{}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {6.4}{\ignorespaces Computational Execution Latency and Throughput Benchmarks}}{68}{}\protected@file@percent }
-\newlabel{tab:perf_latency}{{6.4}{68}{Computational Execution Speed and System Throughput}{table.6.4}{}}
-\@writefile{toc}{\contentsline {chapter}{\numberline {7}RESULTS AND DISCUSSION}{69}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {6.1}Testing Strategy}{65}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {6.2}Test Cases}{66}{}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {6.1}{\ignorespaces Core System, Security, and Data Ingestion Test Cases}}{66}{}\protected@file@percent }
+\newlabel{tab:tc_core}{{6.1}{66}{Test Cases}{table.6.1}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {6.2}{\ignorespaces Scientific Property Derivation and Machine Learning Test Cases}}{67}{}\protected@file@percent }
+\newlabel{tab:tc_scientific}{{6.2}{67}{Test Cases}{table.6.2}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {6.3}Performance Evaluation}{68}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.3.1}Scientific Derivation Accuracy and Benchmark Comparison}{68}{}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {6.3}{\ignorespaces Scientific Derivation Accuracy: GreenSynth Analytics vs.\ OriginLab Benchmark}}{68}{}\protected@file@percent }
+\newlabel{tab:perf_accuracy}{{6.3}{68}{Scientific Derivation Accuracy and Benchmark Comparison}{table.6.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.3.2}Computational Execution Speed and System Throughput}{68}{}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {6.4}{\ignorespaces Computational Execution Latency and Throughput Benchmarks}}{69}{}\protected@file@percent }
+\newlabel{tab:perf_latency}{{6.4}{69}{Computational Execution Speed and System Throughput}{table.6.4}{}}
+\@writefile{toc}{\contentsline {chapter}{\numberline {7}RESULTS AND DISCUSSION}{70}{}\protected@file@percent }
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
-\@writefile{toc}{\contentsline {section}{\numberline {7.1}Output of the System}{69}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {7.1.1}User Interface and Research Management}{69}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {7.1.2}Experimental Data Management and Scientific Traceability}{69}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {7.1.3}Characterization Data and Scientific Visualization}{70}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {7.1.4}Machine-Learning Results}{71}{}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {7.1}{\ignorespaces Machine Learning Model Performance on the Synthetic P7 Dataset}}{72}{}\protected@file@percent }
-\newlabel{tab:ml_benchmark}{{7.1}{72}{Machine-Learning Results}{table.7.1}{}}
-\@writefile{toc}{\contentsline {subsubsection}{Analysis and Discussion of Model Performance}{72}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {7.1.5}Experimental Design and Recommendations}{72}{}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {7.2}{\ignorespaces Central Composite Design (CCD) 29-Run Exploration Envelope for P7 $\text  {CuO}$ Synthesis}}{73}{}\protected@file@percent }
-\newlabel{tab:doe_summary}{{7.2}{73}{Experimental Design and Recommendations}{table.7.2}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {7.2}Comparison with Existing System}{74}{}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {7.3}{\ignorespaces Comparative Workflow Evaluation: Conventional Manual Practice vs.\ GreenSynth Analytics}}{74}{}\protected@file@percent }
-\newlabel{tab:comp_workflow}{{7.3}{74}{Comparison with Existing System}{table.7.3}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {7.2.1}Discussion of Workflow Consolidation}{74}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {7.3}Industrial Benefits and Impact}{76}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {7.3.1}Improved Research Data Management}{76}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {7.3.2}Support for Materials Research}{76}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {7.3.3}Data-Driven Experimental Planning}{76}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {7.3.4}Reproducibility and Collaboration}{76}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {7.3.5}Potential Industrial Applications}{76}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {7.3.6}Limitations and Future Validation}{77}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {chapter}{\numberline {8}CONCLUSION AND FUTURE SCOPE}{78}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {7.1}Output of the System}{70}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.1.1}User Interface and Research Management}{70}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.1.2}Experimental Data Management and Scientific Traceability}{70}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.1.3}Characterization Data and Scientific Visualization}{71}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.1.4}Machine-Learning Results}{72}{}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {7.1}{\ignorespaces Machine Learning Model Performance on the Synthetic P7 Dataset}}{73}{}\protected@file@percent }
+\newlabel{tab:ml_benchmark}{{7.1}{73}{Machine-Learning Results}{table.7.1}{}}
+\@writefile{toc}{\contentsline {subsubsection}{Analysis and Discussion of Model Performance}{73}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.1.5}Experimental Design and Recommendations}{73}{}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {7.2}{\ignorespaces Central Composite Design (CCD) 29-Run Exploration Envelope for P7 $\text  {CuO}$ Synthesis}}{74}{}\protected@file@percent }
+\newlabel{tab:doe_summary}{{7.2}{74}{Experimental Design and Recommendations}{table.7.2}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {7.2}Comparison with Existing System}{75}{}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {7.3}{\ignorespaces Comparative Workflow Evaluation: Conventional Manual Practice vs.\ GreenSynth Analytics}}{75}{}\protected@file@percent }
+\newlabel{tab:comp_workflow}{{7.3}{75}{Comparison with Existing System}{table.7.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.2.1}Discussion of Workflow Consolidation}{75}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {7.3}Industrial Benefits and Impact}{77}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.3.1}Improved Research Data Management}{77}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.3.2}Support for Materials Research}{77}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.3.3}Data-Driven Experimental Planning}{77}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.3.4}Reproducibility and Collaboration}{77}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.3.5}Potential Industrial Applications}{77}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.3.6}Limitations and Future Validation}{78}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {chapter}{\numberline {8}CONCLUSION AND FUTURE SCOPE}{79}{}\protected@file@percent }
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
-\@writefile{toc}{\contentsline {section}{\numberline {8.1}Summary of work}{78}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {8.2}Achievements}{79}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {8.3}Industrial usefulness}{79}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {8.4}Future enhancements}{80}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {chapter}{\numberline {A}Appendix : List of Abbreviations}{81}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {8.1}Summary of work}{79}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {8.2}Achievements}{80}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {8.3}Industrial usefulness}{80}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {8.4}Future enhancements}{81}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {chapter}{\numberline {A}Appendix : List of Abbreviations}{82}{}\protected@file@percent }
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
-\@writefile{lot}{\contentsline {table}{\numberline {A.1}{\ignorespaces Abbreviations: Materials Science and Physical Characterization}}{81}{}\protected@file@percent }
-\newlabel{tab:abbrev_materials}{{A.1}{81}{Future enhancements}{table.1.1}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {A.2}{\ignorespaces Abbreviations: Software Engineering, Database, and Machine Learning}}{81}{}\protected@file@percent }
-\newlabel{tab:abbrev_software}{{A.2}{81}{Future enhancements}{table.1.2}{}}
-\@writefile{toc}{\contentsline {chapter}{\numberline {B}Appendix : List of Publications}{82}{}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {A.1}{\ignorespaces Abbreviations: Materials Science and Physical Characterization}}{82}{}\protected@file@percent }
+\newlabel{tab:abbrev_materials}{{A.1}{82}{Future enhancements}{table.1.1}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {A.2}{\ignorespaces Abbreviations: Software Engineering, Database, and Machine Learning}}{82}{}\protected@file@percent }
+\newlabel{tab:abbrev_software}{{A.2}{82}{Future enhancements}{table.1.2}{}}
+\@writefile{toc}{\contentsline {chapter}{\numberline {B}Appendix : List of Publications}{83}{}\protected@file@percent }
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
 \bibcite{ref1}{1}
@@ -232,7 +238,7 @@
 \bibcite{ref8}{8}
 \bibcite{ref9}{9}
 \bibcite{ref10}{10}
-\@writefile{toc}{\contentsline {chapter}{\numberline {C}References}{83}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {chapter}{\numberline {C}References}{84}{}\protected@file@percent }
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
 \bibcite{ref11}{11}
@@ -249,4 +255,4 @@
 \bibcite{ref22}{22}
 \bibcite{ref23}{23}
 \bibcite{ref24}{24}
-\gdef \@abspage@last{99}
+\gdef \@abspage@last{101}

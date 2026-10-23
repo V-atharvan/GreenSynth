@@ -1,0 +1,36 @@
+cff-version: 1.2.0
+message: "If you use this software in your research or wish to cite the platform, please cite it as below."
+title: "GreenSynth: A Data-Driven Research and Analytics Platform for Green Synthesis of Semiconductor Materials"
+version: 0.1.0
+date-released: 2026-10-23
+url: "https://github.com/V-atharvan/GreenSynth"
+repository-code: "https://github.com/V-atharvan/GreenSynth"
+license: MIT
+type: software
+authors:
+  - family-names: "Vaddepalli"
+    given-names: "Atharva Nijguni"
+    email: "v.atharvan@gmail.com"
+    affiliation: "Department of Computer Science & Engineering, N. B. Navale Sinhgad College of Engineering, Solapur"
+  - family-names: "Tolanure"
+    given-names: "Jeevankumar Shivkumar"
+    affiliation: "Department of Computer Science & Engineering, N. B. Navale Sinhgad College of Engineering, Solapur"
+  - family-names: "Hede"
+    given-names: "Rohan Mahadev"
+    affiliation: "Department of Computer Science & Engineering, N. B. Navale Sinhgad College of Engineering, Solapur"
+  - family-names: "Bhakare"
+    given-names: "Shantesh Dilip"
+    affiliation: "Department of Computer Science & Engineering, N. B. Navale Sinhgad College of Engineering, Solapur"
+contact:
+  - name: "GreenSynth Research Team"
+    email: "v.atharvan@gmail.com"
+keywords:
+  - "green synthesis"
+  - "semiconductor materials"
+  - "copper oxide"
+  - "materials science"
+  - "xrd"
+  - "tauc plot"
+  - "ftir spectroscopy"
+  - "scientific software"
+  - "data-driven research"

@@ -2,6 +2,7 @@
   "name": "greensynth-frontend",
   "private": true,
   "version": "0.1.0",
+  "license": "MIT",
   "description": "GreenSynth Analytics — Research Data Management Platform",
   "type": "module",
   "scripts": {

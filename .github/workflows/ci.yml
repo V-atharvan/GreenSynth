@@ -1,0 +1,117 @@
+name: GreenSynth CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend-test:
+    name: Backend Tests & Migrations (Python 3.11)
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: greensynth_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: testpassword123
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql+asyncpg://postgres:testpassword123@localhost:5432/greensynth_test
+      DATABASE_URL_SYNC: postgresql://postgres:testpassword123@localhost:5432/greensynth_test
+      SECRET_KEY: ci-test-secret-key-minimum-32-chars-long-for-validation
+      APP_ENV: testing
+      RATE_LIMIT_ENABLED: "false"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: backend/pyproject.toml
+
+      - name: Prepare test environment
+        run: |
+          cp .env.example .env
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          python -m pip install --upgrade pip
+          pip install -e ".[dev,scientific]"
+
+      - name: Run Ruff Lint
+        run: |
+          cd backend
+          ruff check .
+
+      - name: Run Alembic Database Migrations
+        run: |
+          cd backend
+          alembic upgrade head
+
+      - name: Run Backend Pytest Suite
+        run: |
+          cd backend
+          pytest tests/ -v --cov=app --cov=greensynth --cov-report=xml --cov-report=term
+
+      - name: Upload Backend Coverage Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-coverage-report
+          path: backend/coverage.xml
+          retention-days: 7
+
+  frontend-test:
+    name: Frontend Tests & Build (Node 20)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: TypeScript Type Check
+        run: |
+          cd frontend
+          npm run typecheck
+
+      - name: Run Vitest Unit Tests
+        run: |
+          cd frontend
+          npm run test
+
+      - name: Build Production Frontend
+        run: |
+          cd frontend
+          npm run build

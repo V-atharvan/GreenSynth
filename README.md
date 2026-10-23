@@ -1,5 +1,8 @@
 # GreenSynth Analytics Platform
 
+[![CI](https://github.com/V-atharvan/GreenSynth/actions/workflows/ci.yml/badge.svg)](https://github.com/V-atharvan/GreenSynth/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
 **Data-Driven Experimental Analysis and Optimization System for Green Synthesis of Semiconductor Materials**
 
 Version 0.1.0 — Phase 1 (Project Foundation)
@@ -188,6 +191,16 @@ Phase 1 provides the complete application foundation:
 
 ---
 
+## Community & Contributing
+
+We welcome contributions, bug reports, and scientific enhancements! Please review:
+- [Contributing Guidelines](CONTRIBUTING.md) for development setup, testing, and PR conventions.
+- [Code of Conduct](CODE_OF_CONDUCT.md) for community standards.
+- [Citation Guide](CITATION.cff) for attributing GreenSynth in academic research.
+
+---
+
 ## License
 
-Research Platform — Proprietary / Academic License
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for complete terms.
+

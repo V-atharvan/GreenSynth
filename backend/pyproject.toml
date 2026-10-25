@@ -97,3 +97,9 @@ filterwarnings = ["ignore::DeprecationWarning"]
 [tool.coverage.run]
 source = ["app"]
 omit = ["*/tests/*", "*/__init__.py"]
+
+# ── Setuptools Package Discovery ───────────────────────────
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
+exclude = ["alembic*", "data*", "tests*"]

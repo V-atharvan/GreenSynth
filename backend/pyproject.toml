@@ -43,6 +43,13 @@ dependencies = [
     # ── Object Storage (Phase 9) ───────────────────────────
     "boto3>=1.34.0",
     "botocore>=1.34.0",
+
+    # ── Reporting & PDF Generation ─────────────────────────
+    "reportlab>=4.0.0",
+    "matplotlib>=3.8.0",
+
+    # ── Model Serialization ────────────────────────────────
+    "joblib>=1.3.0",
 ]
 
 [project.optional-dependencies]

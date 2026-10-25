@@ -1,1 +1,1 @@
-# GreenSynth Analytics — Optimization module (DOE, Objectives, Recommendations)
+# GreenSynth Analytics - Optimization module (DOE, Objectives, Recommendations).

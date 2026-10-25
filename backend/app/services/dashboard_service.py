@@ -8,6 +8,7 @@ All values come from the database — no fabricated data.
 from __future__ import annotations
 
 import logging
+import uuid
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession

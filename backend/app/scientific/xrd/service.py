@@ -10,6 +10,7 @@ from __future__ import annotations
 import io
 import logging
 import uuid
+from collections.abc import Sequence
 from datetime import datetime, timezone
 from pathlib import Path
 

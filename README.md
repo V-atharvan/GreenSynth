@@ -1,6 +1,7 @@
 # GreenSynth Analytics Platform
 
 [![CI](https://github.com/V-atharvan/GreenSynth/actions/workflows/ci.yml/badge.svg)](https://github.com/V-atharvan/GreenSynth/actions/workflows/ci.yml)
+[![DOI](https://zenodo.org/badge/1329164886.svg)](https://doi.org/10.5281/zenodo.23643273)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 **Data-Driven Experimental Analysis and Optimization System for Green Synthesis of Semiconductor Materials**

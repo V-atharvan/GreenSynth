@@ -5,6 +5,7 @@ version: 0.1.0
 date-released: 2026-10-23
 url: "https://github.com/V-atharvan/GreenSynth"
 repository-code: "https://github.com/V-atharvan/GreenSynth"
+doi: "10.5281/zenodo.23643273"
 license: MIT
 type: software
 authors:

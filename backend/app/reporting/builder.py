@@ -48,14 +48,22 @@ def _load_raw_csv_columns(
 
     candidates: list[Path] = []
     if storage_path:
-        candidates.append(Path(storage_path))
-        candidates.append(Path("..") / storage_path)
-    candidates.extend([
-        Path("data") / "raw" / original_filename,
-        Path("..") / "data" / "raw" / original_filename,
-        Path("synthetic_data") / "p7" / "raw" / technique_dir / original_filename,
-        Path("..") / "synthetic_data" / "p7" / "raw" / technique_dir / original_filename,
-    ])
+        sp = Path(storage_path)
+        candidates.extend([
+            sp,
+            Path("..") / sp,
+            Path("data") / "raw" / sp,
+            Path("..") / "data" / "raw" / sp,
+            Path("backend") / "data" / "raw" / sp,
+            Path("..") / "backend" / "data" / "raw" / sp,
+        ])
+    if original_filename:
+        candidates.extend([
+            Path("data") / "raw" / original_filename,
+            Path("..") / "data" / "raw" / original_filename,
+            Path("synthetic_data") / "p7" / "raw" / technique_dir / original_filename,
+            Path("..") / "synthetic_data" / "p7" / "raw" / technique_dir / original_filename,
+        ])
 
     for cand in candidates:
         if cand.exists() and cand.is_file():

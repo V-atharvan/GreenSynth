@@ -81,9 +81,13 @@ def upgrade() -> None:
     inspector = sa.inspect(bind)
     existing_tables = set(inspector.get_table_names())
 
-    for table_name in PHASE10_PLUS_TABLES:
-        if table_name in Base.metadata.tables and table_name not in existing_tables:
-            Base.metadata.tables[table_name].create(bind, checkfirst=True)
+    target_tables = [
+        Base.metadata.tables[name]
+        for name in PHASE10_PLUS_TABLES
+        if name in Base.metadata.tables and name not in existing_tables
+    ]
+    if target_tables:
+        Base.metadata.create_all(bind, tables=target_tables)
 
 
 def downgrade() -> None:

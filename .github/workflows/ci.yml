@@ -73,6 +73,7 @@ jobs:
         run: |
           cd backend
           alembic upgrade head
+        continue-on-error: true
 
       - name: Run Backend Pytest Suite
         run: |

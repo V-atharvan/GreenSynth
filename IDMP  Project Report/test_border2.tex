@@ -1,0 +1,19 @@
+\documentclass[12pt,a4paper,oneside]{report}
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage{tikz}
+\usetikzlibrary{calc}
+\usepackage[tmargin=1in,bmargin=1in,lmargin=1in,rmargin=1in]{geometry}
+
+\begin{document}
+\thispagestyle{empty}
+\begin{tikzpicture}[remember picture, overlay]
+  \draw[line width=1.2pt] 
+    ( + (12mm,-12mm)$) 
+    rectangle 
+    ( + (-12mm,12mm)$);
+\end{tikzpicture}
+\begin{center}
+Test Border with calc
+\end{center}
+\end{document}

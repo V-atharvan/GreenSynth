@@ -1,0 +1,18 @@
+\documentclass[12pt,a4paper,oneside]{report}
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage{tikz}
+\usepackage[tmargin=1in,bmargin=1in,lmargin=1in,rmargin=1in]{geometry}
+
+\begin{document}
+\thispagestyle{empty}
+\begin{tikzpicture}[remember picture, overlay]
+  \draw[line width=1.5pt] 
+    ([xshift=12mm, yshift=-12mm] current page.north west) 
+    rectangle 
+    ([xshift=-12mm, yshift=12mm] current page.south east);
+\end{tikzpicture}
+\begin{center}
+Test Border
+\end{center}
+\end{document}

@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2250 2720" width="2250" height="2720" font-family="Arial, Helvetica, sans-serif" font-size="28">
+<defs><marker id="ar" markerWidth="12" markerHeight="12" refX="9" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L12,6 L0,12 z" fill="#000"/></marker></defs>
+<rect width="2250" height="2720" fill="#ffffff"/>
+<path d="M1159,105 L1159,203" fill="none" stroke="#000" stroke-width="3.5" stroke-linejoin="round" marker-end="url(#ar)"/>
+<path d="M1279,207 L1279,107" fill="none" stroke="#000" stroke-width="3.5" stroke-linejoin="round" marker-end="url(#ar)"/>
+<path d="M1219,509 L1219,612" fill="none" stroke="#000" stroke-width="3.5" stroke-linejoin="round" marker-end="url(#ar)"/>
+<path d="M1120,714 L1120,745 L354,745 L354,853" fill="none" stroke="#000" stroke-width="3.5" stroke-linejoin="round" marker-end="url(#ar)"/>
+<path d="M1219,714 L1219,850" fill="none" stroke="#000" stroke-width="3.5" stroke-linejoin="round" marker-end="url(#ar)"/>
+<path d="M1320,714 L1320,745 L1961,745 L1961,850" fill="none" stroke="#000" stroke-width="3.5" stroke-linejoin="round" marker-end="url(#ar)"/>
+<path d="M254,1135 L254,1260 L140,1260 L140,1493" fill="none" stroke="#000" stroke-width="3.5" stroke-linejoin="round" marker-end="url(#ar)"/>
+<path d="M380,1169 L380,1440 L790,1440 L790,1493" fill="none" stroke="#000" stroke-width="3.5" stroke-linejoin="round" marker-end="url(#ar)"/>
+<path d="M494,1086 L494,1305 L1590,1305 L1590,1493" fill="none" stroke="#000" stroke-width="3.5" stroke-linejoin="round" marker-end="url(#ar)"/>
+<path d="M1139,1146 L1139,1200 L930,1200 L930,1493" fill="none" stroke="#000" stroke-width="3.5" stroke-linejoin="round" marker-end="url(#ar)"/>
+<path d="M1299,1146 L1299,1230 L1660,1230 L1660,1493" fill="none" stroke="#000" stroke-width="3.5" stroke-linejoin="round" marker-end="url(#ar)"/>
+<path d="M1820,1081 L1820,1425 L1000,1425 L1000,1493" fill="none" stroke="#000" stroke-width="3.5" stroke-linejoin="round" marker-end="url(#ar)"/>
+<path d="M2061,1132 L2061,1470 L1790,1470 L1790,1493" fill="none" stroke="#000" stroke-width="3.5" stroke-linejoin="round" marker-end="url(#ar)"/>
+<path d="M860,1625 L860,1810 L1000,1810 L1000,1877" fill="none" stroke="#000" stroke-width="3.5" stroke-linejoin="round" marker-end="url(#ar)"/>
+<path d="M1330,1625 L1330,1810 L1140,1810 L1140,1876" fill="none" stroke="#000" stroke-width="3.5" stroke-linejoin="round" marker-end="url(#ar)"/>
+<path d="M1071,2178 L1071,2303" fill="none" stroke="#000" stroke-width="3.5" stroke-linejoin="round" marker-end="url(#ar)"/>
+<path d="M1071,2435 L1071,2558" fill="none" stroke="#000" stroke-width="3.5" stroke-linejoin="round" marker-end="url(#ar)"/>
+<rect x="1039.0" y="5" width="360" height="100" fill="#dff3fd" stroke="#0288d1" stroke-width="3.5"/>
+<text x="1219" y="47.0" text-anchor="middle" fill="#00406b" font-weight="bold">Lab Technician /</text>
+<text x="1219" y="83.0" text-anchor="middle" fill="#00406b" font-weight="bold">Instrument</text>
+<rect x="1550.0" y="1495" width="300" height="130" fill="#dff3fd" stroke="#0288d1" stroke-width="3.5"/>
+<text x="1700" y="1552.0" text-anchor="middle" fill="#00406b" font-weight="bold">Materials</text>
+<text x="1700" y="1588.0" text-anchor="middle" fill="#00406b" font-weight="bold">Researcher</text>
+<rect x="911.0" y="2560" width="320" height="110" fill="#dff3fd" stroke="#0288d1" stroke-width="3.5"/>
+<text x="1071" y="2607.0" text-anchor="middle" fill="#00406b" font-weight="bold">ML Training</text>
+<text x="1071" y="2643.0" text-anchor="middle" fill="#00406b" font-weight="bold">Pipeline</text>
+<circle cx="1219" cy="351" r="158" fill="#e6f5e8" stroke="#2e7d32" stroke-width="3.5"/>
+<text x="1219" y="307.0" text-anchor="middle" fill="#0b3a12" font-weight="bold">3.1</text>
+<text x="1219" y="343.0" text-anchor="middle" fill="#0b3a12" font-weight="bold">File Ingestion &amp;</text>
+<text x="1219" y="379.0" text-anchor="middle" fill="#0b3a12" font-weight="bold">SHA-256</text>
+<text x="1219" y="415.0" text-anchor="middle" fill="#0b3a12" font-weight="bold">Checksum</text>
+<circle cx="354" cy="1013" r="158" fill="#e6f5e8" stroke="#2e7d32" stroke-width="3.5"/>
+<text x="354" y="969.0" text-anchor="middle" fill="#0b3a12" font-weight="bold">3.2</text>
+<text x="354" y="1005.0" text-anchor="middle" fill="#0b3a12" font-weight="bold">XRD Peak</text>
+<text x="354" y="1041.0" text-anchor="middle" fill="#0b3a12" font-weight="bold">Detection &amp;</text>
+<text x="354" y="1077.0" text-anchor="middle" fill="#0b3a12" font-weight="bold">Scherrer Engine</text>
+<circle cx="1219" cy="1010" r="158" fill="#e6f5e8" stroke="#2e7d32" stroke-width="3.5"/>
+<text x="1219" y="948.0" text-anchor="middle" fill="#0b3a12" font-weight="bold">3.3</text>
+<text x="1219" y="984.0" text-anchor="middle" fill="#0b3a12" font-weight="bold">UV-Vis Tauc</text>
+<text x="1219" y="1020.0" text-anchor="middle" fill="#0b3a12" font-weight="bold">Band Gap</text>
+<text x="1219" y="1056.0" text-anchor="middle" fill="#0b3a12" font-weight="bold">Extrapolation</text>
+<text x="1219" y="1092.0" text-anchor="middle" fill="#0b3a12" font-weight="bold">Engine</text>
+<circle cx="1961" cy="1010" r="158" fill="#e6f5e8" stroke="#2e7d32" stroke-width="3.5"/>
+<text x="1961" y="948.0" text-anchor="middle" fill="#0b3a12" font-weight="bold">3.4</text>
+<text x="1961" y="984.0" text-anchor="middle" fill="#0b3a12" font-weight="bold">Electrical I-V</text>
+<text x="1961" y="1020.0" text-anchor="middle" fill="#0b3a12" font-weight="bold">Ohmic</text>
+<text x="1961" y="1056.0" text-anchor="middle" fill="#0b3a12" font-weight="bold">Conductivity</text>
+<text x="1961" y="1092.0" text-anchor="middle" fill="#0b3a12" font-weight="bold">Engine</text>
+<circle cx="1071" cy="2020" r="158" fill="#e6f5e8" stroke="#2e7d32" stroke-width="3.5"/>
+<text x="1071" y="1976.0" text-anchor="middle" fill="#0b3a12" font-weight="bold">3.5</text>
+<text x="1071" y="2012.0" text-anchor="middle" fill="#0b3a12" font-weight="bold">ML Feature</text>
+<text x="1071" y="2048.0" text-anchor="middle" fill="#0b3a12" font-weight="bold">Assembler</text>
+<text x="1071" y="2084.0" text-anchor="middle" fill="#0b3a12" font-weight="bold">&amp; Leakage Guard</text>
+<path d="M1084.0,638 L1084.0,690 A135.0,24 0 0 0 1354.0,690 L1354.0,638 Z" fill="#fff0d9" stroke="#f57c00" stroke-width="3.5"/>
+<ellipse cx="1219" cy="638" rx="135.0" ry="24" fill="#fff0d9" stroke="#f57c00" stroke-width="3.5"/>
+<text x="1219" y="696.0" text-anchor="middle" fill="#a63c00" font-weight="bold">D1: raw_files</text>
+<path d="M5.0,1519 L5.0,1601 A135.0,24 0 0 0 275.0,1601 L275.0,1519 Z" fill="#fff0d9" stroke="#f57c00" stroke-width="3.5"/>
+<ellipse cx="140" cy="1519" rx="135.0" ry="24" fill="#fff0d9" stroke="#f57c00" stroke-width="3.5"/>
+<text x="140" y="1592.0" text-anchor="middle" fill="#a63c00" font-weight="bold">D2: xrd_peaks</text>
+<path d="M670.0,1519 L670.0,1601 A190.0,24 0 0 0 1050.0,1601 L1050.0,1519 Z" fill="#fff0d9" stroke="#f57c00" stroke-width="3.5"/>
+<ellipse cx="860" cy="1519" rx="190.0" ry="24" fill="#fff0d9" stroke="#f57c00" stroke-width="3.5"/>
+<text x="860" y="1574.0" text-anchor="middle" fill="#a63c00" font-weight="bold">D3:</text>
+<text x="860" y="1610.0" text-anchor="middle" fill="#a63c00" font-weight="bold">calculated_properties</text>
+<path d="M1140.0,1519 L1140.0,1601 A190.0,24 0 0 0 1520.0,1601 L1520.0,1519 Z" fill="#fff0d9" stroke="#f57c00" stroke-width="3.5"/>
+<ellipse cx="1330" cy="1519" rx="190.0" ry="24" fill="#fff0d9" stroke="#f57c00" stroke-width="3.5"/>
+<text x="1330" y="1574.0" text-anchor="middle" fill="#a63c00" font-weight="bold">D4:</text>
+<text x="1330" y="1610.0" text-anchor="middle" fill="#a63c00" font-weight="bold">experiment_parameters</text>
+<path d="M906.0,2329 L906.0,2411 A165.0,24 0 0 0 1236.0,2411 L1236.0,2329 Z" fill="#fff0d9" stroke="#f57c00" stroke-width="3.5"/>
+<ellipse cx="1071" cy="2329" rx="165.0" ry="24" fill="#fff0d9" stroke="#f57c00" stroke-width="3.5"/>
+<text x="1071" y="2384.0" text-anchor="middle" fill="#a63c00" font-weight="bold">D5: ml_datasets &amp;</text>
+<text x="1071" y="2420.0" text-anchor="middle" fill="#a63c00" font-weight="bold">records</text>
+<rect x="909.0" y="115.0" width="200" height="80" fill="#cfcfcf"/>
+<text x="1009" y="147.0" text-anchor="middle" fill="#000">Raw spectra</text>
+<text x="1009" y="183.0" text-anchor="middle" fill="#000">(.csv, .txt)</text>
+<rect x="1299.0" y="115.0" width="260" height="80" fill="#cfcfcf"/>
+<text x="1429" y="147.0" text-anchor="middle" fill="#000">Checksum receipt</text>
+<text x="1429" y="183.0" text-anchor="middle" fill="#000">(SHA-256)</text>
+<rect x="1029.0" y="540.0" width="380" height="44" fill="#cfcfcf"/>
+<text x="1219" y="572.0" text-anchor="middle" fill="#000">Store raw spectra &amp; hash</text>
+<rect x="194.0" y="778.0" width="320" height="44" fill="#cfcfcf"/>
+<text x="354" y="810.0" text-anchor="middle" fill="#000">2θ &amp; Intensity array</text>
+<rect x="1089.0" y="760.0" width="260" height="80" fill="#cfcfcf"/>
+<text x="1219" y="792.0" text-anchor="middle" fill="#000">Wavelength &amp;</text>
+<text x="1219" y="828.0" text-anchor="middle" fill="#000">Absorbance array</text>
+<rect x="1778.5" y="778.0" width="365" height="44" fill="#cfcfcf"/>
+<text x="1961" y="810.0" text-anchor="middle" fill="#000">V &amp; I sweep data points</text>
+<rect x="62.5" y="1340.0" width="155" height="80" fill="#cfcfcf"/>
+<text x="140" y="1372.0" text-anchor="middle" fill="#000">Store 2θ,</text>
+<text x="140" y="1408.0" text-anchor="middle" fill="#000">FWHM, hkl</text>
+<rect x="242.5" y="1330.0" width="275" height="80" fill="#cfcfcf"/>
+<text x="380" y="1362.0" text-anchor="middle" fill="#000">Store Crystallite</text>
+<text x="380" y="1398.0" text-anchor="middle" fill="#000">Size D (nm)</text>
+<rect x="394.0" y="1210.0" width="200" height="80" fill="#cfcfcf"/>
+<text x="494" y="1242.0" text-anchor="middle" fill="#000">Diffraction</text>
+<text x="494" y="1278.0" text-anchor="middle" fill="#000">pattern plot</text>
+<rect x="800.0" y="1330.0" width="260" height="80" fill="#cfcfcf"/>
+<text x="930" y="1362.0" text-anchor="middle" fill="#000">Store Optical</text>
+<text x="930" y="1398.0" text-anchor="middle" fill="#000">Band Gap Eg (eV)</text>
+<rect x="1327.5" y="1190.0" width="305" height="80" fill="#cfcfcf"/>
+<text x="1480" y="1222.0" text-anchor="middle" fill="#000">Tauc plot</text>
+<text x="1480" y="1258.0" text-anchor="middle" fill="#000">extrapolation curve</text>
+<rect x="1682.5" y="1232.0" width="275" height="116" fill="#cfcfcf"/>
+<text x="1820" y="1264.0" text-anchor="middle" fill="#000">Store Resistance,</text>
+<text x="1820" y="1300.0" text-anchor="middle" fill="#000">Resistivity,</text>
+<text x="1820" y="1336.0" text-anchor="middle" fill="#000">Conductivity σ</text>
+<rect x="1976.0" y="1250.0" width="170" height="80" fill="#cfcfcf"/>
+<text x="2061" y="1282.0" text-anchor="middle" fill="#000">Ohmic I-V</text>
+<text x="2061" y="1318.0" text-anchor="middle" fill="#000">sweep plot</text>
+<rect x="730.0" y="1675.0" width="260" height="80" fill="#cfcfcf"/>
+<text x="860" y="1707.0" text-anchor="middle" fill="#000">Target property</text>
+<text x="860" y="1743.0" text-anchor="middle" fill="#000">(Conductivity σ)</text>
+<rect x="1170.0" y="1675.0" width="320" height="80" fill="#cfcfcf"/>
+<text x="1330" y="1707.0" text-anchor="middle" fill="#000">Synthesis parameters</text>
+<text x="1330" y="1743.0" text-anchor="middle" fill="#000">(15 factors)</text>
+<rect x="843.5" y="2216.0" width="455" height="44" fill="#cfcfcf"/>
+<text x="1071" y="2248.0" text-anchor="middle" fill="#000">Cleaned feature-target matrix</text>
+<rect x="851.0" y="2475.0" width="440" height="44" fill="#cfcfcf"/>
+<text x="1071" y="2507.0" text-anchor="middle" fill="#000">Training tensors (5-Fold CV)</text>
+</svg>

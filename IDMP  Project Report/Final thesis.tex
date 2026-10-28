@@ -10,6 +10,7 @@
 \usepackage[tmargin=1in,bmargin=1in,lmargin=1.25in,rmargin=0.9in]{geometry}
 \usepackage{titlesec}
 \usepackage{url}
+\usepackage{rotating}
 \titleformat{\chapter}[display]
 {\normalfont\huge\bfseries}{\chaptertitlename\ \thechapter}{20pt}{\Huge}
 \titlespacing*{\chapter}{0pt}{-20pt}{20pt}
@@ -890,9 +891,9 @@ The system supports seamless transition between isolated local development (SQLi
 
 The system architecture of GreenSynth Analytics is engineered around a modular, decoupled four-tier paradigm designed specifically to address the demanding computational, provenance, and data-integrity requirements of modern materials informatics. Scientific research environments require deterministic reproducibility, immutable provenance tracking, and seamless separation between compute-intensive numerical modeling and high-throughput interactive user interfaces. 
 
-\begin{figure}[htbp]
+\begin{figure}[!p]
 \begin{center}
-\includegraphics[width=1\textwidth]{"GreenSynth Analytics ER-2026-10-08-210247.png"}
+\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{image/2_er_domain_diagram.jpg}
 \caption{GreenSynth Analytics High-Level Domain Conceptual Architecture}
 \label{fig:domain_arch}
 \end{center}
@@ -940,9 +941,9 @@ The relational data model of GreenSynth Analytics is normalized to Third Normal 
 
 Figure~\ref{fig:er_diagram} illustrates the complete Entity-Relationship diagram in Crow's Foot notation, detailing primary keys (PK), foreign keys (FK), and inter-table cardinalities.
 
-\begin{figure}[htbp]
+\begin{figure}[!p]
 \begin{center}
-\includegraphics[width=\textwidth,height=0.80\textheight,keepaspectratio]{"Research Group Project-2026-10-08-211142.png"}
+\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{image/2_er_domain_diagram.jpg}
 \caption{Detailed Relational Entity-Relationship Diagram of GreenSynth Analytics}
 \label{fig:er_diagram}
 \end{center}
@@ -961,9 +962,9 @@ The database schema is organized across five cohesive architectural domains:
 
 The Level 0 Data Flow Diagram (Context-Level Diagram), depicted in Figure~\ref{fig:dfd_level0}, models the boundaries of GreenSynth Analytics relative to external entities. 
 
-\begin{figure}[htbp]
+\begin{figure}[!p]
 \begin{center}
-\includegraphics[width=0.92\textwidth,height=0.65\textheight,keepaspectratio]{"GreenSynth Analytics-2026-10-08-211020.png"}
+\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{image/1_context_diagram.jpg}
 \caption{DFD Level 0 (Context Level Diagram) of GreenSynth Analytics}
 \label{fig:dfd_level0}
 \end{center}
@@ -981,9 +982,9 @@ The system interacts with four primary external entities:
 
 The Level 1 Data Flow Diagram, shown in Figure~\ref{fig:dfd_level1}, decomposes Process 0.0 into five interconnected functional sub-processes and maps their interactions with six persistent data stores (\textbf{D1} to \textbf{D6}).
 
-\begin{figure}[htbp]
+\begin{figure}[!p]
 \begin{center}
-\includegraphics[width=\textwidth,height=0.95\textheight,keepaspectratio]{"mermaid-diagram-2026-10-09-083435.png"}
+\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{image/5_top_level_dfd.jpg}
 \caption{DFD Level 1 Diagram of GreenSynth Analytics}
 \label{fig:dfd_level1}
 \end{center}
@@ -1006,9 +1007,9 @@ Level 2 Data Flow Diagrams expand the core computational subsystems into detaile
 
 Figure~\ref{fig:dfd_level2_char} details the data flow within Process 3.0 as raw experimental files pass from initial ingestion to derived physical constants and curated ML feature matrices.
 
-\begin{figure}[htbp]
+\begin{figure}[!p]
 \begin{center}
-\includegraphics[width=\textwidth,height=1.8\textheight,keepaspectratio]{"mermaid-diagram-2026-10-09-083238.png"}
+\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{image/3_ml_dfd_level4.jpg}
 \caption{DFD Level 2: Subsystem 3.0 (Characterization \& Scientific Derivation Engine)}
 \label{fig:dfd_level2_char}
 \end{center}
@@ -1027,9 +1028,9 @@ The sub-processes in Subsystem 3.0 include:
 
 Figure~\ref{fig:dfd_level2_ml} illustrates the data flows governing feature normalization, cross-validation, champion model selection, applicability domain validation, and orthogonal experimental design generation.
 
-\begin{figure}[htbp]
+\begin{figure}[!p]
 \begin{center}
-\includegraphics[width=\textwidth,height=0.94\textheight,keepaspectratio]{"mermaid-diagram-2026-10-09-083343.png"}
+\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{image/3_ml_dfd_level4.jpg}
 \caption{DFD Level 2: Subsystem 4.0 (Machine Learning Pipeline \& Design of Experiments)}
 \label{fig:dfd_level2_ml}
 \end{center}
@@ -1053,9 +1054,9 @@ Unified Modeling Language (UML) diagrams provide an object-oriented structural a
 
 The Use Case Diagram shown in Figure~\ref{fig:uml_use_case} models system functionality from the perspective of external actors, delineating system boundaries and dependency stereotypes ($\ll include \gg$ and $\ll extend \gg$).
 
-\begin{figure}[htbp]
+\begin{figure}[!p]
 \begin{center}
-\includegraphics[width=\textwidth,height=0.68\textheight,keepaspectratio]{"mermaid-diagram-2026-10-09-083514.png"}
+\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{image/7_use_case_diagram.jpg}
 \caption{UML Use Case Diagram of GreenSynth Analytics}
 \label{fig:uml_use_case}
 \end{center}
@@ -1079,9 +1080,9 @@ The system defines four actors and twenty use cases organized across five functi
 
 The UML Class Diagram in Figure~\ref{fig:uml_class} depicts the static object structure of GreenSynth Analytics, illustrating class attributes, method signatures, access visibility, and structural relationships (associations, aggregations, compositions, and dependencies).
 
-\begin{figure}[htbp]
+\begin{figure}[!p]
 \begin{center}
-\includegraphics[width=\textwidth,height=20\textheight,keepaspectratio]{"mermaid-diagram-2026-10-09-083557.png"}
+\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{image/4_class_diagram.jpg}
 \caption{UML Class Diagram of GreenSynth Analytics}
 \label{fig:uml_class}
 \end{center}
@@ -1101,9 +1102,9 @@ The core domain classes include:
 
 The UML Sequence Diagram depicted in Figure~\ref{fig:uml_sequence} details the dynamic runtime interactions among the researcher, frontend interface, REST API, storage engine, scientific engine, relational database, and ML inference service.
 
-\begin{figure}[htbp]
+\begin{figure}[!p]
 \begin{center}
-\includegraphics[width=\textwidth,keepaspectratio]{"mermaid-diagram-2026-10-09-083646.png"}
+\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{image/6_sequence_diagram.jpg}
 \caption{UML Sequence Diagram Illustrating End-to-End Analysis and Inference Execution}
 \label{fig:uml_sequence}
 \end{center}

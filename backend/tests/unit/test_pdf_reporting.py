@@ -166,3 +166,69 @@ def test_pdf_report_renderer_compilation():
     assert isinstance(pdf_bytes, bytes)
     assert len(pdf_bytes) > 1000
     assert pdf_bytes.startswith(b"%PDF-")
+
+
+
+def test_pdf_report_ml_section_conditional():
+    exp_id = str(uuid.uuid4())
+    # 1. Report with default ML prediction (available=False)
+    data_no_ml = ExperimentReportData(
+        project_code="P7",
+        project_name="CuO Test",
+        material="CuO",
+        extract="Mulberry",
+        solvent="Ethanol",
+        synthesis_method="Spray Pyrolysis",
+        experiment_id=exp_id,
+        experiment_code="EXP-P7-001",
+        title="Test",
+        researcher="Researcher",
+        status="COMPLETED",
+        created_at=datetime.utcnow(),
+    )
+    story_no_ml = PDFReportRenderer._build_story(data_no_ml)
+    para_texts = [f.text for f in story_no_ml if hasattr(f, "text")]
+    assert not any("Machine Learning Prediction" in t for t in para_texts)
+    assert not any("No machine-learning prediction" in t for t in para_texts)
+    assert any("7. Data Provenance & Cryptographic Traceability" in t for t in para_texts)
+
+    pdf_no_ml = PDFReportRenderer.render_experiment_report(data_no_ml)
+    assert isinstance(pdf_no_ml, bytes)
+    assert len(pdf_no_ml) > 1000
+    assert pdf_no_ml.startswith(b"%PDF-")
+
+    # 2. Report with ML prediction available=True
+    data_with_ml = ExperimentReportData(
+        project_code="P7",
+        project_name="CuO Test",
+        material="CuO",
+        extract="Mulberry",
+        solvent="Ethanol",
+        synthesis_method="Spray Pyrolysis",
+        experiment_id=exp_id,
+        experiment_code="EXP-P7-001",
+        title="Test",
+        researcher="Researcher",
+        status="COMPLETED",
+        created_at=datetime.utcnow(),
+        ml_prediction=MLPredictionReportSectionSchema(
+            available=True,
+            model_name="RandomForestRegressor",
+            model_version="1.0",
+            r2_score=0.92,
+            target_property="Electrical Conductivity",
+            predicted_value=0.052,
+            lower_bound=0.048,
+            upper_bound=0.056,
+            domain_status="IN_DOMAIN",
+        ),
+    )
+    story_with_ml = PDFReportRenderer._build_story(data_with_ml)
+    para_with_texts = [f.text for f in story_with_ml if hasattr(f, "text")]
+    assert any("7. Machine Learning Prediction & Closed-Loop Validation" in t for t in para_with_texts)
+    assert any("8. Data Provenance & Cryptographic Traceability" in t for t in para_with_texts)
+
+    pdf_with_ml = PDFReportRenderer.render_experiment_report(data_with_ml)
+    assert isinstance(pdf_with_ml, bytes)
+    assert len(pdf_with_ml) > 1000
+    assert pdf_with_ml.startswith(b"%PDF-")

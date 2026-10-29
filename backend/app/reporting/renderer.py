@@ -82,17 +82,7 @@ class PDFReportRenderer:
     """
 
     @classmethod
-    def render_experiment_report(cls, data: ExperimentReportData) -> bytes:
-        buffer = io.BytesIO()
-        doc = SimpleDocTemplate(
-            buffer,
-            pagesize=letter,
-            leftMargin=36,
-            rightMargin=36,
-            topMargin=48,
-            bottomMargin=48,
-        )
-
+    def _build_story(cls, data: ExperimentReportData) -> list[Any]:
         styles = getSampleStyleSheet()
 
         # Custom Scientific Typography Styles
@@ -333,9 +323,10 @@ class PDFReportRenderer:
 
         story.append(Spacer(1, 14))
 
-        # ── 8. ML PREDICTION & VALIDATION SECTION ─────────────────
-        story.append(Paragraph("7. Machine Learning Prediction & Closed-Loop Validation", h1_style))
-        if data.ml_prediction.available:
+        # ── 8. ML PREDICTION & VALIDATION SECTION (Only when available) ─
+        next_section_idx = 7
+        if data.ml_prediction and data.ml_prediction.available:
+            story.append(Paragraph(f"{next_section_idx}. Machine Learning Prediction & Closed-Loop Validation", h1_style))
             r2_val = f"{data.ml_prediction.r2_score:.4f}" if data.ml_prediction.r2_score is not None else "N/A"
             ml_text = [
                 f"<b>Trained Model:</b> {data.ml_prediction.model_name} (v{data.ml_prediction.model_version}) | <b>Cross-Validation R²:</b> {r2_val}",
@@ -351,13 +342,11 @@ class PDFReportRenderer:
             ml_text.append(f"<i>Note: {data.ml_prediction.disclaimer}</i>")
             for t in ml_text:
                 story.append(Paragraph(t, body_style))
-        else:
-            story.append(Paragraph("<i>No machine-learning prediction currently associated with this experiment.</i>", body_style))
-
-        story.append(Spacer(1, 14))
+            story.append(Spacer(1, 14))
+            next_section_idx += 1
 
         # ── 9. SCIENTIFIC DATA PROVENANCE BLOCK ───────────────────
-        story.append(Paragraph("8. Data Provenance & Cryptographic Traceability", h1_style))
+        story.append(Paragraph(f"{next_section_idx}. Data Provenance & Cryptographic Traceability", h1_style))
         prov_rows = [
             [Paragraph("Sample Code", table_header_style), Paragraph("Technique", table_header_style), Paragraph("Raw File Name", table_header_style), Paragraph("SHA-256 Checksum", table_header_style), Paragraph("Analysis Run ID", table_header_style)],
         ]
@@ -380,6 +369,19 @@ class PDFReportRenderer:
         ]))
         story.append(prov_table)
 
-        # Build document using NumberedCanvas
+        return story
+
+    @classmethod
+    def render_experiment_report(cls, data: ExperimentReportData) -> bytes:
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(
+            buffer,
+            pagesize=letter,
+            leftMargin=36,
+            rightMargin=36,
+            topMargin=48,
+            bottomMargin=48,
+        )
+        story = cls._build_story(data)
         doc.build(story, canvasmaker=NumberedCanvas)
         return buffer.getvalue()

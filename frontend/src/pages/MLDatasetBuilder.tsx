@@ -9,9 +9,71 @@ import { parameterService } from '@/services/parameterService'
 import { mlService, MLDataset, MLDatasetFeatureSpec, MLDatasetRecord } from '@/services/mlService'
 import { useProjectContext } from '@/context/ProjectContext'
 
+interface PredefinedTarget {
+  label: string
+  property: string
+  unit: string
+  type: string
+  description: string
+  defaultDatasetName: string
+}
+
+const PREDEFINED_TARGETS: PredefinedTarget[] = [
+  {
+    label: 'Electrical Conductivity (S/cm) — I-V Transport',
+    property: 'Electrical Conductivity',
+    unit: 'S/cm',
+    type: 'CALCULATED',
+    description: 'Training dataset for semiconductor electrical conductivity prediction from synthesis recipe parameters.',
+    defaultDatasetName: 'Synthesis Conductivity Dataset',
+  },
+  {
+    label: 'Electrical Resistivity (Ω·cm) — Two-Probe Transport',
+    property: 'Electrical Resistivity',
+    unit: 'Ohm·cm',
+    type: 'CALCULATED',
+    description: 'Training dataset for semiconductor electrical resistivity prediction from synthesis parameters.',
+    defaultDatasetName: 'Synthesis Resistivity Dataset',
+  },
+  {
+    label: 'Optical Band Gap (eV) — UV-Vis Tauc Extrapolation',
+    property: 'Optical Band Gap',
+    unit: 'eV',
+    type: 'CALCULATED',
+    description: 'Training dataset for optical band gap energy prediction extracted from UV-Vis absorption spectra.',
+    defaultDatasetName: 'Synthesis Optical Band Gap Dataset',
+  },
+  {
+    label: 'Crystallite Size (nm) — XRD Debye-Scherrer',
+    property: 'Crystallite Size',
+    unit: 'nm',
+    type: 'CALCULATED',
+    description: 'Training dataset for XRD crystallite domain size prediction derived via Debye-Scherrer formula.',
+    defaultDatasetName: 'Synthesis Crystallite Size Dataset',
+  },
+  {
+    label: 'Particle Size (nm) — SEM Micrograph Metrology',
+    property: 'Particle Size',
+    unit: 'nm',
+    type: 'MEASURED',
+    description: 'Training dataset for SEM morphological particle/cluster size prediction.',
+    defaultDatasetName: 'Synthesis SEM Particle Size Dataset',
+  },
+  {
+    label: 'Custom Target Property...',
+    property: 'CUSTOM',
+    unit: '',
+    type: 'CALCULATED',
+    description: 'Custom research target property.',
+    defaultDatasetName: 'Custom Synthesis Dataset',
+  },
+]
+
 export default function MLDatasetBuilder() {
   const navigate = useNavigate()
   const { projectId, projectCode, projectName } = useProjectContext()
+  const [selectedTargetKey, setSelectedTargetKey] = useState<string>('Electrical Conductivity')
+  const [isCustomTarget, setIsCustomTarget] = useState<boolean>(false)
   const [datasetName, setDatasetName] = useState<string>('Synthesis Conductivity Dataset')
   const [description, setDescription] = useState<string>('Training dataset for semiconductor conductivity prediction')
   const [targetProperty, setTargetProperty] = useState<string>('Electrical Conductivity')
@@ -69,6 +131,26 @@ export default function MLDatasetBuilder() {
     const updated = [...features]
     updated[index] = { ...updated[index], [field]: value }
     setFeatures(updated)
+  }
+
+  const handleTargetSelectionChange = (key: string) => {
+    setSelectedTargetKey(key)
+    if (key === 'CUSTOM') {
+      setIsCustomTarget(true)
+      setTargetProperty('')
+      setTargetUnit('')
+      setTargetType('CALCULATED')
+    } else {
+      setIsCustomTarget(false)
+      const match = PREDEFINED_TARGETS.find((t) => t.property === key)
+      if (match) {
+        setTargetProperty(match.property)
+        setTargetUnit(match.unit)
+        setTargetType(match.type)
+        setDatasetName(match.defaultDatasetName)
+        setDescription(match.description)
+      }
+    }
   }
 
   const handleBuildDataset = async (e: React.FormEvent) => {
@@ -205,24 +287,74 @@ export default function MLDatasetBuilder() {
             </div>
 
             <div className="form-group">
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>Target Property</label>
-              <input
-                type="text"
-                value={targetProperty}
-                onChange={(e) => setTargetProperty(e.target.value)}
-                required
-                style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px' }}
-              />
+              <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>
+                <span>Target Property (Predictive Goal)</span>
+                <span style={{ fontSize: '11px', color: '#0f766e', fontWeight: 600 }}>Standardized Dropdown</span>
+              </label>
+              <select
+                value={selectedTargetKey}
+                onChange={(e) => handleTargetSelectionChange(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  borderRadius: '6px',
+                  border: '1px solid #cbd5e1',
+                  fontSize: '14px',
+                  background: '#ffffff',
+                  color: '#0f172a',
+                  cursor: 'pointer',
+                  fontWeight: 500,
+                }}
+              >
+                {PREDEFINED_TARGETS.map((t) => (
+                  <option key={t.property} value={t.property}>
+                    {t.label}
+                  </option>
+                ))}
+              </select>
+              {isCustomTarget && (
+                <input
+                  type="text"
+                  placeholder="Enter custom target property name..."
+                  value={targetProperty}
+                  onChange={(e) => setTargetProperty(e.target.value)}
+                  required
+                  style={{
+                    width: '100%',
+                    marginTop: '8px',
+                    padding: '10px 12px',
+                    borderRadius: '6px',
+                    border: '1px solid #0f766e',
+                    fontSize: '14px',
+                  }}
+                />
+              )}
             </div>
 
             <div className="form-group">
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>Target Unit</label>
+              <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>
+                <span>Target Unit</span>
+                <span style={{ fontSize: '11px', color: isCustomTarget ? '#64748b' : '#059669', fontWeight: 500 }}>
+                  {isCustomTarget ? 'Manual input' : 'Auto-locked with target'}
+                </span>
+              </label>
               <input
                 type="text"
                 value={targetUnit}
                 onChange={(e) => setTargetUnit(e.target.value)}
                 required
-                style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px' }}
+                readOnly={!isCustomTarget}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  borderRadius: '6px',
+                  border: '1px solid #cbd5e1',
+                  fontSize: '14px',
+                  background: isCustomTarget ? '#ffffff' : '#f8fafc',
+                  color: isCustomTarget ? '#0f172a' : '#0f766e',
+                  fontWeight: 600,
+                  cursor: isCustomTarget ? 'text' : 'not-allowed',
+                }}
               />
             </div>
           </div>

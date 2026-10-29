@@ -78,6 +78,7 @@ backend/data/exports/*
 # ── Scratch & Temporary ───────────────────────────────────
 scratch/
 *.lnk
+/*.pdf
 
 # ── Alembic (keep versions tracked) ──────────────────────
 # alembic/versions/ is intentionally tracked

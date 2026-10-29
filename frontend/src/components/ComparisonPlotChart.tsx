@@ -85,14 +85,22 @@ export function ComparisonPlotChart({
     regPath = `M ${px1} ${py1} L ${px2} ${py2}`
   }
 
+  // Determine precision based on x-axis range so ticks never collapse to the same label
+  const xDisplayRange = xPadMax - xPadMin
+  const xDecimals = xDisplayRange < 0.05 ? 4 : xDisplayRange < 0.5 ? 3 : xDisplayRange < 5 ? 2 : 1
+
   const xTicks = Array.from({ length: 5 }, (_, i) => {
     const val = xPadMin + (i / 4) * (xPadMax - xPadMin)
-    return { val: val.toFixed(1), x: scaleX(val) }
+    return { val: val.toFixed(xDecimals), x: scaleX(val) }
   })
+
+  // Determine precision based on y-axis range
+  const yDisplayRange = yPadMax - yPadMin
+  const yDecimals = yDisplayRange < 0.05 ? 4 : yDisplayRange < 0.5 ? 3 : yDisplayRange < 5 ? 2 : 1
 
   const yTicks = Array.from({ length: 5 }, (_, i) => {
     const val = yPadMin + (i / 4) * (yPadMax - yPadMin)
-    return { val: val.toFixed(2), y: scaleY(val) }
+    return { val: val.toFixed(yDecimals), y: scaleY(val) }
   })
 
   return (

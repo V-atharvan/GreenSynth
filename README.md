@@ -3,9 +3,6 @@
 # GreenSynth
 
 [![XERJ Corpus Hub contributor](https://hub.xerj.org/contributors/V-atharvan/badge.svg)](https://hub.xerj.org/contributors/V-atharvan)
-
-A data-driven research and analytics platform for green synthesis
-of semiconductor materials.
 [![CI](https://github.com/V-atharvan/GreenSynth/actions/workflows/ci.yml/badge.svg)](https://github.com/V-atharvan/GreenSynth/actions/workflows/ci.yml)
 [![DOI](https://zenodo.org/badge/1329164886.svg)](https://doi.org/10.5281/zenodo.23643273)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)

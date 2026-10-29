@@ -47,15 +47,19 @@ docker/secrets/
 .DS_Store
 Thumbs.db
 
-# ── Data (raw lab data is gitignored; keep directory markers)
+# ── Data (raw lab data is gitignored except projects and P7 datasets for cloud deployment)
 data/raw/*
 data/processed/*
 data/exports/*
 backend/data/raw/*
 backend/data/processed/*
 backend/data/exports/*
-!data/raw/.gitkeep
-!data/processed/.gitkeep
+
+# Track authentic research project datasets for cloud deployment on Render
+!data/raw/projects/
+!data/raw/P7/
+!data/processed/projects/
+!data/processed/P7/
 !data/exports/.gitkeep
 !backend/data/raw/.gitkeep
 !backend/data/processed/.gitkeep

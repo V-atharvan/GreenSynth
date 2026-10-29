@@ -55,7 +55,7 @@ dependencies = [
 [project.optional-dependencies]
 # Scientific computing — installed separately in later phases
 scientific = [
-    "numpy>=1.26.0",
+    "numpy>=2.0.0",
     "pandas>=2.2.0",
     "scipy>=1.13.0",
     "scikit-learn>=1.5.0",

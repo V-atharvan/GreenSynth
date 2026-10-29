@@ -239,11 +239,26 @@ class AnalyticsService:
             if cnt > 0:
                 warns.append(f"Variable '{v}' is missing for {cnt} of {len(table_rows)} selected samples.")
 
+        # Validate unit consistency across samples for each variable
+        unit_consistency_status = "PASS"
+        for v in ds.variables:
+            units = {
+                r.cells[v].unit.strip()
+                for r in table_rows
+                if v in r.cells and r.cells[v].unit and r.cells[v].unit.strip()
+            }
+            if len(units) > 1:
+                unit_consistency_status = "WARNING"
+                warns.append(
+                    f"Inconsistent units detected for variable '{v}': found {sorted(units)}. "
+                    "Values may not be directly comparable across samples without conversion."
+                )
+
         quality_report = DataQualityReport(
             total_samples=len(table_rows),
             variables_evaluated=ds.variables,
             missing_counts=missing_counts,
-            unit_consistency="PASS",
+            unit_consistency=unit_consistency_status,
             warnings=warns,
             status="READY_WITH_WARNINGS" if warns else "READY",
         )

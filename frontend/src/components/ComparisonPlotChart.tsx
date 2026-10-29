@@ -58,10 +58,10 @@ export function ComparisonPlotChart({
   const yMax = Math.max(...yVals)
   const yRange = yMax - yMin || 1.0
 
-  // Padding bounds
-  const xPadMin = xMin - xRange * 0.08
+  // Padding bounds: avoid negative lower bounds when all values are non-negative
+  const xPadMin = xMin >= 0 ? Math.max(0, xMin - xRange * 0.08) : xMin - xRange * 0.08
   const xPadMax = xMax + xRange * 0.08
-  const yPadMin = yMin - yRange * 0.08
+  const yPadMin = yMin >= 0 ? Math.max(0, yMin - yRange * 0.08) : yMin - yRange * 0.08
   const yPadMax = yMax + yRange * 0.08
 
   const scaleX = (val: number) =>
@@ -85,19 +85,23 @@ export function ComparisonPlotChart({
     regPath = `M ${px1} ${py1} L ${px2} ${py2}`
   }
 
-  // Determine precision based on x-axis range so ticks never collapse to the same label
-  const xDisplayRange = xPadMax - xPadMin
-  const xDecimals = xDisplayRange < 0.05 ? 4 : xDisplayRange < 0.5 ? 3 : xDisplayRange < 5 ? 2 : 1
+  // Calculate clean decimal precision based on tick step size
+  const getTickDecimals = (padMin: number, padMax: number) => {
+    const step = (padMax - padMin) / 4
+    if (step < 0.005) return 4
+    if (step < 0.05) return 3
+    if (step < 0.5) return 2
+    if (step < 5) return 1
+    return 0
+  }
 
+  const xDecimals = getTickDecimals(xPadMin, xPadMax)
   const xTicks = Array.from({ length: 5 }, (_, i) => {
     const val = xPadMin + (i / 4) * (xPadMax - xPadMin)
     return { val: val.toFixed(xDecimals), x: scaleX(val) }
   })
 
-  // Determine precision based on y-axis range
-  const yDisplayRange = yPadMax - yPadMin
-  const yDecimals = yDisplayRange < 0.05 ? 4 : yDisplayRange < 0.5 ? 3 : yDisplayRange < 5 ? 2 : 1
-
+  const yDecimals = getTickDecimals(yPadMin, yPadMax)
   const yTicks = Array.from({ length: 5 }, (_, i) => {
     const val = yPadMin + (i / 4) * (yPadMax - yPadMin)
     return { val: val.toFixed(yDecimals), y: scaleY(val) }

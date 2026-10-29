@@ -107,20 +107,37 @@ def test_experiment_report_dto_instantiation():
 
 
 def test_chart_generator_matplotlib_bytes():
-    xrd_bytes = ReportChartGenerator.generate_xrd_plot()
+    # 1. Authentic measurement data renders valid PNG bytes
+    xrd_bytes = ReportChartGenerator.generate_xrd_plot(
+        two_theta=[20.0, 35.5, 38.7, 50.0],
+        intensity=[100.0, 800.0, 600.0, 120.0],
+    )
     assert isinstance(xrd_bytes, bytes)
     assert len(xrd_bytes) > 500
     assert xrd_bytes.startswith(b"\x89PNG")
 
-    uvvis_bytes = ReportChartGenerator.generate_uvvis_tauc_plot(1.45)
+    uvvis_bytes = ReportChartGenerator.generate_uvvis_tauc_plot(
+        band_gap_ev=1.45,
+        photon_energies=[1.0, 1.5, 2.0, 2.5],
+        tauc_values=[0.0, 10.0, 50.0, 150.0],
+    )
     assert isinstance(uvvis_bytes, bytes)
     assert len(uvvis_bytes) > 500
     assert uvvis_bytes.startswith(b"\x89PNG")
 
-    elec_bytes = ReportChartGenerator.generate_electrical_iv_plot(200.0)
+    elec_bytes = ReportChartGenerator.generate_electrical_iv_plot(
+        resistance_ohms=200.0,
+        voltages=[-2.0, -1.0, 0.0, 1.0, 2.0],
+        currents_ma=[-10.0, -5.0, 0.0, 5.0, 10.0],
+    )
     assert isinstance(elec_bytes, bytes)
     assert len(elec_bytes) > 500
     assert elec_bytes.startswith(b"\x89PNG")
+
+    # 2. Strict scientific integrity: Never fabricate synthetic curves when data is missing
+    assert ReportChartGenerator.generate_xrd_plot() is None
+    assert ReportChartGenerator.generate_uvvis_tauc_plot() is None
+    assert ReportChartGenerator.generate_electrical_iv_plot() is None
 
 
 def test_pdf_report_renderer_compilation():

@@ -61,8 +61,8 @@ def _load_raw_csv_columns(
         candidates.extend([
             Path("data") / "raw" / original_filename,
             Path("..") / "data" / "raw" / original_filename,
-            Path("synthetic_data") / "p7" / "raw" / technique_dir / original_filename,
-            Path("..") / "synthetic_data" / "p7" / "raw" / technique_dir / original_filename,
+            Path("backend") / "data" / "raw" / original_filename,
+            Path("..") / "backend" / "data" / "raw" / original_filename,
         ])
 
     for cand in candidates:

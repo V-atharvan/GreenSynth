@@ -261,14 +261,17 @@ class PDFReportRenderer:
             for info in xrd_info:
                 story.append(Paragraph(info, body_style))
 
-            story.append(Spacer(1, 6))
             xrd_plot_bytes = ReportChartGenerator.generate_xrd_plot(
                 two_theta=data.xrd.two_theta,
                 intensity=data.xrd.intensity,
                 peaks=data.xrd.peaks,
             )
-            xrd_img = Image(io.BytesIO(xrd_plot_bytes), width=450, height=220)
-            story.append(xrd_img)
+            if xrd_plot_bytes:
+                story.append(Spacer(1, 6))
+                xrd_img = Image(io.BytesIO(xrd_plot_bytes), width=450, height=220)
+                story.append(xrd_img)
+            else:
+                story.append(Paragraph("<i>Raw XRD diffraction pattern spectrum data unavailable for plotting.</i>", body_style))
         else:
             story.append(Paragraph("<i>XRD characterization data not available for this experiment.</i>", body_style))
 
@@ -286,14 +289,17 @@ class PDFReportRenderer:
             for info in uv_info:
                 story.append(Paragraph(info, body_style))
 
-            story.append(Spacer(1, 6))
             uv_plot_bytes = ReportChartGenerator.generate_uvvis_tauc_plot(
                 band_gap_ev=data.uvvis.optical_band_gap_ev,
                 photon_energies=data.uvvis.photon_energies,
                 tauc_values=data.uvvis.tauc_values,
             )
-            uv_img = Image(io.BytesIO(uv_plot_bytes), width=450, height=220)
-            story.append(uv_img)
+            if uv_plot_bytes:
+                story.append(Spacer(1, 6))
+                uv_img = Image(io.BytesIO(uv_plot_bytes), width=450, height=220)
+                story.append(uv_img)
+            else:
+                story.append(Paragraph("<i>Raw UV-Vis spectrum / Tauc curve data unavailable for plotting.</i>", body_style))
         else:
             story.append(Paragraph("<i>UV-Vis spectroscopy data not available for this experiment.</i>", body_style))
 
@@ -310,14 +316,17 @@ class PDFReportRenderer:
             for info in elec_info:
                 story.append(Paragraph(info, body_style))
 
-            story.append(Spacer(1, 6))
             elec_plot_bytes = ReportChartGenerator.generate_electrical_iv_plot(
                 resistance_ohms=data.electrical.resistance_ohms,
                 voltages=data.electrical.voltages,
                 currents_ma=data.electrical.currents_ma,
             )
-            elec_img = Image(io.BytesIO(elec_plot_bytes), width=450, height=220)
-            story.append(elec_img)
+            if elec_plot_bytes:
+                story.append(Spacer(1, 6))
+                elec_img = Image(io.BytesIO(elec_plot_bytes), width=450, height=220)
+                story.append(elec_img)
+            else:
+                story.append(Paragraph("<i>Raw I-V measurement curve data unavailable for plotting.</i>", body_style))
         else:
             story.append(Paragraph("<i>Electrical I-V measurement data not available for this experiment.</i>", body_style))
 

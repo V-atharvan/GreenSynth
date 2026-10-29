@@ -332,7 +332,7 @@ class UVVisAnalysisService:
             if slope and intercept:
                 # Generate fit line from Eg to max energy
                 e_start = bg_ev
-                e_end = float(df["photon_energy_ev"].max())
+                e_end = max_energy
                 e_steps = np.linspace(e_start, e_end, 50)
                 for e_val in e_steps:
                     y_val = slope * e_val + intercept

@@ -35,8 +35,36 @@ def calculate_linear_regression(
         for x, y in paired
         if x is not None and y is not None and not math.isnan(float(x)) and not math.isnan(float(y))
     ]
-    if len(clean_pairs) < 3:
-        raise RegressionError("At least 3 valid paired data points are required to compute linear regression.")
+    if len(clean_pairs) < 2:
+        raise RegressionError("At least 2 valid paired data points are required to compute linear regression.")
+
+    if len(clean_pairs) == 2:
+        p1, p2 = clean_pairs[0], clean_pairs[1]
+        dx = p2[0] - p1[0]
+        if abs(dx) < 1e-12:
+            raise RegressionError("Cannot compute linear regression: independent variable (X) has identical values (zero variance).")
+        slope = (p2[1] - p1[1]) / dx
+        intercept = p1[1] - slope * p1[0]
+        sign = "+" if intercept >= 0 else "-"
+        return RegressionResponse(
+            y_variable=y_variable,
+            x_variables=[x_variable],
+            model_type="SIMPLE_LINEAR",
+            formula=f"{y_variable} = {slope:.4f} * {x_variable} {sign} {abs(intercept):.4f}",
+            coefficients={x_variable: float(slope), "intercept": float(intercept)},
+            slope=float(slope),
+            intercept=float(intercept),
+            r_squared=1.0,
+            adjusted_r_squared=1.0,
+            rmse=0.0,
+            mae=0.0,
+            sample_size_n=2,
+            interpretation=f"Exact two-point linear fit across {x_variable} and {y_variable} (N=2). Note that residual degrees of freedom are zero.",
+            warnings=[
+                "Exact two-point linear fit (N=2): model is fully saturated with 0 residual degrees of freedom.",
+                "At least 3 observations are recommended for statistical inference and hypothesis testing."
+            ],
+        )
 
     rows = [{x_variable: p[0], y_variable: p[1]} for p in clean_pairs]
     res = fit_regression_model([x_variable], y_variable, rows, model_type="SIMPLE_LINEAR")

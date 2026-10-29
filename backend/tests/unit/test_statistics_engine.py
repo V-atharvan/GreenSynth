@@ -67,6 +67,20 @@ def test_linear_regression_engine() -> None:
     assert "conductivity_s_cm = 0.0200 * substrate_temperature - 1.0000" in res.formula
     assert any("not a universal physical law" in w for w in res.warnings)
 
+def test_linear_regression_two_points() -> None:
+    """Verify exact two-point linear fit when N=2."""
+    x_vals = [10.0, 20.0]
+    y_vals = [2.0, 4.0]
+
+    res = calculate_linear_regression("temp", "conductivity", x_vals, y_vals)
+
+    assert res.sample_size_n == 2
+    assert abs(res.slope - 0.2) < 1e-4
+    assert abs(res.intercept - 0.0) < 1e-4
+    assert res.r_squared == 1.0
+    assert any("Exact two-point linear fit" in w for w in res.warnings)
+
+
 
 def test_group_comparison_engine() -> None:
     """Verify grouping by categorical factor (e.g. Solvent) and per-group statistics."""

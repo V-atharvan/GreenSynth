@@ -1,0 +1,65 @@
+name: "Scientific Algorithm / Calculation Discrepancy"
+description: "Report a mathematical error, physical equation bug, or derivation discrepancy"
+title: "[SCIENTIFIC]: "
+labels: ["scientific-validation", "math-accuracy"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Scientific integrity is paramount in GreenSynth. Use this form to report discrepancies in mathematical formulas, physical derivations, unit conversions, or analytical benchmarks (OriginLab / standard references).
+
+  - type: dropdown
+    id: technique
+    attributes:
+      label: Characterization Technique / Scientific Engine
+      description: Which analytical module produced the discrepancy?
+      options:
+        - "XRD (Debye-Scherrer Crystallite Sizing / Peak Fitting)"
+        - "UV-Vis (Tauc Plot / Optical Bandgap Extrapolation)"
+        - "FTIR (Savitzky-Golay / Peak Detection / Prominence)"
+        - "Electrical I-V (Ohm's Law / Resistivity / Conductivity)"
+        - "SEM (Scale Bar Pixel Calibration / Caliper)"
+        - "Design of Experiments (Factorial / CCD / Box-Behnken)"
+        - "Machine Learning (Target Leakage / Metrics / Domain Check)"
+        - "Statistical Analytics (Descriptive / OLS / ANOVA)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: formula_issue
+    attributes:
+      label: Mathematical Formula or Algorithm Affected
+      description: State the formula in question and what GreenSynth currently computes.
+      placeholder: "e.g., In the Debye-Scherrer crystallite sizing formula D = (K * lambda) / (beta * cos(theta)), beta was not converted from degrees to radians before cosine calculation..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected_vs_actual
+    attributes:
+      label: Expected vs. Actual Output
+      description: Provide the input numerical values, GreenSynth's output, and the verified standard value (e.g., from OriginLab, HighScore Plus, or manual derivation).
+      placeholder: |
+        - Inputs: 2theta = 35.5 deg, FWHM = 0.492 deg, lambda = 0.15406 nm
+        - GreenSynth Output: D = 14.2 nm
+        - Verified Output (OriginLab / Manual): D = 16.944 nm
+        - Discrepancy: ~16% error
+    validations:
+      required: true
+
+  - type: textarea
+    id: references
+    attributes:
+      label: Peer-Reviewed Reference / Literature Standard
+      description: Provide the published academic paper, standard (e.g., ASTM, JCPDS, IUPAC), or textbook citation supporting the expected formula.
+      placeholder: "e.g., Scherrer, P. (1918). Nachr. Ges. Wiss. Göttingen, 26, 98-100; or Tauc, J. et al. (1966). Phys. Status Solidi, 15(2), 627-637."
+    validations:
+      required: true
+
+  - type: textarea
+    id: sample_data
+    attributes:
+      label: Test Data or Coordinates
+      description: Attach or paste sample numeric coordinates (X, Y) allowing maintainers to reproduce the derivation.
+      render: csv
+

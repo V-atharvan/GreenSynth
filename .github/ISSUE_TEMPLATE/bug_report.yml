@@ -1,0 +1,78 @@
+name: "Bug Report"
+description: "Report a software bug or unexpected error in GreenSynth"
+title: "[BUG]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting an issue in GreenSynth! Please provide clear details so we can reproduce and fix the bug.
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Affected Component
+      description: Which area of the application is experiencing the issue?
+      options:
+        - "Backend API / FastAPI"
+        - "Frontend UI / React"
+        - "Database & Alembic Migrations"
+        - "File Ingestion & SHA-256 Hashing"
+        - "ReportLab PDF Dossier Generation"
+        - "Docker / Windows One-Click Scripts"
+        - "Other"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is.
+      placeholder: "e.g., File upload endpoint returns 500 when uploading comma-separated CSV with headers..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: How can maintainers reproduce the issue?
+      placeholder: |
+        1. Navigate to 'Characterizations'
+        2. Upload raw file 'sample.csv'
+        3. Click 'Run Analysis'
+        4. See error in browser console / terminal
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+      placeholder: "e.g., The spectrum should render and calculate the peak positions without throwing an error."
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error Logs or Tracebacks
+      description: Paste relevant terminal logs, stack traces, or browser console output.
+      render: shell
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment Specifications
+      description: Include OS version, Python version, Node.js version, and database backend.
+      value: |
+        - OS: [e.g. Windows 11 / Ubuntu 22.04 / macOS Sonoma]
+        - Python Version: [e.g. 3.11.8]
+        - Node.js Version: [e.g. 20.10.0]
+        - Database: [PostgreSQL 16 / SQLite]
+        - Deployment: [Local virtualenv / Docker Compose]
+    validations:
+      required: true
+

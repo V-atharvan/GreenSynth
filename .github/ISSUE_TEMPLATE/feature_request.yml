@@ -1,0 +1,50 @@
+name: "Feature or Characterization Request"
+description: "Suggest a new feature, characterization module, or scientific capability"
+title: "[FEATURE]: "
+labels: ["enhancement", "feature-request"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have an idea for GreenSynth? We welcome suggestions for new characterization techniques, visualization tools, materials informatics models, or export formats.
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Feature Category
+      description: What type of enhancement is this?
+      options:
+        - "New Characterization Technique (e.g. Raman, PL, XPS, TGA, CV)"
+        - "Scientific Calculation / Fitting Algorithm"
+        - "Materials Informatics / Machine Learning Model"
+        - "User Interface & Interactive Charting"
+        - "Data Export & Dossier Reporting"
+        - "Laboratory Hardware Integration"
+        - "Other"
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed Solution or Capability
+      description: Describe what you would like GreenSynth to do.
+      placeholder: "e.g., Add automated baseline correction and Lorentzian deconvolution for Raman spectra of CuO/Cu2O phases..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: scientific_context
+    attributes:
+      label: Scientific Motivation & Use Case
+      description: How will this feature advance green synthesis and semiconductor materials research?
+      placeholder: "e.g., Phytochemical thin films frequently exhibit mixed Cu2O and CuO phases; Raman spectroscopy would allow rapid phase differentiation without requiring synchrotron XRD."
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternative Workarounds Considered
+      description: Describe any alternative solutions or external tools you currently use.
+

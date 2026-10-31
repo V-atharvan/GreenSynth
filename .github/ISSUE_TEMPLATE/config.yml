@@ -1,0 +1,12 @@
+blank_issues_enabled: false
+contact_links:
+  - name: "GreenSynth Documentation"
+    url: "https://github.com/V-atharvan/GreenSynth#readme"
+    about: "Read architecture, quickstart guides, and scientific engine documentation."
+  - name: "Security Vulnerability Disclosure"
+    url: "https://github.com/V-atharvan/GreenSynth/blob/main/SECURITY.md"
+    about: "Report security vulnerabilities privately via email rather than public issues."
+  - name: "Academic Citation & Research Inquiries"
+    url: "mailto:v.atharvan@gmail.com"
+    about: "Inquire about citing GreenSynth or scientific research collaborations."
+
